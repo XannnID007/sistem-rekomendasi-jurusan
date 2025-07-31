@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Dashboard Admin') - SPK Pemilihan Jurusan</title>
+    <title>Dashboard Admin - SPK Pemilihan Jurusan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -55,31 +55,69 @@
                 transform: translateY(0);
             }
         }
+
+        .nav-item {
+            position: relative;
+        }
+
+        .nav-item:hover::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: #fbbf24;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: #fbbf24;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .dropdown-enter {
+            transform: translateY(-8px);
+            opacity: 0;
+        }
+
+        .dropdown-enter-active {
+            transform: translateY(0);
+            opacity: 1;
+            transition: all 0.2s ease-out;
+        }
     </style>
-    @stack('styles')
 </head>
 
 <body class="bg-gray-50">
     <!-- Sidebar -->
-    <div id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-navy transform sidebar-transition lg:translate-x-0">
-        <div class="flex items-center justify-center h-16 px-4 bg-navy-dark">
+    <div id="sidebar"
+        class="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform sidebar-transition lg:translate-x-0 border-r border-gray-200">
+        <!-- Logo & Brand -->
+        <div class="flex items-center justify-center h-16 px-4 bg-gradient-to-r from-navy to-navy-dark">
             <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 bg-gold rounded-lg flex items-center justify-center">
+                <div class="w-10 h-10 bg-gold rounded-xl flex items-center justify-center shadow-lg">
                     <span class="text-navy font-bold text-lg">SP</span>
                 </div>
                 <div class="text-white">
-                    <h1 class="text-lg font-bold">Admin Panel</h1>
-                    <p class="text-xs text-gold">SPK Pemilihan Jurusan</p>
+                    <h1 class="text-lg font-semibold">Admin Panel</h1>
+                    <p class="text-xs text-gold opacity-90">SPK Pemilihan Jurusan</p>
                 </div>
             </div>
         </div>
 
         <!-- Navigation Menu -->
-        <nav class="mt-5 px-2">
-            <div class="space-y-1">
+        <nav class="mt-6 px-4">
+            <div class="space-y-2">
                 <!-- Dashboard -->
                 <a href="{{ route('admin.dashboard') }}"
-                    class="nav-item group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ request()->routeIs('admin.dashboard') ? 'bg-navy-light text-white' : 'text-gray-300 hover:bg-navy-light hover:text-white' }} transition duration-150 ease-in-out">
+                    class="nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }} group flex items-center px-4 py-3 text-sm font-medium rounded-xl {{ request()->routeIs('admin.dashboard') ? 'bg-navy text-white' : 'text-gray-700 hover:bg-gray-100 hover:text-navy' }} transition duration-200">
                     <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
@@ -91,7 +129,7 @@
 
                 <!-- Kelola Peserta Didik -->
                 <a href="{{ route('admin.peserta-didik.index') }}"
-                    class="nav-item group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ request()->routeIs('admin.peserta-didik.*') ? 'bg-navy-light text-white' : 'text-gray-300 hover:bg-navy-light hover:text-white' }} transition duration-150 ease-in-out">
+                    class="nav-item {{ request()->routeIs('admin.peserta-didik.*') ? 'active' : '' }} group flex items-center px-4 py-3 text-sm font-medium rounded-xl {{ request()->routeIs('admin.peserta-didik.*') ? 'bg-navy text-white' : 'text-gray-700 hover:bg-gray-100 hover:text-navy' }} transition duration-200">
                     <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
@@ -101,7 +139,7 @@
 
                 <!-- Kelola Perhitungan -->
                 <a href="{{ route('admin.perhitungan.index') }}"
-                    class="nav-item group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ request()->routeIs('admin.perhitungan.*') ? 'bg-navy-light text-white' : 'text-gray-300 hover:bg-navy-light hover:text-white' }} transition duration-150 ease-in-out">
+                    class="nav-item {{ request()->routeIs('admin.perhitungan.*') ? 'active' : '' }} group flex items-center px-4 py-3 text-sm font-medium rounded-xl {{ request()->routeIs('admin.perhitungan.*') ? 'bg-navy text-white' : 'text-gray-700 hover:bg-gray-100 hover:text-navy' }} transition duration-200">
                     <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -111,7 +149,7 @@
 
                 <!-- Hasil Rekomendasi -->
                 <a href="{{ route('admin.rekomendasi.index') }}"
-                    class="nav-item group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ request()->routeIs('admin.rekomendasi.*') ? 'bg-navy-light text-white' : 'text-gray-300 hover:bg-navy-light hover:text-white' }} transition duration-150 ease-in-out">
+                    class="nav-item {{ request()->routeIs('admin.rekomendasi.*') ? 'active' : '' }} group flex items-center px-4 py-3 text-sm font-medium rounded-xl {{ request()->routeIs('admin.rekomendasi.*') ? 'bg-navy text-white' : 'text-gray-700 hover:bg-gray-100 hover:text-navy' }} transition duration-200">
                     <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 00-2 2h-2a2 2 0 01-2-2z" />
@@ -121,7 +159,7 @@
 
                 <!-- Cetak Laporan -->
                 <a href="{{ route('admin.laporan.index') }}"
-                    class="nav-item group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ request()->routeIs('admin.laporan.*') ? 'bg-navy-light text-white' : 'text-gray-300 hover:bg-navy-light hover:text-white' }} transition duration-150 ease-in-out">
+                    class="nav-item {{ request()->routeIs('admin.laporan.*') ? 'active' : '' }} group flex items-center px-4 py-3 text-sm font-medium rounded-xl {{ request()->routeIs('admin.laporan.*') ? 'bg-navy text-white' : 'text-gray-700 hover:bg-gray-100 hover:text-navy' }} transition duration-200">
                     <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -130,11 +168,11 @@
                 </a>
 
                 <!-- Divider -->
-                <div class="border-t border-navy-light my-4"></div>
+                <div class="border-t border-gray-200 my-4"></div>
 
                 <!-- Settings/Kriteria -->
                 <a href="{{ route('admin.kriteria.index') }}"
-                    class="nav-item group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ request()->routeIs('admin.kriteria.*') ? 'bg-navy-light text-white' : 'text-gray-300 hover:bg-navy-light hover:text-white' }} transition duration-150 ease-in-out">
+                    class="nav-item {{ request()->routeIs('admin.kriteria.*') ? 'active' : '' }} group flex items-center px-4 py-3 text-sm font-medium rounded-xl {{ request()->routeIs('admin.kriteria.*') ? 'bg-navy text-white' : 'text-gray-700 hover:bg-gray-100 hover:text-navy' }} transition duration-200">
                     <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -145,19 +183,6 @@
                 </a>
             </div>
         </nav>
-
-        <!-- User Info at Bottom -->
-        <div class="absolute bottom-0 w-full p-4 bg-navy-dark">
-            <div class="flex items-center space-x-3">
-                <div class="w-8 h-8 bg-gold rounded-full flex items-center justify-center">
-                    <span class="text-navy font-bold text-sm">{{ substr(auth()->user()->full_name, 0, 1) }}</span>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-white truncate">{{ auth()->user()->full_name }}</p>
-                    <p class="text-xs text-gold truncate">Administrator</p>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Mobile Sidebar Overlay -->
@@ -166,13 +191,13 @@
     <!-- Main Content -->
     <div class="lg:ml-64 flex flex-col min-h-screen main-content">
         <!-- Top Navigation -->
-        <header class="bg-white shadow-sm border-b border-gray-200 fixed w-full lg:ml-64 top-0 z-30">
+        <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
             <div class="px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between h-16">
                     <div class="flex items-center">
                         <!-- Mobile menu button -->
                         <button id="mobile-menu-button" type="button"
-                            class="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-navy">
+                            class="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-navy transition duration-200">
                             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4 6h16M4 12h16M4 18h16" />
@@ -181,33 +206,27 @@
 
                         <!-- Page Title -->
                         <div class="ml-4 lg:ml-0">
-                            <h1 class="text-2xl font-bold text-navy">@yield('page-title', 'Dashboard')</h1>
-                            <p class="text-sm text-gray-600">@yield('page-description', 'Selamat datang di panel admin')</p>
+                            <h1 class="text-xl font-semibold text-gray-900">@yield('page-title', 'Dashboard')</h1>
+                            <p class="text-sm text-gray-500">@yield('page-description', 'Selamat datang di panel admin')</p>
                         </div>
                     </div>
 
                     <!-- Right side items -->
                     <div class="flex items-center space-x-4">
-                        <!-- Notifications -->
-                        <button class="p-2 text-gray-400 hover:text-gray-500 relative">
-                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15 17h5l-5 5-5-5h5v-5H9l5-5 5 5h-5z" />
-                            </svg>
-                            <span class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400"></span>
-                        </button>
 
                         <!-- Profile Dropdown -->
                         <div class="relative">
                             <button id="profile-dropdown-button"
-                                class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition duration-150">
+                                class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition duration-200">
                                 <div class="w-8 h-8 bg-navy rounded-full flex items-center justify-center">
                                     <span
-                                        class="text-white font-bold text-sm">{{ substr(auth()->user()->full_name, 0, 1) }}</span>
+                                        class="text-white font-medium text-sm">{{ substr(auth()->user()->full_name ?? 'A', 0, 1) }}</span>
                                 </div>
-                                <div class="hidden sm:block">
-                                    <p class="text-sm font-medium text-gray-700">{{ auth()->user()->full_name }}</p>
-                                    <p class="text-xs text-gray-500">{{ ucfirst(auth()->user()->role) }}</p>
+                                <div class="hidden sm:block text-left">
+                                    <p class="text-sm font-medium text-gray-700">
+                                        {{ auth()->user()->full_name ?? 'Administrator' }}</p>
+                                    <p class="text-xs text-gray-500">{{ ucfirst(auth()->user()->role ?? 'admin') }}
+                                    </p>
                                 </div>
                                 <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
@@ -218,17 +237,27 @@
 
                             <!-- Dropdown Menu -->
                             <div id="profile-dropdown"
-                                class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                                class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50 border border-gray-200">
                                 <div class="py-1">
                                     <a href="#"
-                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profil Saya</a>
-                                    <a href="#"
-                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Pengaturan</a>
+                                        class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition duration-200">
+                                        <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                        Profil Saya
+                                    </a>
                                     <div class="border-t border-gray-100"></div>
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
                                         <button type="submit"
-                                            class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition duration-200">
+                                            <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                            </svg>
                                             Keluar
                                         </button>
                                     </form>
@@ -241,56 +270,191 @@
         </header>
 
         <!-- Page Content -->
-        <main class="flex-1 pt-16">
-            <div class="py-6">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <!-- Breadcrumb -->
-                    @yield('breadcrumb')
+        <main class="flex-1 p-6">
+            <!-- Alert Messages -->
+            <div class="mb-6">
+                <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg fade-in">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        Data berhasil disimpan!
+                    </div>
+                </div>
+            </div>
 
-                    <!-- Alert Messages -->
-                    @if (session('success'))
-                        <div
-                            class="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg fade-in">
-                            <div class="flex">
-                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd"
-                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                        clip-rule="evenodd" />
+            <!-- Main Content Area -->
+            <div class="space-y-6">
+                <!-- Statistics Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Card 1 -->
+                    <div
+                        class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition duration-200">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                                 </svg>
-                                {{ session('success') }}
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-500">Total Peserta Didik</p>
+                                <p class="text-2xl font-semibold text-gray-900">150</p>
                             </div>
                         </div>
-                    @endif
+                    </div>
 
-                    @if (session('error'))
-                        <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg fade-in">
-                            <div class="flex">
-                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd"
-                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                                        clip-rule="evenodd" />
+                    <!-- Card 2 -->
+                    <div
+                        class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition duration-200">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                {{ session('error') }}
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-500">Data Penilaian</p>
+                                <p class="text-2xl font-semibold text-gray-900">140</p>
                             </div>
                         </div>
-                    @endif
+                    </div>
 
-                    <!-- Main Content -->
-                    @yield('content')
+                    <!-- Card 3 -->
+                    <div
+                        class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition duration-200">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-500">Perhitungan TOPSIS</p>
+                                <p class="text-2xl font-semibold text-gray-900">135</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 4 -->
+                    <div
+                        class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition duration-200">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-yellow-50 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-500">Rata-rata Preferensi</p>
+                                <p class="text-2xl font-semibold text-gray-900">0.642</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content Cards -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Chart Card -->
+                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-semibold text-gray-900">Distribusi Rekomendasi</h3>
+                            <div class="text-sm text-gray-500">2024/2025</div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <!-- TKJ Bar -->
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
+                                        <span class="text-sm font-medium text-gray-700">TKJ</span>
+                                    </div>
+                                    <span class="text-sm font-semibold text-gray-900">85 siswa</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div class="bg-blue-500 h-3 rounded-full" style="width: 63%"></div>
+                                </div>
+                            </div>
+
+                            <!-- TKR Bar -->
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                                        <span class="text-sm font-medium text-gray-700">TKR</span>
+                                    </div>
+                                    <span class="text-sm font-semibold text-gray-900">50 siswa</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div class="bg-green-500 h-3 rounded-full" style="width: 37%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-semibold text-gray-900">Aktivitas Terbaru</h3>
+                            <a href="#" class="text-sm text-navy hover:text-navy-dark font-medium">Lihat Semua
+                                →</a>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                                    <span class="text-white font-medium text-xs">AS</span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900">Ahmad Syahid</p>
+                                    <p class="text-xs text-gray-600">Perhitungan TOPSIS selesai - TKJ</p>
+                                    <p class="text-xs text-gray-500">2 menit yang lalu</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                                    <span class="text-white font-medium text-xs">RN</span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900">Rina Novita</p>
+                                    <p class="text-xs text-gray-600">Data penilaian ditambahkan</p>
+                                    <p class="text-xs text-gray-500">5 menit yang lalu</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                                    <span class="text-white font-medium text-xs">BF</span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900">Bayu Firmansyah</p>
+                                    <p class="text-xs text-gray-600">Perhitungan TOPSIS selesai - TKR</p>
+                                    <p class="text-xs text-gray-500">8 menit yang lalu</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
 
         <!-- Footer -->
         <footer class="bg-white border-t border-gray-200 py-4">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center">
-                    <p class="text-sm text-gray-600">
-                        &copy; 2024 SMK Penida 2 Katapang. All rights reserved.
-                    </p>
-                    <p class="text-sm text-gray-500">
-                        Sistem Pendukung Keputusan v1.0
-                    </p>
+            <div class="px-6">
+                <div class="flex justify-between items-center text-sm text-gray-600">
+                    <p>&copy; 2024 SMK Penida 2 Katapang. All rights reserved.</p>
+                    <p>Sistem Pendukung Keputusan v1.0</p>
                 </div>
             </div>
         </footer>
@@ -337,9 +501,19 @@
                 }
             });
         }, 5000);
-    </script>
 
-    @stack('scripts')
+        // Add active state management
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.nav-item').forEach(nav => {
+                    nav.classList.remove('active', 'bg-navy', 'text-white');
+                    nav.classList.add('text-gray-700');
+                });
+                this.classList.add('active', 'bg-navy', 'text-white');
+                this.classList.remove('text-gray-700');
+            });
+        });
+    </script>
 </body>
 
 </html>

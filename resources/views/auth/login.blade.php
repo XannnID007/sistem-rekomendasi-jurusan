@@ -21,28 +21,12 @@
         }
     </script>
     <style>
-        .bg-gradient-navy {
-            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
-        }
-
-        .floating-animation {
-            animation: float 6s ease-in-out infinite;
-        }
-
-        @keyframes float {
-
-            0%,
-            100% {
-                transform: translateY(0px);
-            }
-
-            50% {
-                transform: translateY(-15px);
-            }
+        .gradient-bg {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
         }
 
         .fade-in {
-            animation: fadeIn 0.8s ease-in;
+            animation: fadeIn 0.6s ease-in;
         }
 
         @keyframes fadeIn {
@@ -56,15 +40,41 @@
                 transform: translateY(0);
             }
         }
+
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .input-focus {
+            transition: all 0.2s ease;
+        }
+
+        .input-focus:focus {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.15);
+        }
     </style>
 </head>
 
-<body class="min-h-screen bg-gradient-navy flex items-center justify-center p-4">
+<body class="gradient-bg min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-md">
         <!-- Back to home link -->
-        <div class="text-center mb-8">
-            <a href="/" class="inline-flex items-center text-white hover:text-gold transition duration-300">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="text-center mb-6 slide-in">
+            <a href="{{ route('welcome') }}"
+                class="inline-flex items-center text-gray-600 hover:text-navy transition duration-200 text-sm">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                 </svg>
@@ -73,16 +83,14 @@
         </div>
 
         <!-- Login Card -->
-        <div class="bg-white rounded-2xl shadow-2xl p-8 fade-in">
+        <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-white/50 fade-in">
             <!-- Logo and Title -->
             <div class="text-center mb-8">
-                <div class="floating-animation mb-6">
-                    <div class="w-20 h-20 bg-navy rounded-2xl flex items-center justify-center mx-auto shadow-lg">
-                        <span class="text-white font-bold text-2xl">SP</span>
-                    </div>
+                <div class="w-16 h-16 bg-navy rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <span class="text-white font-bold text-xl">SP</span>
                 </div>
-                <h1 class="text-2xl font-bold text-navy mb-2">Masuk ke Sistem</h1>
-                <p class="text-gray-600">SPK Pemilihan Jurusan - SMK Penida 2 Katapang</p>
+                <h1 class="text-xl font-bold text-gray-900 mb-2">Masuk ke Sistem</h1>
+                <p class="text-gray-600 text-sm">SPK Pemilihan Jurusan - SMK Penida 2 Katapang</p>
             </div>
 
             <!-- Login Form -->
@@ -102,11 +110,11 @@
                             </svg>
                         </div>
                         <input type="text" id="username" name="username" value="{{ old('username') }}"
-                            class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy focus:border-transparent transition duration-200 @error('username') border-red-500 @enderror"
+                            class="input-focus block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy focus:border-transparent transition duration-200 bg-white/70 @error('username') border-red-500 @enderror"
                             placeholder="Masukkan username atau NISN" required autocomplete="username">
                     </div>
                     @error('username')
-                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -124,11 +132,12 @@
                             </svg>
                         </div>
                         <input type="password" id="password" name="password"
-                            class="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy focus:border-transparent transition duration-200 @error('password') border-red-500 @enderror"
+                            class="input-focus block w-full pl-10 pr-10 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy focus:border-transparent transition duration-200 bg-white/70 @error('password') border-red-500 @enderror"
                             placeholder="Masukkan password" required autocomplete="current-password">
                         <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center"
                             onclick="togglePassword()">
-                            <svg id="eye-icon" class="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none"
+                            <svg id="eye-icon"
+                                class="h-5 w-5 text-gray-400 hover:text-gray-600 transition duration-200" fill="none"
                                 stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -139,15 +148,15 @@
                         </button>
                     </div>
                     @error('password')
-                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <!-- Remember Me -->
                 <div class="flex items-center justify-between">
                     <div class="flex items-center">
-                        <input id="remember" name="remember" type="checkbox"
-                            class="h-4 w-4 text-navy focus:ring-navy border-gray-300 rounded">
+                        <input id="remember" name="remember" type="checkbox" {{ old('remember') ? 'checked' : '' }}
+                            class="h-4 w-4 text-navy focus:ring-navy border-gray-300 rounded transition duration-200">
                         <label for="remember" class="ml-2 block text-sm text-gray-700">
                             Ingat saya
                         </label>
@@ -156,14 +165,27 @@
 
                 <!-- Login Button -->
                 <button type="submit"
-                    class="w-full bg-navy text-white py-3 px-4 rounded-lg hover:bg-navy-dark focus:outline-none focus:ring-2 focus:ring-navy focus:ring-offset-2 transition duration-200 font-medium shadow-lg">
-                    Masuk ke Sistem
+                    class="w-full bg-navy text-white py-3 px-4 rounded-lg hover:bg-navy-dark focus:outline-none focus:ring-2 focus:ring-navy focus:ring-offset-2 transition duration-200 font-medium transform hover:scale-[1.02] active:scale-[0.98]">
+                    <span class="flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                        </svg>
+                        Masuk ke Sistem
+                    </span>
                 </button>
             </form>
+
+            <!-- Additional Info -->
+            <div class="mt-6 text-center">
+                <p class="text-xs text-gray-500">
+                    Belum memiliki akun? Hubungi administrator sekolah
+                </p>
+            </div>
         </div>
 
         <!-- Footer -->
-        <div class="text-center mt-8 text-white text-sm opacity-75">
+        <div class="text-center mt-8 text-gray-500 text-xs">
             <p>&copy; 2024 SMK Penida 2 Katapang. All rights reserved.</p>
         </div>
     </div>
@@ -189,6 +211,50 @@
 
         // Auto-focus username field
         document.getElementById('username').focus();
+
+        // Add form validation feedback
+        const form = document.querySelector('form');
+        const inputs = form.querySelectorAll('input[required]');
+
+        inputs.forEach(input => {
+            input.addEventListener('blur', function() {
+                if (this.value.trim() === '') {
+                    this.classList.add('border-red-300');
+                    this.classList.remove('border-gray-200');
+                } else {
+                    this.classList.remove('border-red-300');
+                    this.classList.add('border-green-300');
+                }
+            });
+
+            input.addEventListener('input', function() {
+                if (this.value.trim() !== '') {
+                    this.classList.remove('border-red-300');
+                    this.classList.add('border-green-300');
+                }
+            });
+        });
+
+        // Form submission with loading state
+        form.addEventListener('submit', function(e) {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+
+            submitBtn.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Memproses...
+            `;
+            submitBtn.disabled = true;
+
+            // Reset after 3 seconds if no redirect occurs
+            setTimeout(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }, 3000);
+        });
     </script>
 </body>
 
