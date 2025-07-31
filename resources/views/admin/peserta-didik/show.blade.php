@@ -66,11 +66,23 @@
                         <div class="space-y-3">
                             <div class="flex justify-between py-2 border-b border-gray-100">
                                 <span class="text-gray-600">Tanggal Lahir:</span>
-                                <span class="font-medium">{{ $pesertaDidik->tanggal_lahir->format('d F Y') }}</span>
+                                <span class="font-medium">
+                                    @if ($pesertaDidik->tanggal_lahir)
+                                        {{ \Carbon\Carbon::parse($pesertaDidik->tanggal_lahir)->format('d F Y') }}
+                                    @else
+                                        -
+                                    @endif
+                                </span>
                             </div>
                             <div class="flex justify-between py-2 border-b border-gray-100">
                                 <span class="text-gray-600">Umur:</span>
-                                <span class="font-medium">{{ $pesertaDidik->umur }} tahun</span>
+                                <span class="font-medium">
+                                    @if ($pesertaDidik->tanggal_lahir)
+                                        {{ \Carbon\Carbon::parse($pesertaDidik->tanggal_lahir)->age }} tahun
+                                    @else
+                                        -
+                                    @endif
+                                </span>
                             </div>
                             <div class="flex justify-between py-2 border-b border-gray-100">
                                 <span class="text-gray-600">No. Telepon:</span>
@@ -78,7 +90,7 @@
                             </div>
                             <div class="flex justify-between py-2 border-b border-gray-100">
                                 <span class="text-gray-600">Email:</span>
-                                <span class="font-medium">{{ $pesertaDidik->user->email }}</span>
+                                <span class="font-medium">{{ $pesertaDidik->user->email ?? '-' }}</span>
                             </div>
                             <div class="py-2">
                                 <span class="text-gray-600">Alamat:</span>
@@ -108,12 +120,12 @@
                         <div class="space-y-3">
                             <div class="flex justify-between py-2 border-b border-gray-100">
                                 <span class="text-gray-600">Username:</span>
-                                <span class="font-medium">{{ $pesertaDidik->user->username }}</span>
+                                <span class="font-medium">{{ $pesertaDidik->user->username ?? '-' }}</span>
                             </div>
                             <div class="flex justify-between py-2 border-b border-gray-100">
                                 <span class="text-gray-600">Status Akun:</span>
                                 <span class="font-medium">
-                                    @if ($pesertaDidik->user->is_active)
+                                    @if ($pesertaDidik->user && $pesertaDidik->user->is_active)
                                         <span
                                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                             Aktif
@@ -128,7 +140,13 @@
                             </div>
                             <div class="flex justify-between py-2 border-b border-gray-100">
                                 <span class="text-gray-600">Terdaftar:</span>
-                                <span class="font-medium">{{ $pesertaDidik->created_at->format('d F Y') }}</span>
+                                <span class="font-medium">
+                                    @if ($pesertaDidik->created_at)
+                                        {{ $pesertaDidik->created_at->format('d F Y') }}
+                                    @else
+                                        -
+                                    @endif
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -175,23 +193,21 @@
             </div>
         </div>
 
-        <!-- Assessment Data -->
-        @if ($pesertaDidik->penilaian->count())
+        <!-- TOPSIS Results -->
+        @if ($pesertaDidik->perhitunganTopsis->count())
             <div class="bg-white rounded-xl shadow-sm border border-gray-100">
                 <div class="px-6 py-4 border-b border-gray-200">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-lg font-semibold text-navy">Data Penilaian</h3>
-                        <a href="{{ route('admin.peserta-didik.penilaian.create', $pesertaDidik) }}"
-                            class="text-navy hover:text-navy-dark text-sm font-medium">
-                            + Tambah Penilaian Baru
-                        </a>
-                    </div>
+                    <h3 class="text-lg font-semibold text-navy">Hasil Perhitungan TOPSIS</h3>
                 </div>
 
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Tahun Ajaran</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Nilai Preferensi</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Rekomendasi</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -216,7 +232,11 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {{ $perhitungan->tanggal_perhitungan->format('d/m/Y H:i') }}
+                                        @if ($perhitungan->tanggal_perhitungan)
+                                            {{ $perhitungan->tanggal_perhitungan->format('d/m/Y H:i') }}
+                                        @else
+                                            -
+                                        @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <a href="{{ route('admin.perhitungan.detail', $pesertaDidik) }}"
@@ -229,77 +249,85 @@
                 </div>
             </div>
         @endif
-    </div>
 
-    <!-- TOPSIS Results -->
-    @if ($pesertaDidik->perhitunganTopsis->count())
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-navy">Hasil Perhitungan TOPSIS</h3>
-            </div>
+        <!-- Assessment Data -->
+        @if ($pesertaDidik->penilaian->count())
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-semibold text-navy">Data Penilaian</h3>
+                        <a href="{{ route('admin.peserta-didik.penilaian.create', $pesertaDidik) }}"
+                            class="text-navy hover:text-navy-dark text-sm font-medium">
+                            + Tambah Penilaian Baru
+                        </a>
+                    </div>
+                </div>
 
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Tahun Ajaran</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Nilai Preferensi</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Tahun Ajaran</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Rata-rata Nilai</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Tanggal Input</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @foreach ($pesertaDidik->penilaian as $penilaian)
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
                             <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    {{ $penilaian->tahun_ajaran }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ number_format($penilaian->rata_nilai_akademik, 1) }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    @if ($penilaian->sudah_dihitung)
-                                        <span
-                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            Sudah Dihitung
-                                        </span>
-                                    @else
-                                        <span
-                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                            Perlu Dihitung
-                                        </span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ $penilaian->created_at->format('d/m/Y') }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                    <a href="{{ route('admin.peserta-didik.penilaian.edit', [$pesertaDidik, $penilaian]) }}"
-                                        class="text-yellow-600 hover:text-yellow-900">Edit</a>
-                                    <form method="POST"
-                                        action="{{ route('admin.peserta-didik.penilaian.destroy', [$pesertaDidik, $penilaian]) }}"
-                                        class="inline" onsubmit="return confirm('Yakin ingin menghapus penilaian ini?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:text-red-900">Hapus</button>
-                                    </form>
-                                </td>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Tahun Ajaran</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Rata-rata Nilai</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Tanggal Input</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Aksi
+                                </th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach ($pesertaDidik->penilaian as $penilaian)
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        {{ $penilaian->tahun_ajaran }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ number_format($penilaian->rata_nilai_akademik, 1) }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        @if ($penilaian->sudah_dihitung)
+                                            <span
+                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                Sudah Dihitung
+                                            </span>
+                                        @else
+                                            <span
+                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                Perlu Dihitung
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        @if ($penilaian->created_at)
+                                            {{ $penilaian->created_at->format('d/m/Y') }}
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                                        <a href="{{ route('admin.peserta-didik.penilaian.edit', [$pesertaDidik, $penilaian]) }}"
+                                            class="text-yellow-600 hover:text-yellow-900">Edit</a>
+                                        <form method="POST"
+                                            action="{{ route('admin.peserta-didik.penilaian.destroy', [$pesertaDidik, $penilaian]) }}"
+                                            class="inline"
+                                            onsubmit="return confirm('Yakin ingin menghapus penilaian ini?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-red-600 hover:text-red-900">Hapus</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
-    @endif
+        @endif
+    </div>
 
 @endsection
