@@ -104,7 +104,9 @@
         <div class="flex items-center justify-center h-16 px-4 bg-gradient-to-r from-navy to-navy-dark">
             <div class="flex items-center space-x-3">
                 <div class="w-10 h-10 bg-gold rounded-xl flex items-center justify-center shadow-lg">
-                    <span class="text-navy font-bold text-lg">SP</span>
+                    <img src="/images/logo.png" alt="Logo SPK" class="w-6 h-6 object-contain"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <span class="text-navy font-bold text-lg" style="display: none;">SP</span>
                 </div>
                 <div class="text-white">
                     <h1 class="text-lg font-semibold">Admin Panel</h1>

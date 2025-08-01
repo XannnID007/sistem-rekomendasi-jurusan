@@ -9,8 +9,11 @@
         <!-- Profile Header -->
         <div class="bg-gradient-to-r from-navy to-navy-dark rounded-xl p-6 text-white">
             <div class="flex items-center space-x-6">
-                <div class="w-24 h-24 bg-gold rounded-full flex items-center justify-center">
-                    <span class="text-navy font-bold text-3xl">{{ substr($user->full_name, 0, 1) }}</span>
+                <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-lg">
+                    <img src="/images/logo.png" alt="Avatar" class="w-12 h-12 object-contain rounded-full"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <span class="text-navy font-bold text-3xl"
+                        style="display: none;">{{ substr($user->full_name, 0, 1) }}</span>
                 </div>
                 <div class="flex-1">
                     <h2 class="text-2xl font-bold mb-2">{{ $user->full_name }}</h2>
@@ -78,9 +81,16 @@
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-gray-500">Tanggal Lahir</label>
-                                <p class="text-gray-900 font-medium">{{ $pesertaDidik->tanggal_lahir->format('d F Y') }}
-                                </p>
-                                <p class="text-xs text-gray-500">Umur: {{ $pesertaDidik->umur }} tahun</p>
+                                @if ($pesertaDidik->tanggal_lahir)
+                                    <p class="text-gray-900 font-medium">
+                                        {{ \Carbon\Carbon::parse($pesertaDidik->tanggal_lahir)->format('d F Y') }}
+                                    </p>
+                                    <p class="text-xs text-gray-500">
+                                        Umur: {{ \Carbon\Carbon::parse($pesertaDidik->tanggal_lahir)->age }} tahun
+                                    </p>
+                                @else
+                                    <p class="text-gray-900 font-medium">-</p>
+                                @endif
                             </div>
                         </div>
 
@@ -141,7 +151,7 @@
                                 <p class="text-sm text-yellow-700 mb-3">
                                     Beberapa informasi masih kosong. Lengkapi profil untuk pengalaman yang lebih baik.
                                 </p>
-                                @if (count($profileCompletion['missing_fields']) > 0)
+                                @if (isset($profileCompletion['missing_fields']) && count($profileCompletion['missing_fields']) > 0)
                                     <div class="text-sm text-yellow-700">
                                         <strong>Field yang belum diisi:</strong>
                                         <ul class="list-disc list-inside mt-1">
@@ -173,18 +183,28 @@
                             <span class="text-sm text-gray-600">Status</span>
                             <span
                                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                {{ $accountActivity['account_status'] }}
+                                {{ $accountActivity['account_status'] ?? 'Aktif' }}
                             </span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-gray-600">Terdaftar</span>
-                            <span
-                                class="text-sm font-medium">{{ $accountActivity['account_created']->format('d/m/Y') }}</span>
+                            <span class="text-sm font-medium">
+                                @if (isset($accountActivity['account_created']))
+                                    {{ \Carbon\Carbon::parse($accountActivity['account_created'])->format('d/m/Y') }}
+                                @else
+                                    {{ $user->created_at ? $user->created_at->format('d/m/Y') : '-' }}
+                                @endif
+                            </span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-gray-600">Login Terakhir</span>
-                            <span
-                                class="text-sm font-medium">{{ $accountActivity['last_login']->format('d/m/Y H:i') }}</span>
+                            <span class="text-sm font-medium">
+                                @if (isset($accountActivity['last_login']))
+                                    {{ \Carbon\Carbon::parse($accountActivity['last_login'])->format('d/m/Y H:i') }}
+                                @else
+                                    {{ $user->updated_at ? $user->updated_at->format('d/m/Y H:i') : '-' }}
+                                @endif
+                            </span>
                         </div>
                     </div>
                 </div>
