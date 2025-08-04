@@ -1,5 +1,4 @@
 <?php
-// routes/web.php
 
 use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\AuthController;
@@ -82,6 +81,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/{laporan}', [LaporanController::class, 'show'])->name('show');
         Route::get('/{laporan}/download', [LaporanController::class, 'download'])->name('download');
         Route::delete('/{laporan}', [LaporanController::class, 'destroy'])->name('destroy');
+
+        // AJAX route for getting students
+        Route::get('/get-students', [LaporanController::class, 'getStudents'])->name('get-students');
 
         // Generate specific reports
         Route::post('/generate/individual', [LaporanController::class, 'generateIndividual'])->name('generate.individual');

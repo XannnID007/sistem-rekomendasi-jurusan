@@ -10,6 +10,7 @@ use App\Models\PesertaDidik;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Log;
 
 class LaporanController extends Controller
 {
@@ -39,7 +40,7 @@ class LaporanController extends Controller
         $laporan = $query->paginate(15);
 
         // Get filter options
-        $tahunAjaran = Laporan::distinct()->pluck('tahun_ajaran');
+        $tahunAjaran = Laporan::distinct()->pluck('tahun_ajaran')->filter();
         $jenisLaporan = ['individual', 'ringkasan', 'perbandingan'];
 
         return view('admin.laporan.index', compact('laporan', 'tahunAjaran', 'jenisLaporan'));
@@ -51,7 +52,7 @@ class LaporanController extends Controller
     public function create()
     {
         // Get available data for report generation
-        $tahunAjaran = PerhitunganTopsis::distinct()->pluck('tahun_ajaran');
+        $tahunAjaran = PerhitunganTopsis::distinct()->pluck('tahun_ajaran')->filter();
         $totalPesertaDidik = PesertaDidik::count();
         $totalPerhitungan = PerhitunganTopsis::count();
 
@@ -71,12 +72,15 @@ class LaporanController extends Controller
         ]);
 
         try {
+            // Ensure parameter is properly handled as JSON
+            $parameter = $validated['parameter'] ?? [];
+
             $laporan = Laporan::create([
                 'judul_laporan' => $validated['judul_laporan'],
                 'jenis_laporan' => $validated['jenis_laporan'],
                 'tahun_ajaran' => $validated['tahun_ajaran'],
                 'dibuat_oleh' => auth()->id(),
-                'parameter' => $validated['parameter'] ?? [],
+                'parameter' => json_encode($parameter), // Explicitly convert to JSON
             ]);
 
             // Generate PDF file immediately
@@ -86,6 +90,7 @@ class LaporanController extends Controller
                 ->route('admin.laporan.show', $laporan)
                 ->with('success', 'Laporan berhasil dibuat dan file PDF telah digenerate');
         } catch (\Exception $e) {
+            Log::error('Error creating laporan: ' . $e->getMessage());
             return back()
                 ->withInput()
                 ->with('error', 'Gagal membuat laporan: ' . $e->getMessage());
@@ -110,18 +115,24 @@ class LaporanController extends Controller
      */
     public function download(Laporan $laporan)
     {
-        // Generate file if not exists
-        if (!$laporan->file_path || !Storage::exists($laporan->file_path)) {
-            $this->generateReportFile($laporan);
+        try {
+            // Generate file if not exists
+            if (!$laporan->file_path || !Storage::exists($laporan->file_path)) {
+                $this->generateReportFile($laporan);
+                $laporan->refresh();
+            }
+
+            if (!$laporan->file_path || !Storage::exists($laporan->file_path)) {
+                return back()->with('error', 'File laporan tidak dapat digenerate');
+            }
+
+            $filename = str_replace(['/', ' '], ['_', '_'], $laporan->judul_laporan) . '_' . now()->format('Y-m-d') . '.pdf';
+
+            return Storage::download($laporan->file_path, $filename);
+        } catch (\Exception $e) {
+            Log::error('Error downloading laporan: ' . $e->getMessage());
+            return back()->with('error', 'Gagal mengunduh laporan: ' . $e->getMessage());
         }
-
-        if (!$laporan->file_path || !Storage::exists($laporan->file_path)) {
-            return back()->with('error', 'File laporan tidak ditemukan');
-        }
-
-        $filename = $laporan->judul_laporan . '_' . now()->format('Y-m-d') . '.pdf';
-
-        return Storage::download($laporan->file_path, $filename);
     }
 
     /**
@@ -141,6 +152,7 @@ class LaporanController extends Controller
                 ->route('admin.laporan.index')
                 ->with('success', 'Laporan berhasil dihapus');
         } catch (\Exception $e) {
+            Log::error('Error deleting laporan: ' . $e->getMessage());
             return back()
                 ->with('error', 'Gagal menghapus laporan: ' . $e->getMessage());
         }
@@ -155,6 +167,10 @@ class LaporanController extends Controller
             'tahun_ajaran' => 'required|string',
             'peserta_didik_ids' => 'required|array|min:1',
             'peserta_didik_ids.*' => 'exists:peserta_didik,peserta_didik_id'
+        ], [
+            'tahun_ajaran.required' => 'Tahun ajaran wajib dipilih',
+            'peserta_didik_ids.required' => 'Pilih minimal satu peserta didik',
+            'peserta_didik_ids.min' => 'Pilih minimal satu peserta didik',
         ]);
 
         try {
@@ -165,9 +181,9 @@ class LaporanController extends Controller
                 'jenis_laporan' => 'individual',
                 'tahun_ajaran' => $validated['tahun_ajaran'],
                 'dibuat_oleh' => auth()->id(),
-                'parameter' => [
+                'parameter' => json_encode([
                     'peserta_didik_ids' => $validated['peserta_didik_ids']
-                ],
+                ]),
             ]);
 
             // Generate PDF file
@@ -175,8 +191,9 @@ class LaporanController extends Controller
 
             return redirect()
                 ->route('admin.laporan.show', $laporan)
-                ->with('success', 'Laporan individual berhasil dibuat dan file PDF telah digenerate');
+                ->with('success', 'Laporan individual berhasil dibuat');
         } catch (\Exception $e) {
+            Log::error('Error generating individual report: ' . $e->getMessage());
             return back()
                 ->withInput()
                 ->with('error', 'Gagal membuat laporan: ' . $e->getMessage());
@@ -192,6 +209,8 @@ class LaporanController extends Controller
             'tahun_ajaran' => 'required|string',
             'include_charts' => 'boolean',
             'include_statistics' => 'boolean'
+        ], [
+            'tahun_ajaran.required' => 'Tahun ajaran wajib dipilih',
         ]);
 
         try {
@@ -202,10 +221,10 @@ class LaporanController extends Controller
                 'jenis_laporan' => 'ringkasan',
                 'tahun_ajaran' => $validated['tahun_ajaran'],
                 'dibuat_oleh' => auth()->id(),
-                'parameter' => [
+                'parameter' => json_encode([
                     'include_charts' => $validated['include_charts'] ?? false,
                     'include_statistics' => $validated['include_statistics'] ?? true
-                ],
+                ]),
             ]);
 
             // Generate PDF file
@@ -213,8 +232,9 @@ class LaporanController extends Controller
 
             return redirect()
                 ->route('admin.laporan.show', $laporan)
-                ->with('success', 'Laporan ringkasan berhasil dibuat dan file PDF telah digenerate');
+                ->with('success', 'Laporan ringkasan berhasil dibuat');
         } catch (\Exception $e) {
+            Log::error('Error generating summary report: ' . $e->getMessage());
             return back()
                 ->withInput()
                 ->with('error', 'Gagal membuat laporan: ' . $e->getMessage());
@@ -230,6 +250,10 @@ class LaporanController extends Controller
             'tahun_ajaran' => 'required|array|min:2',
             'tahun_ajaran.*' => 'string',
             'comparison_criteria' => 'required|array|min:1'
+        ], [
+            'tahun_ajaran.required' => 'Pilih minimal 2 tahun ajaran',
+            'tahun_ajaran.min' => 'Pilih minimal 2 tahun ajaran untuk dibandingkan',
+            'comparison_criteria.required' => 'Pilih minimal satu kriteria perbandingan',
         ]);
 
         try {
@@ -240,10 +264,10 @@ class LaporanController extends Controller
                 'jenis_laporan' => 'perbandingan',
                 'tahun_ajaran' => implode(',', $validated['tahun_ajaran']),
                 'dibuat_oleh' => auth()->id(),
-                'parameter' => [
+                'parameter' => json_encode([
                     'tahun_ajaran' => $validated['tahun_ajaran'],
                     'comparison_criteria' => $validated['comparison_criteria']
-                ],
+                ]),
             ]);
 
             // Generate PDF file
@@ -251,8 +275,9 @@ class LaporanController extends Controller
 
             return redirect()
                 ->route('admin.laporan.show', $laporan)
-                ->with('success', 'Laporan perbandingan berhasil dibuat dan file PDF telah digenerate');
+                ->with('success', 'Laporan perbandingan berhasil dibuat');
         } catch (\Exception $e) {
+            Log::error('Error generating comparison report: ' . $e->getMessage());
             return back()
                 ->withInput()
                 ->with('error', 'Gagal membuat laporan: ' . $e->getMessage());
@@ -270,23 +295,28 @@ class LaporanController extends Controller
             return response()->json(['students' => []]);
         }
 
-        $students = PesertaDidik::where('tahun_ajaran', $tahunAjaran)
-            ->whereHas('perhitunganTopsis')
-            ->with(['perhitunganTerbaru'])
-            ->orderBy('nama_lengkap')
-            ->get()
-            ->map(function ($student) {
-                return [
-                    'id' => $student->peserta_didik_id,
-                    'nama' => $student->nama_lengkap,
-                    'nisn' => $student->nisn,
-                    'rekomendasi' => $student->perhitunganTerbaru->jurusan_rekomendasi ?? '-',
-                    'nilai_preferensi' => $student->perhitunganTerbaru ?
-                        number_format($student->perhitunganTerbaru->nilai_preferensi, 4) : '-'
-                ];
-            });
+        try {
+            $students = PesertaDidik::where('tahun_ajaran', $tahunAjaran)
+                ->whereHas('perhitunganTopsis')
+                ->with(['perhitunganTerbaru'])
+                ->orderBy('nama_lengkap')
+                ->get()
+                ->map(function ($student) {
+                    return [
+                        'id' => $student->peserta_didik_id,
+                        'nama' => $student->nama_lengkap,
+                        'nisn' => $student->nisn,
+                        'rekomendasi' => $student->perhitunganTerbaru->jurusan_rekomendasi ?? '-',
+                        'nilai_preferensi' => $student->perhitunganTerbaru ?
+                            number_format($student->perhitunganTerbaru->nilai_preferensi, 4) : '-'
+                    ];
+                });
 
-        return response()->json(['students' => $students]);
+            return response()->json(['students' => $students]);
+        } catch (\Exception $e) {
+            Log::error('Error getting students: ' . $e->getMessage());
+            return response()->json(['students' => [], 'error' => 'Gagal memuat data siswa']);
+        }
     }
 
     /**
@@ -311,7 +341,12 @@ class LaporanController extends Controller
      */
     private function getIndividualReportData(Laporan $laporan)
     {
-        $pesertaDidikIds = $laporan->parameter['peserta_didik_ids'] ?? [];
+        // Decode parameter from JSON
+        $parameter = is_string($laporan->parameter) ?
+            json_decode($laporan->parameter, true) :
+            $laporan->parameter;
+
+        $pesertaDidikIds = $parameter['peserta_didik_ids'] ?? [];
 
         if (empty($pesertaDidikIds)) {
             return [
@@ -382,7 +417,12 @@ class LaporanController extends Controller
      */
     private function getComparisonReportData(Laporan $laporan)
     {
-        $tahunAjaran = $laporan->parameter['tahun_ajaran'] ?? [];
+        // Decode parameter from JSON
+        $parameter = is_string($laporan->parameter) ?
+            json_decode($laporan->parameter, true) :
+            $laporan->parameter;
+
+        $tahunAjaran = $parameter['tahun_ajaran'] ?? [];
         $comparison = [];
 
         foreach ($tahunAjaran as $tahun) {
@@ -423,9 +463,21 @@ class LaporanController extends Controller
             // Set paper and orientation
             $pdf->setPaper('A4', 'portrait');
 
+            // Set options for better rendering
+            $pdf->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isPhpEnabled' => true,
+                'defaultFont' => 'Arial'
+            ]);
+
             // Generate filename
             $filename = 'laporan_' . $laporan->laporan_id . '_' . time() . '.pdf';
             $filepath = 'reports/' . $filename;
+
+            // Ensure directory exists
+            if (!Storage::exists('reports')) {
+                Storage::makeDirectory('reports');
+            }
 
             // Save PDF to storage
             Storage::put($filepath, $pdf->output());
@@ -435,6 +487,7 @@ class LaporanController extends Controller
 
             return $filepath;
         } catch (\Exception $e) {
+            Log::error('PDF Generation Error: ' . $e->getMessage());
             throw new \Exception('Gagal generate PDF: ' . $e->getMessage());
         }
     }

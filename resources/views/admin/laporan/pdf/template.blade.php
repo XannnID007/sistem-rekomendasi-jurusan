@@ -6,13 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $laporan->judul_laporan }}</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: Arial, sans-serif;
             font-size: 12px;
             line-height: 1.4;
             color: #333;
-            margin: 0;
-            padding: 20px;
+            margin: 20px;
         }
 
         .header {
@@ -54,42 +59,44 @@
         }
 
         .info-grid {
-            display: table;
             width: 100%;
         }
 
         .info-row {
-            display: table-row;
-        }
-
-        .info-label,
-        .info-value {
-            display: table-cell;
-            padding: 3px 10px 3px 0;
+            margin-bottom: 5px;
         }
 
         .info-label {
             font-weight: bold;
+            display: inline-block;
             width: 150px;
         }
 
+        .info-value {
+            display: inline-block;
+        }
+
         .stats-grid {
-            display: table;
             width: 100%;
             margin-bottom: 20px;
         }
 
         .stats-row {
-            display: table-row;
+            display: flex;
+            justify-content: space-between;
         }
 
         .stats-item {
-            display: table-cell;
             text-align: center;
             padding: 15px;
             background: #f1f5f9;
             border: 1px solid #e2e8f0;
-            width: 25%;
+            width: 24%;
+            margin-right: 1%;
+        }
+
+        .stats-item:last-child {
+            margin-right: 0;
         }
 
         .stats-number {
@@ -161,6 +168,18 @@
             margin-bottom: 15px;
         }
 
+        .section h4 {
+            color: #1e3a8a;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+
+        .section h5 {
+            color: #1e3a8a;
+            margin-bottom: 8px;
+            font-size: 11px;
+        }
+
         .footer {
             position: fixed;
             bottom: 20px;
@@ -179,6 +198,22 @@
             color: #666;
             font-style: italic;
         }
+
+        .flex {
+            display: flex;
+        }
+
+        .justify-between {
+            justify-content: space-between;
+        }
+
+        .mb-4 {
+            margin-bottom: 16px;
+        }
+
+        .mt-4 {
+            margin-top: 16px;
+        }
     </style>
 </head>
 
@@ -196,40 +231,44 @@
         <h3>Informasi Laporan</h3>
         <div class="info-grid">
             <div class="info-row">
-                <div class="info-label">Judul Laporan:</div>
-                <div class="info-value">{{ $laporan->judul_laporan }}</div>
+                <span class="info-label">Judul Laporan:</span>
+                <span class="info-value">{{ $laporan->judul_laporan }}</span>
             </div>
             <div class="info-row">
-                <div class="info-label">Jenis Laporan:</div>
-                <div class="info-value">{{ $laporan->jenis_laporan_indonesia }}</div>
+                <span class="info-label">Jenis Laporan:</span>
+                <span class="info-value">{{ $laporan->jenis_laporan_indonesia }}</span>
             </div>
             <div class="info-row">
-                <div class="info-label">Tahun Ajaran:</div>
-                <div class="info-value">{{ $laporan->tahun_ajaran }}</div>
+                <span class="info-label">Tahun Ajaran:</span>
+                <span class="info-value">{{ $laporan->tahun_ajaran }}</span>
             </div>
             <div class="info-row">
-                <div class="info-label">Dibuat Oleh:</div>
-                <div class="info-value">{{ $laporan->pembuatLaporan->full_name }}</div>
+                <span class="info-label">Dibuat Oleh:</span>
+                <span class="info-value">{{ $laporan->pembuatLaporan->full_name ?? 'Administrator' }}</span>
             </div>
             <div class="info-row">
-                <div class="info-label">Tanggal Dibuat:</div>
-                <div class="info-value">{{ $laporan->created_at->format('d F Y, H:i') }} WIB</div>
+                <span class="info-label">Tanggal Dibuat:</span>
+                <span class="info-value">{{ $laporan->created_at->format('d F Y, H:i') }} WIB</span>
             </div>
         </div>
     </div>
 
+    <!-- Report Content Based on Type -->
     @if ($laporan->jenis_laporan === 'individual')
         @include('admin.laporan.pdf.individual', ['data' => $reportData])
     @elseif($laporan->jenis_laporan === 'ringkasan')
         @include('admin.laporan.pdf.summary', ['data' => $reportData])
     @elseif($laporan->jenis_laporan === 'perbandingan')
         @include('admin.laporan.pdf.comparison', ['data' => $reportData])
+    @else
+        <div class="no-data">
+            <p>Jenis laporan tidak dikenali: {{ $laporan->jenis_laporan }}</p>
+        </div>
     @endif
 
     <!-- Footer -->
     <div class="footer">
         <p>Digenerate pada: {{ now()->format('d F Y, H:i') }} WIB</p>
-        <p>Halaman {PAGE_NUM} dari {PAGE_COUNT}</p>
     </div>
 </body>
 
