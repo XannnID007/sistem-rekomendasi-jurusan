@@ -159,7 +159,11 @@
                                 <p class="font-medium text-gray-900">{{ $calculation->pesertaDidik->nama_lengkap }}</p>
                                 <p class="text-sm text-gray-600">NISN: {{ $calculation->pesertaDidik->nisn }}</p>
                                 <p class="text-xs text-gray-500 mt-1">
-                                    {{ $calculation->tanggal_perhitungan->format('d M Y, H:i') }}
+                                    @if (isset($calculation->tanggal_perhitungan_safe))
+                                        {{ $calculation->tanggal_perhitungan_safe->format('d M Y, H:i') }}
+                                    @else
+                                        {{ $calculation->created_at->format('d M Y, H:i') }}
+                                    @endif
                                 </p>
                             </div>
                             <div class="text-right">

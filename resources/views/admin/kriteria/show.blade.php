@@ -188,27 +188,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Action Buttons -->
-        <div class="flex flex-col sm:flex-row gap-4">
-            <a href="{{ route('admin.kriteria.edit', $kriteria) }}"
-                class="flex-1 bg-navy text-white px-6 py-3 rounded-lg hover:bg-navy-dark transition duration-200 text-center font-medium">
-                Edit Kriteria
-            </a>
-            <a href="{{ route('admin.kriteria.index') }}"
-                class="flex-1 bg-white border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition duration-200 text-center font-medium">
-                Kembali ke Daftar
-            </a>
-            <form method="POST" action="{{ route('admin.kriteria.destroy', $kriteria) }}" class="flex-1"
-                onsubmit="return confirm('Yakin ingin menghapus kriteria ini? Tindakan ini tidak dapat dibatalkan.')">
-                @csrf
-                @method('DELETE')
-                <button type="submit"
-                    class="w-full bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition duration-200 font-medium">
-                    Hapus Kriteria
-                </button>
-            </form>
-        </div>
     </div>
 
 @endsection

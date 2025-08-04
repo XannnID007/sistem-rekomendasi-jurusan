@@ -162,183 +162,132 @@
             </form>
         </div>
 
-        <!-- Main Content Area with Two Columns -->
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <!-- Left Column: Data Table -->
-            <div class="lg:col-span-3">
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Ranking
-                                    </th>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Peserta Didik
-                                    </th>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Nilai Preferensi
-                                    </th>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Rekomendasi
-                                    </th>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Tanggal
-                                    </th>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Aksi
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                @forelse($rekomendasi as $index => $rec)
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="w-8 h-8 bg-navy rounded-full flex items-center justify-center">
-                                                <span
-                                                    class="text-white font-bold text-sm">{{ $rekomendasi->firstItem() + $index }}</span>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="flex items-center">
-                                                <div
-                                                    class="w-10 h-10 bg-gold rounded-full flex items-center justify-center">
-                                                    <span
-                                                        class="text-navy font-bold text-sm">{{ substr($rec->pesertaDidik->nama_lengkap, 0, 1) }}</span>
-                                                </div>
-                                                <div class="ml-4">
-                                                    <div class="text-sm font-medium text-gray-900">
-                                                        {{ $rec->pesertaDidik->nama_lengkap }}</div>
-                                                    <div class="text-sm text-gray-500">NISN:
-                                                        {{ $rec->pesertaDidik->nisn }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900">
-                                                {{ number_format($rec->nilai_preferensi, 4) }}</div>
-                                            <div class="text-xs text-gray-500">
-                                                {{ number_format($rec->nilai_preferensi * 100, 2) }}%
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Ranking
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Peserta Didik
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Nilai Preferensi
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Rekomendasi
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Tanggal
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Aksi
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @forelse($rekomendasi as $index => $rec)
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="w-8 h-8 bg-navy rounded-full flex items-center justify-center">
+                                        <span
+                                            class="text-white font-bold text-sm">{{ $rekomendasi->firstItem() + $index }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 bg-gold rounded-full flex items-center justify-center">
                                             <span
-                                                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{ $rec->jurusan_rekomendasi === 'TKJ' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
-                                                {{ $rec->rekomendasi_lengkap }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            @if ($rec->tanggal_perhitungan)
-                                                {{ \Carbon\Carbon::parse($rec->tanggal_perhitungan)->format('d/m/Y H:i') }}
-                                            @else
-                                                <span class="text-gray-400">-</span>
-                                            @endif
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                            <a href="{{ route('admin.rekomendasi.detail', $rec) }}"
-                                                class="text-navy hover:text-navy-dark" title="Lihat Detail">
-                                                <svg class="w-4 h-4 inline" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                </svg>
-                                            </a>
-                                            <a href="{{ route('admin.perhitungan.detail', $rec->pesertaDidik) }}"
-                                                class="text-purple-600 hover:text-purple-900" title="Detail Perhitungan">
-                                                <svg class="w-4 h-4 inline" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                                </svg>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="6" class="px-6 py-8 text-center">
-                                            <div class="flex flex-col items-center">
-                                                <svg class="w-12 h-12 text-gray-400 mb-4" fill="none"
-                                                    stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 00-2 2h-2a2 2 0 01-2-2z" />
-                                                </svg>
-                                                <p class="text-gray-500 text-lg">Belum ada hasil rekomendasi</p>
-                                                <p class="text-gray-400 text-sm mt-1">Lakukan perhitungan TOPSIS terlebih
-                                                    dahulu</p>
-                                                <a href="{{ route('admin.perhitungan.create') }}"
-                                                    class="mt-4 inline-flex items-center px-4 py-2 bg-navy text-white rounded-lg hover:bg-navy-dark transition duration-200">
-                                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                                    </svg>
-                                                    Hitung TOPSIS
-                                                </a>
+                                                class="text-navy font-bold text-sm">{{ substr($rec->pesertaDidik->nama_lengkap, 0, 1) }}</span>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">
+                                                {{ $rec->pesertaDidik->nama_lengkap }}</div>
+                                            <div class="text-sm text-gray-500">NISN:
+                                                {{ $rec->pesertaDidik->nisn }}
                                             </div>
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Pagination -->
-                    @if ($rekomendasi->hasPages())
-                        <div class="px-6 py-4 border-t border-gray-200">
-                            {{ $rekomendasi->links() }}
-                        </div>
-                    @endif
-                </div>
-            </div>
-
-            <!-- Right Column: Top Performers & Export -->
-            <div class="lg:col-span-1 space-y-6">
-                <!-- Top Performers -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                    <h3 class="text-lg font-semibold text-navy mb-4">Top 5 Performers</h3>
-                    <div class="space-y-3">
-                        @forelse($topPerformers as $index => $performer)
-                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-8 h-8 bg-gold rounded-full flex items-center justify-center">
-                                        <span class="text-navy font-bold text-sm">{{ $index + 1 }}</span>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p class="font-medium text-gray-900 text-sm">
-                                            {{ Str::limit($performer->pesertaDidik->nama_lengkap, 15) }}</p>
-                                        <p class="text-xs text-gray-500">{{ $performer->pesertaDidik->nisn }}</p>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ number_format($rec->nilai_preferensi, 4) }}</div>
+                                    <div class="text-xs text-gray-500">
+                                        {{ number_format($rec->nilai_preferensi * 100, 2) }}%
                                     </div>
-                                </div>
-                                <div class="text-right">
-                                    <div class="flex flex-col items-end space-y-1">
-                                        <span
-                                            class="text-sm font-bold text-navy">{{ number_format($performer->nilai_preferensi, 3) }}</span>
-                                        <span
-                                            class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $performer->jurusan_rekomendasi === 'TKJ' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
-                                            {{ $performer->jurusan_rekomendasi }}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span
+                                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{ $rec->jurusan_rekomendasi === 'TKJ' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
+                                        {{ $rec->rekomendasi_lengkap }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    @if ($rec->tanggal_perhitungan)
+                                        {{ \Carbon\Carbon::parse($rec->tanggal_perhitungan)->format('d/m/Y H:i') }}
+                                    @else
+                                        <span class="text-gray-400">-</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                                    <a href="{{ route('admin.rekomendasi.detail', $rec) }}"
+                                        class="text-navy hover:text-navy-dark" title="Lihat Detail">
+                                        <svg class="w-4 h-4 inline" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                    </a>
+                                    <a href="{{ route('admin.perhitungan.detail', $rec->pesertaDidik) }}"
+                                        class="text-purple-600 hover:text-purple-900" title="Detail Perhitungan">
+                                        <svg class="w-4 h-4 inline" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                        </svg>
+                                    </a>
+                                </td>
+                            </tr>
                         @empty
-                            <div class="text-center py-4">
-                                <p class="text-gray-500 text-sm">Belum ada data</p>
-                            </div>
+                            <tr>
+                                <td colspan="6" class="px-6 py-8 text-center">
+                                    <div class="flex flex-col items-center">
+                                        <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 00-2 2h-2a2 2 0 01-2-2z" />
+                                        </svg>
+                                        <p class="text-gray-500 text-lg">Belum ada hasil rekomendasi</p>
+                                        <p class="text-gray-400 text-sm mt-1">Lakukan perhitungan TOPSIS terlebih
+                                            dahulu</p>
+                                        <a href="{{ route('admin.perhitungan.create') }}"
+                                            class="mt-4 inline-flex items-center px-4 py-2 bg-navy text-white rounded-lg hover:bg-navy-dark transition duration-200">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                            </svg>
+                                            Hitung TOPSIS
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
                         @endforelse
-                    </div>
-                </div>
+                    </tbody>
+                </table>
             </div>
+
+            <!-- Pagination -->
+            @if ($rekomendasi->hasPages())
+                <div class="px-6 py-4 border-t border-gray-200">
+                    {{ $rekomendasi->links() }}
+                </div>
+            @endif
         </div>
     </div>
 

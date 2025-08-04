@@ -3,14 +3,15 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\PesertaDidik;
-use App\Models\PenilaianPesertaDidik;
-use App\Models\PerhitunganTopsis;
-use App\Services\TopsisCalculationService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Exception;
+use App\Models\Kriteria;
+use App\Models\PesertaDidik;
+use Illuminate\Http\Request;
+use App\Models\PerhitunganTopsis;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use App\Models\PenilaianPesertaDidik;
+use App\Services\TopsisCalculationService;
 
 class PerhitunganController extends Controller
 {
@@ -281,17 +282,40 @@ class PerhitunganController extends Controller
                 ->with('error', 'Belum ada perhitungan untuk peserta didik ini');
         }
 
+        // Get the calculation data
+        $perhitungan = $pesertaDidik->perhitunganTerbaru;
+        $perhitungan->load('penilaian');
+
         // Get all data for matrix display
         $allPenilaian = PenilaianPesertaDidik::with('pesertaDidik')
-            ->where('tahun_ajaran', $pesertaDidik->perhitunganTerbaru->tahun_ajaran)
+            ->where('tahun_ajaran', $perhitungan->tahun_ajaran)
             ->readyForCalculation()
             ->get();
 
         $allPerhitungan = PerhitunganTopsis::with('pesertaDidik')
-            ->where('tahun_ajaran', $pesertaDidik->perhitunganTerbaru->tahun_ajaran)
+            ->where('tahun_ajaran', $perhitungan->tahun_ajaran)
             ->get();
 
-        return view('admin.perhitungan.detail', compact('pesertaDidik', 'allPenilaian', 'allPerhitungan'));
+        // Get criteria for detailed steps
+        $kriteria = Kriteria::active()->orderBy('kode_kriteria')->get();
+
+        // Calculate ranking
+        $ranking = PerhitunganTopsis::where('tahun_ajaran', $perhitungan->tahun_ajaran)
+            ->where('nilai_preferensi', '>', $perhitungan->nilai_preferensi)
+            ->count() + 1;
+
+        $totalStudents = PerhitunganTopsis::where('tahun_ajaran', $perhitungan->tahun_ajaran)
+            ->count();
+
+        return view('admin.perhitungan.detail', compact(
+            'pesertaDidik',
+            'perhitungan',
+            'allPenilaian',
+            'allPerhitungan',
+            'kriteria',
+            'ranking',
+            'totalStudents'
+        ));
     }
 
     /**

@@ -1,9 +1,11 @@
 <?php
+// app/Models/PerhitunganTopsis.php
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class PerhitunganTopsis extends Model
 {
@@ -107,6 +109,26 @@ class PerhitunganTopsis extends Model
     public function penilaian()
     {
         return $this->belongsTo(PenilaianPesertaDidik::class, 'penilaian_id', 'penilaian_id');
+    }
+
+    /**
+     * Get tanggal perhitungan with safe formatting
+     */
+    public function getTanggalPerhitunganFormatted()
+    {
+        if (!$this->tanggal_perhitungan) {
+            return null;
+        }
+        
+        try {
+            if ($this->tanggal_perhitungan instanceof Carbon) {
+                return $this->tanggal_perhitungan;
+            }
+            
+            return Carbon::parse($this->tanggal_perhitungan);
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     /**

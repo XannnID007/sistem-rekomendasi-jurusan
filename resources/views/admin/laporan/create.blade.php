@@ -44,7 +44,7 @@
                         <p class="text-sm text-gray-500">Overview keseluruhan</p>
                     </div>
                 </div>
-                <p class="text-gray-600 mb-4">Generate ringkasan statistik dan analisis untuk semua siswa dalam periode
+                <p class="text-gray-600 mb-4">Generate ringkasan statistik untuk semua siswa dalam periode
                     tertentu.</p>
                 <button onclick="openModal('summary')"
                     class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-200">

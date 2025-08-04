@@ -38,15 +38,32 @@ class DashboardController extends Controller
         $tkrCount = PerhitunganTopsis::where('tahun_ajaran', $currentYear)
             ->where('jurusan_rekomendasi', 'TKR')->count();
 
-        // Get recent calculations
+        // Get recent calculations with safe date handling
         $recentCalculations = PerhitunganTopsis::with('pesertaDidik')
             ->where('tahun_ajaran', $currentYear)
-            ->orderBy('tanggal_perhitungan', 'desc')
+            ->orderBy('created_at', 'desc')
             ->limit(5)
-            ->get();
+            ->get()
+            ->map(function ($calculation) {
+                // Ensure tanggal_perhitungan is properly formatted
+                $tanggalPerhitungan = $calculation->getTanggalPerhitunganFormatted();
+                $calculation->tanggal_perhitungan_safe = $tanggalPerhitungan ?: $calculation->created_at;
+                return $calculation;
+            });
 
         // Get calculation statistics
-        $statistics = $this->topsisService->getCalculationStatistics($currentYear);
+        try {
+            $statistics = $this->topsisService->getCalculationStatistics($currentYear);
+        } catch (\Exception $e) {
+            $statistics = [
+                'total_calculations' => $totalPerhitungan,
+                'tkj_recommendations' => $tkjCount,
+                'tkr_recommendations' => $tkrCount,
+                'average_preference_score' => 0,
+                'highest_preference_score' => 0,
+                'lowest_preference_score' => 0,
+            ];
+        }
 
         // Get monthly calculation trend (dummy data for now)
         $monthlyTrend = [

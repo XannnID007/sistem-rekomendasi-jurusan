@@ -212,11 +212,16 @@
                                         {{ $calc->rekomendasi_lengkap }}
                                     </span>
                                 </td>
-                                @if ($calc->tanggal_perhitungan)
-                                    {{ \Carbon\Carbon::parse($calc->tanggal_perhitungan)->format('d/m/Y H:i') }}
-                                @else
-                                    <span class="text-gray-400">-</span>
-                                @endif
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    @php
+                                        $tanggalFormatted = $calc->getTanggalPerhitunganFormatted();
+                                    @endphp
+                                    @if ($tanggalFormatted)
+                                        {{ $tanggalFormatted->format('d/m/Y H:i') }}
+                                    @else
+                                        {{ $calc->created_at->format('d/m/Y H:i') }}
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                     <a href="{{ route('admin.perhitungan.show', $calc) }}"
                                         class="text-navy hover:text-navy-dark" title="Lihat Detail">
@@ -287,36 +292,6 @@
                 </div>
             @endif
         </div>
-
-        <!-- Bulk Actions -->
-        @if ($perhitungan->count() > 0)
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <h3 class="text-lg font-semibold text-navy mb-4">Aksi Massal</h3>
-                <div class="flex flex-col sm:flex-row gap-4">
-                    <form method="POST" action="{{ route('admin.perhitungan.calculate-all') }}" class="inline"
-                        onsubmit="return confirm('Yakin ingin menghitung ulang semua data TOPSIS?')">
-                        @csrf
-                        <button type="submit"
-                            class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-200">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
-                            Hitung Ulang Semua
-                        </button>
-                    </form>
-
-                    <a href="{{ route('admin.rekomendasi.export') }}"
-                        class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        Export Data
-                    </a>
-                </div>
-            </div>
-        @endif
     </div>
 
     @push('scripts')
