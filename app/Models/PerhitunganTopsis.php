@@ -88,6 +88,8 @@ class PerhitunganTopsis extends Model
             'jarak_negatif' => 'decimal:8',
             'nilai_preferensi' => 'decimal:8',
             'tanggal_perhitungan' => 'datetime',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
         ];
     }
 

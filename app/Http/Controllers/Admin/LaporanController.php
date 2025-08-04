@@ -9,6 +9,7 @@ use App\Models\PerhitunganTopsis;
 use App\Models\PesertaDidik;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class LaporanController extends Controller
 {
@@ -78,9 +79,12 @@ class LaporanController extends Controller
                 'parameter' => $validated['parameter'] ?? [],
             ]);
 
+            // Generate PDF file immediately
+            $this->generateReportFile($laporan);
+
             return redirect()
                 ->route('admin.laporan.show', $laporan)
-                ->with('success', 'Laporan berhasil dibuat');
+                ->with('success', 'Laporan berhasil dibuat dan file PDF telah digenerate');
         } catch (\Exception $e) {
             return back()
                 ->withInput()
@@ -106,12 +110,18 @@ class LaporanController extends Controller
      */
     public function download(Laporan $laporan)
     {
-        if (!$laporan->fileExists()) {
-            // Generate file if not exists
+        // Generate file if not exists
+        if (!$laporan->file_path || !Storage::exists($laporan->file_path)) {
             $this->generateReportFile($laporan);
         }
 
-        return Storage::download($laporan->file_path, $laporan->judul_laporan . '.pdf');
+        if (!$laporan->file_path || !Storage::exists($laporan->file_path)) {
+            return back()->with('error', 'File laporan tidak ditemukan');
+        }
+
+        $filename = $laporan->judul_laporan . '_' . now()->format('Y-m-d') . '.pdf';
+
+        return Storage::download($laporan->file_path, $filename);
     }
 
     /**
@@ -160,12 +170,12 @@ class LaporanController extends Controller
                 ],
             ]);
 
-            // Generate file
+            // Generate PDF file
             $this->generateReportFile($laporan);
 
             return redirect()
                 ->route('admin.laporan.show', $laporan)
-                ->with('success', 'Laporan individual berhasil dibuat');
+                ->with('success', 'Laporan individual berhasil dibuat dan file PDF telah digenerate');
         } catch (\Exception $e) {
             return back()
                 ->withInput()
@@ -198,12 +208,12 @@ class LaporanController extends Controller
                 ],
             ]);
 
-            // Generate file
+            // Generate PDF file
             $this->generateReportFile($laporan);
 
             return redirect()
                 ->route('admin.laporan.show', $laporan)
-                ->with('success', 'Laporan ringkasan berhasil dibuat');
+                ->with('success', 'Laporan ringkasan berhasil dibuat dan file PDF telah digenerate');
         } catch (\Exception $e) {
             return back()
                 ->withInput()
@@ -236,17 +246,47 @@ class LaporanController extends Controller
                 ],
             ]);
 
-            // Generate file
+            // Generate PDF file
             $this->generateReportFile($laporan);
 
             return redirect()
                 ->route('admin.laporan.show', $laporan)
-                ->with('success', 'Laporan perbandingan berhasil dibuat');
+                ->with('success', 'Laporan perbandingan berhasil dibuat dan file PDF telah digenerate');
         } catch (\Exception $e) {
             return back()
                 ->withInput()
                 ->with('error', 'Gagal membuat laporan: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Get students data for AJAX
+     */
+    public function getStudents(Request $request)
+    {
+        $tahunAjaran = $request->get('tahun_ajaran');
+
+        if (!$tahunAjaran) {
+            return response()->json(['students' => []]);
+        }
+
+        $students = PesertaDidik::where('tahun_ajaran', $tahunAjaran)
+            ->whereHas('perhitunganTopsis')
+            ->with(['perhitunganTerbaru'])
+            ->orderBy('nama_lengkap')
+            ->get()
+            ->map(function ($student) {
+                return [
+                    'id' => $student->peserta_didik_id,
+                    'nama' => $student->nama_lengkap,
+                    'nisn' => $student->nisn,
+                    'rekomendasi' => $student->perhitunganTerbaru->jurusan_rekomendasi ?? '-',
+                    'nilai_preferensi' => $student->perhitunganTerbaru ?
+                        number_format($student->perhitunganTerbaru->nilai_preferensi, 4) : '-'
+                ];
+            });
+
+        return response()->json(['students' => $students]);
     }
 
     /**
@@ -273,6 +313,16 @@ class LaporanController extends Controller
     {
         $pesertaDidikIds = $laporan->parameter['peserta_didik_ids'] ?? [];
 
+        if (empty($pesertaDidikIds)) {
+            return [
+                'perhitungan' => collect(),
+                'total_siswa' => 0,
+                'rata_preferensi' => 0,
+                'tkj_count' => 0,
+                'tkr_count' => 0,
+            ];
+        }
+
         $data = PerhitunganTopsis::with(['pesertaDidik', 'penilaian'])
             ->whereIn('peserta_didik_id', $pesertaDidikIds)
             ->where('tahun_ajaran', $laporan->tahun_ajaran)
@@ -282,7 +332,7 @@ class LaporanController extends Controller
         return [
             'perhitungan' => $data,
             'total_siswa' => $data->count(),
-            'rata_preferensi' => $data->avg('nilai_preferensi'),
+            'rata_preferensi' => $data->avg('nilai_preferensi') ?? 0,
             'tkj_count' => $data->where('jurusan_rekomendasi', 'TKJ')->count(),
             'tkr_count' => $data->where('jurusan_rekomendasi', 'TKR')->count(),
         ];
@@ -296,6 +346,20 @@ class LaporanController extends Controller
         $data = PerhitunganTopsis::with(['pesertaDidik', 'penilaian'])
             ->where('tahun_ajaran', $laporan->tahun_ajaran)
             ->get();
+
+        if ($data->isEmpty()) {
+            return [
+                'total_siswa' => 0,
+                'tkj_count' => 0,
+                'tkr_count' => 0,
+                'rata_preferensi' => 0,
+                'tertinggi' => 0,
+                'terendah' => 0,
+                'distribusi_gender' => ['laki' => 0, 'perempuan' => 0],
+                'top_performers' => collect(),
+                'data_lengkap' => collect()
+            ];
+        }
 
         return [
             'total_siswa' => $data->count(),
@@ -330,9 +394,9 @@ class LaporanController extends Controller
                 'total_siswa' => $data->count(),
                 'tkj_count' => $data->where('jurusan_rekomendasi', 'TKJ')->count(),
                 'tkr_count' => $data->where('jurusan_rekomendasi', 'TKR')->count(),
-                'rata_preferensi' => $data->avg('nilai_preferensi'),
-                'tertinggi' => $data->max('nilai_preferensi'),
-                'terendah' => $data->min('nilai_preferensi'),
+                'rata_preferensi' => $data->avg('nilai_preferensi') ?? 0,
+                'tertinggi' => $data->max('nilai_preferensi') ?? 0,
+                'terendah' => $data->min('nilai_preferensi') ?? 0,
             ];
         }
 
@@ -343,136 +407,35 @@ class LaporanController extends Controller
     }
 
     /**
-     * Generate report file (placeholder for actual implementation)
+     * Generate report PDF file
      */
     private function generateReportFile(Laporan $laporan)
     {
-        // This is a placeholder. In real implementation, you would use:
-        // - DomPDF or similar for PDF generation
-        // - Laravel Excel for Excel files
-        // - Custom HTML to PDF conversion
+        try {
+            $reportData = $this->getReportData($laporan);
 
-        $filename = 'laporan_' . $laporan->laporan_id . '_' . time() . '.pdf';
-        $filepath = 'reports/' . $filename;
+            // Generate PDF using DomPDF
+            $pdf = Pdf::loadView('admin.laporan.pdf.template', [
+                'laporan' => $laporan,
+                'reportData' => $reportData
+            ]);
 
-        // For now, create a simple text file as placeholder
-        $content = $this->generateReportContent($laporan);
-        Storage::put($filepath, $content);
+            // Set paper and orientation
+            $pdf->setPaper('A4', 'portrait');
 
-        $laporan->update(['file_path' => $filepath]);
+            // Generate filename
+            $filename = 'laporan_' . $laporan->laporan_id . '_' . time() . '.pdf';
+            $filepath = 'reports/' . $filename;
 
-        return $filepath;
-    }
+            // Save PDF to storage
+            Storage::put($filepath, $pdf->output());
 
-    /**
-     * Generate report content
-     */
-    private function generateReportContent(Laporan $laporan)
-    {
-        $reportData = $this->getReportData($laporan);
+            // Update laporan with file path
+            $laporan->update(['file_path' => $filepath]);
 
-        $content = "LAPORAN SISTEM PENDUKUNG KEPUTUSAN\n";
-        $content .= "SMK Penida 2 Katapang\n";
-        $content .= str_repeat("=", 50) . "\n\n";
-
-        $content .= "Judul: " . $laporan->judul_laporan . "\n";
-        $content .= "Jenis: " . $laporan->jenis_laporan_indonesia . "\n";
-        $content .= "Tahun Ajaran: " . $laporan->tahun_ajaran . "\n";
-        $content .= "Dibuat oleh: " . $laporan->pembuatLaporan->full_name . "\n";
-        $content .= "Tanggal: " . $laporan->created_at->format('d/m/Y H:i') . "\n\n";
-
-        switch ($laporan->jenis_laporan) {
-            case 'individual':
-                $content .= $this->generateIndividualContent($reportData);
-                break;
-            case 'ringkasan':
-                $content .= $this->generateSummaryContent($reportData);
-                break;
-            case 'perbandingan':
-                $content .= $this->generateComparisonContent($reportData);
-                break;
+            return $filepath;
+        } catch (\Exception $e) {
+            throw new \Exception('Gagal generate PDF: ' . $e->getMessage());
         }
-
-        return $content;
-    }
-
-    /**
-     * Generate individual report content
-     */
-    private function generateIndividualContent($data)
-    {
-        $content = "LAPORAN INDIVIDUAL\n";
-        $content .= str_repeat("-", 30) . "\n\n";
-
-        $content .= "Ringkasan:\n";
-        $content .= "- Total Siswa: " . $data['total_siswa'] . "\n";
-        $content .= "- Rata-rata Preferensi: " . number_format($data['rata_preferensi'], 4) . "\n";
-        $content .= "- Rekomendasi TKJ: " . $data['tkj_count'] . " siswa\n";
-        $content .= "- Rekomendasi TKR: " . $data['tkr_count'] . " siswa\n\n";
-
-        $content .= "Detail Siswa:\n";
-        foreach ($data['perhitungan'] as $index => $perhitungan) {
-            $content .= ($index + 1) . ". " . $perhitungan->pesertaDidik->nama_lengkap . "\n";
-            $content .= "   NISN: " . $perhitungan->pesertaDidik->nisn . "\n";
-            $content .= "   Preferensi: " . number_format($perhitungan->nilai_preferensi, 4) . "\n";
-            $content .= "   Rekomendasi: " . $perhitungan->rekomendasi_lengkap . "\n\n";
-        }
-
-        return $content;
-    }
-
-    /**
-     * Generate summary report content
-     */
-    private function generateSummaryContent($data)
-    {
-        $content = "LAPORAN RINGKASAN\n";
-        $content .= str_repeat("-", 30) . "\n\n";
-
-        $content .= "Statistik Umum:\n";
-        $content .= "- Total Siswa: " . $data['total_siswa'] . "\n";
-        $content .= "- Rekomendasi TKJ: " . $data['tkj_count'] . " siswa (" .
-            number_format($data['tkj_count'] / $data['total_siswa'] * 100, 1) . "%)\n";
-        $content .= "- Rekomendasi TKR: " . $data['tkr_count'] . " siswa (" .
-            number_format($data['tkr_count'] / $data['total_siswa'] * 100, 1) . "%)\n\n";
-
-        $content .= "Statistik Preferensi:\n";
-        $content .= "- Rata-rata: " . number_format($data['rata_preferensi'], 4) . "\n";
-        $content .= "- Tertinggi: " . number_format($data['tertinggi'], 4) . "\n";
-        $content .= "- Terendah: " . number_format($data['terendah'], 4) . "\n\n";
-
-        $content .= "Distribusi Gender:\n";
-        $content .= "- Laki-laki: " . $data['distribusi_gender']['laki'] . " siswa\n";
-        $content .= "- Perempuan: " . $data['distribusi_gender']['perempuan'] . " siswa\n\n";
-
-        $content .= "Top 10 Performer:\n";
-        foreach ($data['top_performers'] as $index => $perhitungan) {
-            $content .= ($index + 1) . ". " . $perhitungan->pesertaDidik->nama_lengkap .
-                " (" . number_format($perhitungan->nilai_preferensi, 4) . ")\n";
-        }
-
-        return $content;
-    }
-
-    /**
-     * Generate comparison report content
-     */
-    private function generateComparisonContent($data)
-    {
-        $content = "LAPORAN PERBANDINGAN\n";
-        $content .= str_repeat("-", 30) . "\n\n";
-
-        $content .= "Perbandingan Antar Tahun:\n";
-        foreach ($data['comparison'] as $tahun => $stats) {
-            $content .= "\nTahun Ajaran: " . $tahun . "\n";
-            $content .= "- Total Siswa: " . $stats['total_siswa'] . "\n";
-            $content .= "- TKJ: " . $stats['tkj_count'] . " (" .
-                number_format($stats['tkj_count'] / $stats['total_siswa'] * 100, 1) . "%)\n";
-            $content .= "- TKR: " . $stats['tkr_count'] . " (" .
-                number_format($stats['tkr_count'] / $stats['total_siswa'] * 100, 1) . "%)\n";
-            $content .= "- Rata-rata Preferensi: " . number_format($stats['rata_preferensi'], 4) . "\n";
-        }
-
-        return $content;
     }
 }

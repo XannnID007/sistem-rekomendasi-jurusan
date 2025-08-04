@@ -212,9 +212,11 @@
                                         {{ $calc->rekomendasi_lengkap }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ $calc->tanggal_perhitungan->format('d/m/Y H:i') }}
-                                </td>
+                                @if ($calc->tanggal_perhitungan)
+                                    {{ \Carbon\Carbon::parse($calc->tanggal_perhitungan)->format('d/m/Y H:i') }}
+                                @else
+                                    <span class="text-gray-400">-</span>
+                                @endif
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                     <a href="{{ route('admin.perhitungan.show', $calc) }}"
                                         class="text-navy hover:text-navy-dark" title="Lihat Detail">
