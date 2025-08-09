@@ -1,5 +1,4 @@
 <?php
-// app/Services/TopsisCalculationService.php
 
 namespace App\Services;
 
@@ -35,7 +34,6 @@ class TopsisCalculationService
                if ($penilaianId) {
                     $query->where('penilaian_id', $penilaianId);
                } else {
-                    // Only calculate for assessments that haven't been calculated yet
                     $query->where('sudah_dihitung', false);
                }
 
@@ -52,31 +50,60 @@ class TopsisCalculationService
                     ->where('tahun_ajaran', $tahunAjaran)
                     ->get();
 
-               // Step 1: Build decision matrix for all students in the same academic year
+               Log::info('TOPSIS Calculation Start', [
+                    'requested_assessments' => $assessments->count(),
+                    'all_assessments' => $allAssessments->count(),
+                    'academic_year' => $tahunAjaran
+               ]);
+
+               // Step 1: Build decision matrix
                $decisionMatrix = $this->buildDecisionMatrix($allAssessments);
 
                if (empty($decisionMatrix)) {
                     throw new Exception('Decision matrix is empty');
                }
 
+               Log::info('Decision Matrix Built', [
+                    'matrix_size' => count($decisionMatrix),
+                    'sample_row' => $decisionMatrix[0] ?? null
+               ]);
+
                // Step 2: Normalize decision matrix
                $normalizedMatrix = $this->normalizeMatrix($decisionMatrix);
+
+               Log::info('Matrix Normalized', [
+                    'sample_normalized' => $normalizedMatrix[0] ?? null
+               ]);
 
                // Step 3: Calculate weighted normalized matrix
                $weightedMatrix = $this->calculateWeightedMatrix($normalizedMatrix);
 
+               Log::info('Matrix Weighted', [
+                    'weights' => $this->weights,
+                    'sample_weighted' => $weightedMatrix[0] ?? null
+               ]);
+
                // Step 4: Determine ideal solutions
                $idealSolutions = $this->calculateIdealSolutions($weightedMatrix);
+
+               Log::info('Ideal Solutions Calculated', [
+                    'positive' => $idealSolutions['positive'],
+                    'negative' => $idealSolutions['negative']
+               ]);
 
                // Step 5: Calculate distances and preference scores
                $results = $this->calculatePreferenceScores($weightedMatrix, $idealSolutions, $allAssessments);
 
-               // Step 6: Save results to database (only for requested assessments or new ones)
+               Log::info('Preference Scores Calculated', [
+                    'results_count' => $results->count(),
+                    'sample_result' => $results->first()
+               ]);
+
+               // Step 6: Save results to database
                $this->saveResults($results, $normalizedMatrix, $weightedMatrix, $assessments);
 
                DB::commit();
 
-               // Return only the results for requested assessments
                if ($penilaianId) {
                     return $results->where('penilaian_id', $penilaianId);
                }
@@ -84,6 +111,10 @@ class TopsisCalculationService
                return $results->whereIn('penilaian_id', $assessments->pluck('penilaian_id'));
           } catch (Exception $e) {
                DB::rollback();
+               Log::error('TOPSIS calculation failed', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+               ]);
                throw new Exception('TOPSIS calculation failed: ' . $e->getMessage());
           }
      }
@@ -96,6 +127,15 @@ class TopsisCalculationService
           $matrix = [];
 
           foreach ($assessments as $assessment) {
+               // Ensure all required fields are present and not null
+               if (!$this->isAssessmentValid($assessment)) {
+                    Log::warning('Invalid assessment data', [
+                         'penilaian_id' => $assessment->penilaian_id,
+                         'missing_fields' => $assessment->getMissingFields()
+                    ]);
+                    continue;
+               }
+
                $row = [
                     'penilaian_id' => $assessment->penilaian_id,
                     'peserta_didik_id' => $assessment->peserta_didik_id,
@@ -114,10 +154,67 @@ class TopsisCalculationService
                     'bp' => (float) $assessment->convertPenghasilanToNumeric($assessment->penghasilan_ortu ?? ''),
                ];
 
+               // Validate that all values are positive
+               $criteriaKeys = ['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'ma', 'mb', 'mc', 'md', 'bb', 'bp'];
+               $hasZeroValues = false;
+
+               foreach ($criteriaKeys as $key) {
+                    if ($row[$key] <= 0) {
+                         Log::warning('Zero or negative value detected', [
+                              'penilaian_id' => $assessment->penilaian_id,
+                              'field' => $key,
+                              'value' => $row[$key]
+                         ]);
+                         // Set minimum value to avoid division by zero
+                         $row[$key] = 0.1;
+                         $hasZeroValues = true;
+                    }
+               }
+
+               if ($hasZeroValues) {
+                    Log::info('Fixed zero values for assessment', [
+                         'penilaian_id' => $assessment->penilaian_id
+                    ]);
+               }
+
                $matrix[] = $row;
           }
 
+          Log::info('Decision matrix built', [
+               'total_rows' => count($matrix),
+               'criteria_count' => 12
+          ]);
+
           return $matrix;
+     }
+
+     /**
+      * Check if assessment has valid data
+      */
+     private function isAssessmentValid($assessment): bool
+     {
+          $requiredFields = [
+               'nilai_ipa',
+               'nilai_ips',
+               'nilai_matematika',
+               'nilai_bahasa_indonesia',
+               'nilai_bahasa_inggris',
+               'nilai_produktif',
+               'minat_a',
+               'minat_b',
+               'minat_c',
+               'minat_d',
+               'keahlian',
+               'penghasilan_ortu'
+          ];
+
+          foreach ($requiredFields as $field) {
+               if (empty($assessment->$field)) {
+                    return false;
+               }
+          }
+
+          return true;
      }
 
      /**
@@ -137,7 +234,15 @@ class TopsisCalculationService
                     $sumOfSquares[$criteria] += pow($value, 2);
                }
                $sumOfSquares[$criteria] = sqrt($sumOfSquares[$criteria]);
+
+               // Prevent division by zero
+               if ($sumOfSquares[$criteria] == 0) {
+                    Log::warning('Sum of squares is zero for criteria: ' . $criteria);
+                    $sumOfSquares[$criteria] = 1;
+               }
           }
+
+          Log::info('Sum of squares calculated', $sumOfSquares);
 
           // Normalize each element
           foreach ($decisionMatrix as $index => $row) {
@@ -149,9 +254,8 @@ class TopsisCalculationService
 
                foreach ($criteriaKeys as $criteria) {
                     $value = $row[$criteria] ?? 0;
-                    $normalizedRow[$criteria] = $sumOfSquares[$criteria] > 0
-                         ? $value / $sumOfSquares[$criteria]
-                         : 0;
+                    $normalizedValue = $sumOfSquares[$criteria] > 0 ? $value / $sumOfSquares[$criteria] : 0;
+                    $normalizedRow[$criteria] = $normalizedValue;
                }
 
                $normalizedMatrix[$index] = $normalizedRow;
@@ -209,7 +313,6 @@ class TopsisCalculationService
                }
 
                // All criteria are benefit type in our case
-               // For benefit: ideal positive = max, ideal negative = min
                $idealPositive[$criteria] = max($values);
                $idealNegative[$criteria] = min($values);
           }
@@ -249,13 +352,35 @@ class TopsisCalculationService
 
                // Calculate preference score
                $totalDistance = $distancePositive + $distanceNegative;
-               $preferenceScore = $totalDistance > 0 ? $distanceNegative / $totalDistance : 0;
+
+               // Fix: Ensure we don't divide by zero
+               if ($totalDistance == 0) {
+                    Log::warning('Total distance is zero', [
+                         'penilaian_id' => $row['penilaian_id'],
+                         'distance_positive' => $distancePositive,
+                         'distance_negative' => $distanceNegative
+                    ]);
+                    $preferenceScore = 0.5; // Default middle value
+               } else {
+                    $preferenceScore = $distanceNegative / $totalDistance;
+               }
+
+               // Ensure preference score is between 0 and 1
+               $preferenceScore = max(0, min(1, $preferenceScore));
 
                // Determine recommendation based on preference score
-               // Threshold 0.30: > 0.30 = TKJ, <= 0.30 = TKR
                $recommendation = $preferenceScore > 0.30 ? 'TKJ' : 'TKR';
 
                $assessment = $assessments->where('penilaian_id', $row['penilaian_id'])->first();
+
+               Log::info('Preference score calculated', [
+                    'penilaian_id' => $row['penilaian_id'],
+                    'distance_positive' => $distancePositive,
+                    'distance_negative' => $distanceNegative,
+                    'total_distance' => $totalDistance,
+                    'preference_score' => $preferenceScore,
+                    'recommendation' => $recommendation
+               ]);
 
                $results->push([
                     'penilaian_id' => $row['penilaian_id'],
@@ -335,9 +460,16 @@ class TopsisCalculationService
                     if ($result['assessment']) {
                          $result['assessment']->update(['sudah_dihitung' => true]);
                     }
+
+                    Log::info('Result saved successfully', [
+                         'penilaian_id' => $result['penilaian_id'],
+                         'preference_score' => $result['preference_score']
+                    ]);
                } catch (Exception $e) {
-                    // Log error but continue with other records
-                    Log::error('Failed to save TOPSIS result for penilaian_id: ' . $result['penilaian_id'] . ' - ' . $e->getMessage());
+                    Log::error('Failed to save TOPSIS result', [
+                         'penilaian_id' => $result['penilaian_id'],
+                         'error' => $e->getMessage()
+                    ]);
                }
           }
      }
@@ -392,6 +524,8 @@ class TopsisCalculationService
                }
           }
 
+          Log::info('Criteria weights loaded', $weights);
+
           return $weights;
      }
 
@@ -424,7 +558,7 @@ class TopsisCalculationService
      public function validateWeights(): bool
      {
           $totalWeight = array_sum($this->weights);
-          return abs($totalWeight - 1.0) < 0.001; // Allow small floating point differences
+          return abs($totalWeight - 1.0) < 0.001;
      }
 
      /**

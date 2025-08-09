@@ -1,7 +1,12 @@
 <div class="section">
     <h3>Laporan Perbandingan Antar Tahun Ajaran</h3>
 
-    @if (isset($data['comparison']) && count($data['comparison']) > 0)
+    @php
+        $comparison = $data['comparison'] ?? [];
+        $tahunAjaran = $data['tahun_ajaran'] ?? [];
+    @endphp
+
+    @if (!empty($comparison) && count($comparison) > 0)
         <!-- Overview Table -->
         <table>
             <thead>
@@ -18,29 +23,37 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($data['comparison'] as $tahun => $stats)
+                @foreach ($comparison as $tahun => $stats)
+                    @php
+                        $totalSiswa = $stats['total_siswa'] ?? 0;
+                        $tkjCount = $stats['tkj_count'] ?? 0;
+                        $tkrCount = $stats['tkr_count'] ?? 0;
+                        $rataPreferensi = $stats['rata_preferensi'] ?? 0;
+                        $tertinggi = $stats['tertinggi'] ?? 0;
+                        $terendah = $stats['terendah'] ?? 0;
+                    @endphp
                     <tr>
                         <td style="font-weight: bold;">{{ $tahun }}</td>
-                        <td class="text-center">{{ $stats['total_siswa'] }}</td>
-                        <td class="text-center">{{ $stats['tkj_count'] }}</td>
-                        <td class="text-center">{{ $stats['tkr_count'] }}</td>
+                        <td class="text-center">{{ $totalSiswa }}</td>
+                        <td class="text-center">{{ $tkjCount }}</td>
+                        <td class="text-center">{{ $tkrCount }}</td>
                         <td class="text-center">
-                            @if ($stats['total_siswa'] > 0)
-                                {{ number_format(($stats['tkj_count'] / $stats['total_siswa']) * 100, 1) }}%
+                            @if ($totalSiswa > 0)
+                                {{ number_format(($tkjCount / $totalSiswa) * 100, 1) }}%
                             @else
                                 0%
                             @endif
                         </td>
                         <td class="text-center">
-                            @if ($stats['total_siswa'] > 0)
-                                {{ number_format(($stats['tkr_count'] / $stats['total_siswa']) * 100, 1) }}%
+                            @if ($totalSiswa > 0)
+                                {{ number_format(($tkrCount / $totalSiswa) * 100, 1) }}%
                             @else
                                 0%
                             @endif
                         </td>
-                        <td class="text-center">{{ number_format($stats['rata_preferensi'], 4) }}</td>
-                        <td class="text-center">{{ number_format($stats['tertinggi'], 4) }}</td>
-                        <td class="text-center">{{ number_format($stats['terendah'], 4) }}</td>
+                        <td class="text-center">{{ number_format($rataPreferensi, 4) }}</td>
+                        <td class="text-center">{{ number_format($tertinggi, 4) }}</td>
+                        <td class="text-center">{{ number_format($terendah, 4) }}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -51,12 +64,12 @@
             <h4>Analisis Perbandingan</h4>
 
             @php
-                $totalStudents = array_sum(array_column($data['comparison'], 'total_siswa'));
-                $totalTKJ = array_sum(array_column($data['comparison'], 'tkj_count'));
-                $totalTKR = array_sum(array_column($data['comparison'], 'tkr_count'));
+                $totalStudents = array_sum(array_column($comparison, 'total_siswa'));
+                $totalTKJ = array_sum(array_column($comparison, 'tkj_count'));
+                $totalTKR = array_sum(array_column($comparison, 'tkr_count'));
                 $avgPreference =
-                    count($data['comparison']) > 0
-                        ? array_sum(array_column($data['comparison'], 'rata_preferensi')) / count($data['comparison'])
+                    count($comparison) > 0
+                        ? array_sum(array_column($comparison, 'rata_preferensi')) / count($comparison)
                         : 0;
             @endphp
 
@@ -69,14 +82,18 @@
                     </div>
                     <div class="info-row">
                         <span class="info-label">Total Rekomendasi TKJ:</span>
-                        <span class="info-value">{{ $totalTKJ }} @if ($totalStudents > 0)
+                        <span class="info-value">
+                            {{ $totalTKJ }}
+                            @if ($totalStudents > 0)
                                 ({{ number_format(($totalTKJ / $totalStudents) * 100, 1) }}%)
                             @endif
                         </span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Total Rekomendasi TKR:</span>
-                        <span class="info-value">{{ $totalTKR }} @if ($totalStudents > 0)
+                        <span class="info-value">
+                            {{ $totalTKR }}
+                            @if ($totalStudents > 0)
                                 ({{ number_format(($totalTKR / $totalStudents) * 100, 1) }}%)
                             @endif
                         </span>
@@ -94,7 +111,7 @@
             <h4>Analisis Tren</h4>
 
             @php
-                $years = array_keys($data['comparison']);
+                $years = array_keys($comparison);
                 sort($years);
             @endphp
 
@@ -103,15 +120,14 @@
                     $firstYear = $years[0];
                     $lastYear = end($years);
 
-                    $studentGrowth =
-                        $data['comparison'][$lastYear]['total_siswa'] - $data['comparison'][$firstYear]['total_siswa'];
-                    $tkjGrowth =
-                        $data['comparison'][$lastYear]['tkj_count'] - $data['comparison'][$firstYear]['tkj_count'];
-                    $tkrGrowth =
-                        $data['comparison'][$lastYear]['tkr_count'] - $data['comparison'][$firstYear]['tkr_count'];
+                    $firstYearData = $comparison[$firstYear] ?? [];
+                    $lastYearData = $comparison[$lastYear] ?? [];
+
+                    $studentGrowth = ($lastYearData['total_siswa'] ?? 0) - ($firstYearData['total_siswa'] ?? 0);
+                    $tkjGrowth = ($lastYearData['tkj_count'] ?? 0) - ($firstYearData['tkj_count'] ?? 0);
+                    $tkrGrowth = ($lastYearData['tkr_count'] ?? 0) - ($firstYearData['tkr_count'] ?? 0);
                     $preferenceGrowth =
-                        $data['comparison'][$lastYear]['rata_preferensi'] -
-                        $data['comparison'][$firstYear]['rata_preferensi'];
+                        ($lastYearData['rata_preferensi'] ?? 0) - ($firstYearData['rata_preferensi'] ?? 0);
                 @endphp
 
                 <div class="info-box">
@@ -121,8 +137,8 @@
                             <span class="info-label">Perubahan Jumlah Siswa:</span>
                             <span class="info-value">
                                 {{ $studentGrowth > 0 ? '+' : '' }}{{ $studentGrowth }} siswa
-                                @if ($data['comparison'][$firstYear]['total_siswa'] > 0)
-                                    ({{ number_format(($studentGrowth / $data['comparison'][$firstYear]['total_siswa']) * 100, 1) }}%)
+                                @if (($firstYearData['total_siswa'] ?? 0) > 0)
+                                    ({{ number_format(($studentGrowth / $firstYearData['total_siswa']) * 100, 1) }}%)
                                 @endif
                             </span>
                         </div>
@@ -130,8 +146,8 @@
                             <span class="info-label">Perubahan Rekomendasi TKJ:</span>
                             <span class="info-value">
                                 {{ $tkjGrowth > 0 ? '+' : '' }}{{ $tkjGrowth }} siswa
-                                @if ($data['comparison'][$firstYear]['tkj_count'] > 0)
-                                    ({{ number_format(($tkjGrowth / $data['comparison'][$firstYear]['tkj_count']) * 100, 1) }}%)
+                                @if (($firstYearData['tkj_count'] ?? 0) > 0)
+                                    ({{ number_format(($tkjGrowth / $firstYearData['tkj_count']) * 100, 1) }}%)
                                 @endif
                             </span>
                         </div>
@@ -139,8 +155,8 @@
                             <span class="info-label">Perubahan Rekomendasi TKR:</span>
                             <span class="info-value">
                                 {{ $tkrGrowth > 0 ? '+' : '' }}{{ $tkrGrowth }} siswa
-                                @if ($data['comparison'][$firstYear]['tkr_count'] > 0)
-                                    ({{ number_format(($tkrGrowth / $data['comparison'][$firstYear]['tkr_count']) * 100, 1) }}%)
+                                @if (($firstYearData['tkr_count'] ?? 0) > 0)
+                                    ({{ number_format(($tkrGrowth / $firstYearData['tkr_count']) * 100, 1) }}%)
                                 @endif
                             </span>
                         </div>
@@ -148,8 +164,8 @@
                             <span class="info-label">Perubahan Rata-rata Preferensi:</span>
                             <span class="info-value">
                                 {{ $preferenceGrowth > 0 ? '+' : '' }}{{ number_format($preferenceGrowth, 4) }}
-                                @if ($data['comparison'][$firstYear]['rata_preferensi'] > 0)
-                                    ({{ number_format(($preferenceGrowth / $data['comparison'][$firstYear]['rata_preferensi']) * 100, 2) }}%)
+                                @if (($firstYearData['rata_preferensi'] ?? 0) > 0)
+                                    ({{ number_format(($preferenceGrowth / $firstYearData['rata_preferensi']) * 100, 2) }}%)
                                 @endif
                             </span>
                         </div>
@@ -158,25 +174,34 @@
             @endif
 
             <!-- Year by Year Analysis -->
-            @foreach ($data['comparison'] as $tahun => $stats)
+            @foreach ($comparison as $tahun => $stats)
+                @php
+                    $totalSiswa = $stats['total_siswa'] ?? 0;
+                    $tkjCount = $stats['tkj_count'] ?? 0;
+                    $tkrCount = $stats['tkr_count'] ?? 0;
+                    $rataPreferensi = $stats['rata_preferensi'] ?? 0;
+                    $tertinggi = $stats['tertinggi'] ?? 0;
+                    $terendah = $stats['terendah'] ?? 0;
+                @endphp
+
                 <div class="section">
                     <h5>Detail Tahun Ajaran {{ $tahun }}</h5>
                     <div class="info-box">
                         <div class="stats-row">
                             <div class="stats-item">
-                                <span class="stats-number">{{ $stats['total_siswa'] }}</span>
+                                <span class="stats-number">{{ $totalSiswa }}</span>
                                 <div class="stats-label">Total Siswa</div>
                             </div>
                             <div class="stats-item">
-                                <span class="stats-number">{{ $stats['tkj_count'] }}</span>
+                                <span class="stats-number">{{ $tkjCount }}</span>
                                 <div class="stats-label">Rekomendasi TKJ</div>
                             </div>
                             <div class="stats-item">
-                                <span class="stats-number">{{ $stats['tkr_count'] }}</span>
+                                <span class="stats-number">{{ $tkrCount }}</span>
                                 <div class="stats-label">Rekomendasi TKR</div>
                             </div>
                             <div class="stats-item">
-                                <span class="stats-number">{{ number_format($stats['rata_preferensi'], 3) }}</span>
+                                <span class="stats-number">{{ number_format($rataPreferensi, 3) }}</span>
                                 <div class="stats-label">Rata-rata Preferensi</div>
                             </div>
                         </div>
@@ -184,34 +209,29 @@
                         <div style="margin-top: 15px;">
                             <strong>Karakteristik:</strong>
                             <ul style="margin: 5px 0; padding-left: 20px;">
-                                @if ($stats['total_siswa'] > 0)
+                                @if ($totalSiswa > 0)
                                     <li>
-                                        @if ($stats['tkj_count'] > $stats['tkr_count'])
-                                            Mayoritas siswa
-                                            ({{ number_format(($stats['tkj_count'] / $stats['total_siswa']) * 100, 1) }}%)
+                                        @if ($tkjCount > $tkrCount)
+                                            Mayoritas siswa ({{ number_format(($tkjCount / $totalSiswa) * 100, 1) }}%)
                                             direkomendasikan untuk TKJ
-                                        @elseif($stats['tkr_count'] > $stats['tkj_count'])
-                                            Mayoritas siswa
-                                            ({{ number_format(($stats['tkr_count'] / $stats['total_siswa']) * 100, 1) }}%)
+                                        @elseif($tkrCount > $tkjCount)
+                                            Mayoritas siswa ({{ number_format(($tkrCount / $totalSiswa) * 100, 1) }}%)
                                             direkomendasikan untuk TKR
                                         @else
                                             Distribusi rekomendasi seimbang antara TKJ dan TKR
                                         @endif
                                     </li>
                                     <li>
-                                        @if ($stats['rata_preferensi'] > 0.35)
-                                            Rata-rata nilai preferensi tinggi
-                                            ({{ number_format($stats['rata_preferensi'], 4) }})
-                                        @elseif($stats['rata_preferensi'] > 0.25)
-                                            Rata-rata nilai preferensi sedang
-                                            ({{ number_format($stats['rata_preferensi'], 4) }})
+                                        @if ($rataPreferensi > 0.35)
+                                            Rata-rata nilai preferensi tinggi ({{ number_format($rataPreferensi, 4) }})
+                                        @elseif($rataPreferensi > 0.25)
+                                            Rata-rata nilai preferensi sedang ({{ number_format($rataPreferensi, 4) }})
                                         @else
-                                            Rata-rata nilai preferensi rendah
-                                            ({{ number_format($stats['rata_preferensi'], 4) }})
+                                            Rata-rata nilai preferensi rendah ({{ number_format($rataPreferensi, 4) }})
                                         @endif
                                     </li>
-                                    <li>Rentang nilai: {{ number_format($stats['terendah'], 4) }} -
-                                        {{ number_format($stats['tertinggi'], 4) }}</li>
+                                    <li>Rentang nilai: {{ number_format($terendah, 4) }} -
+                                        {{ number_format($tertinggi, 4) }}</li>
                                 @else
                                     <li>Tidak ada data untuk tahun ajaran ini</li>
                                 @endif
@@ -257,6 +277,9 @@
         <div class="no-data">
             <p>Tidak ada data untuk perbandingan.</p>
             <p>Silakan pastikan data perhitungan TOPSIS tersedia untuk tahun ajaran yang dipilih.</p>
+            @if (!empty($tahunAjaran))
+                <p>Tahun ajaran yang diminta: {{ implode(', ', $tahunAjaran) }}</p>
+            @endif
         </div>
     @endif
 </div>

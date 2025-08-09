@@ -44,10 +44,9 @@
                         <p class="text-sm text-gray-500">Overview keseluruhan</p>
                     </div>
                 </div>
-                <p class="text-gray-600 mb-4">Generate ringkasan statistik untuk semua siswa dalam periode
-                    tertentu.</p>
+                <p class="text-gray-600 mb-4">Generate ringkasan statistik untuk semua siswa dalam periode tertentu.</p>
                 <button onclick="openModal('summary')"
-                    class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-200">
+                    class="w-full bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 px-4 py-2">
                     Buat Laporan Ringkasan
                 </button>
             </div>
@@ -102,7 +101,7 @@
     <!-- Individual Report Modal -->
     <div id="individualModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
         <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-xl max-w-2xl w-full p-6">
+            <div class="bg-white rounded-xl max-w-2xl w-full p-6 max-h-screen overflow-y-auto">
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="text-lg font-semibold text-navy">Buat Laporan Individual</h3>
                     <button onclick="closeModal('individual')" class="text-gray-400 hover:text-gray-600">
@@ -218,10 +217,10 @@
         </div>
     </div>
 
-    <!-- Comparison Report Modal -->
+    <!-- Comparison Report Modal - FIXED VERSION -->
     <div id="comparisonModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
         <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-xl max-w-lg w-full p-6">
+            <div class="bg-white rounded-xl max-w-lg w-full p-6 max-h-screen overflow-y-auto">
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="text-lg font-semibold text-navy">Buat Laporan Perbandingan</h3>
                     <button onclick="closeModal('comparison')" class="text-gray-400 hover:text-gray-600">
@@ -232,43 +231,62 @@
                     </button>
                 </div>
 
-                <form method="POST" action="{{ route('admin.laporan.generate.comparison') }}">
+                <form method="POST" action="{{ route('admin.laporan.generate.comparison') }}" id="comparisonForm">
                     @csrf
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">
                                 Pilih Tahun Ajaran untuk Dibandingkan <span class="text-red-500">*</span>
                             </label>
-                            <div class="space-y-2 max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-3">
-                                @foreach ($tahunAjaran as $tahun)
-                                    <label class="flex items-center">
-                                        <input type="checkbox" name="tahun_ajaran[]" value="{{ $tahun }}"
-                                            class="rounded border-gray-300 text-navy focus:ring-navy">
-                                        <span class="ml-2 text-sm text-gray-700">{{ $tahun }}</span>
-                                    </label>
-                                @endforeach
+                            <div class="space-y-2 max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-3"
+                                id="tahunAjaranList">
+                                @if ($tahunAjaran->count() > 0)
+                                    @foreach ($tahunAjaran as $tahun)
+                                        <label class="flex items-center">
+                                            <input type="checkbox" name="tahun_ajaran[]" value="{{ $tahun }}"
+                                                class="rounded border-gray-300 text-navy focus:ring-navy tahun-checkbox">
+                                            <span class="ml-2 text-sm text-gray-700">{{ $tahun }}</span>
+                                        </label>
+                                    @endforeach
+                                @else
+                                    <p class="text-sm text-gray-500">Tidak ada tahun ajaran tersedia</p>
+                                @endif
                             </div>
                             <p class="text-xs text-gray-500 mt-1">Pilih minimal 2 tahun ajaran</p>
+                            <div id="tahunAjaranError" class="text-red-500 text-xs mt-1 hidden">
+                                Pilih minimal 2 tahun ajaran untuk perbandingan
+                            </div>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Kriteria Perbandingan</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Kriteria Perbandingan <span class="text-red-500">*</span>
+                            </label>
                             <div class="space-y-2">
                                 <label class="flex items-center">
                                     <input type="checkbox" name="comparison_criteria[]" value="total_siswa" checked
-                                        class="rounded border-gray-300 text-navy focus:ring-navy">
+                                        class="rounded border-gray-300 text-navy focus:ring-navy criteria-checkbox">
                                     <span class="ml-2 text-sm text-gray-700">Total siswa</span>
                                 </label>
                                 <label class="flex items-center">
                                     <input type="checkbox" name="comparison_criteria[]" value="rekomendasi_jurusan"
-                                        checked class="rounded border-gray-300 text-navy focus:ring-navy">
+                                        checked
+                                        class="rounded border-gray-300 text-navy focus:ring-navy criteria-checkbox">
                                     <span class="ml-2 text-sm text-gray-700">Distribusi rekomendasi jurusan</span>
                                 </label>
                                 <label class="flex items-center">
                                     <input type="checkbox" name="comparison_criteria[]" value="nilai_preferensi"
-                                        class="rounded border-gray-300 text-navy focus:ring-navy">
+                                        class="rounded border-gray-300 text-navy focus:ring-navy criteria-checkbox">
                                     <span class="ml-2 text-sm text-gray-700">Nilai preferensi rata-rata</span>
                                 </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="comparison_criteria[]" value="gender_distribution"
+                                        class="rounded border-gray-300 text-navy focus:ring-navy criteria-checkbox">
+                                    <span class="ml-2 text-sm text-gray-700">Distribusi gender</span>
+                                </label>
+                            </div>
+                            <div id="criteriaError" class="text-red-500 text-xs mt-1 hidden">
+                                Pilih minimal satu kriteria perbandingan
                             </div>
                         </div>
                     </div>
@@ -278,7 +296,7 @@
                             class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition duration-200">
                             Batal
                         </button>
-                        <button type="submit"
+                        <button type="submit" id="submitComparison"
                             class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-200">
                             Generate Laporan
                         </button>
@@ -292,13 +310,19 @@
         <script>
             function openModal(type) {
                 document.getElementById(type + 'Modal').classList.remove('hidden');
+
+                // Reset form validation when opening comparison modal
+                if (type === 'comparison') {
+                    document.getElementById('tahunAjaranError').classList.add('hidden');
+                    document.getElementById('criteriaError').classList.add('hidden');
+                }
             }
 
             function closeModal(type) {
                 document.getElementById(type + 'Modal').classList.add('hidden');
             }
 
-            // Load students when academic year is selected
+            // Load students when academic year is selected for individual report
             document.getElementById('individual_tahun_ajaran').addEventListener('change', function() {
                 const tahunAjaran = this.value;
                 const studentsList = document.getElementById('studentsList');
@@ -308,26 +332,92 @@
                     return;
                 }
 
-                // Here you would typically make an AJAX call to get students
-                // For now, we'll show a loading message
                 studentsList.innerHTML = '<p class="text-gray-500 text-sm">Loading siswa...</p>';
 
-                // Simulate API call
-                setTimeout(() => {
-                    studentsList.innerHTML = `
-                        <div class="space-y-2">
-                            <label class="flex items-center">
-                                <input type="checkbox" name="peserta_didik_ids[]" value="1" class="rounded border-gray-300 text-navy focus:ring-navy">
-                                <span class="ml-2 text-sm text-gray-700">Ahmad Fauzi - 1234567890</span>
-                            </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" name="peserta_didik_ids[]" value="2" class="rounded border-gray-300 text-navy focus:ring-navy">
-                                <span class="ml-2 text-sm text-gray-700">Siti Nurhaliza - 0987654321</span>
-                            </label>
-                            <p class="text-xs text-gray-500 mt-2">Data siswa untuk tahun ajaran ${tahunAjaran}</p>
-                        </div>
-                    `;
-                }, 500);
+                // Make AJAX call to get students
+                fetch(`{{ route('admin.laporan.get-students') }}?tahun_ajaran=${encodeURIComponent(tahunAjaran)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.students && data.students.length > 0) {
+                            let html = '<div class="space-y-2">';
+                            data.students.forEach(student => {
+                                html += `
+                                    <label class="flex items-center">
+                                        <input type="checkbox" name="peserta_didik_ids[]" value="${student.id}" 
+                                               class="rounded border-gray-300 text-navy focus:ring-navy">
+                                        <span class="ml-2 text-sm text-gray-700">
+                                            ${student.nama} - ${student.nisn}
+                                            <span class="text-xs text-gray-500">(${student.rekomendasi})</span>
+                                        </span>
+                                    </label>
+                                `;
+                            });
+                            html += '</div>';
+                            studentsList.innerHTML = html;
+                        } else {
+                            studentsList.innerHTML =
+                                '<p class="text-gray-500 text-sm">Tidak ada siswa dengan perhitungan TOPSIS untuk tahun ajaran ini</p>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading students:', error);
+                        studentsList.innerHTML = '<p class="text-red-500 text-sm">Error loading data siswa</p>';
+                    });
+            });
+
+            // Validation for comparison form
+            document.getElementById('comparisonForm').addEventListener('submit', function(e) {
+                let isValid = true;
+
+                // Check tahun ajaran selection
+                const tahunCheckboxes = document.querySelectorAll('input[name="tahun_ajaran[]"]:checked');
+                const tahunError = document.getElementById('tahunAjaranError');
+
+                if (tahunCheckboxes.length < 2) {
+                    e.preventDefault();
+                    tahunError.classList.remove('hidden');
+                    isValid = false;
+                } else {
+                    tahunError.classList.add('hidden');
+                }
+
+                // Check criteria selection
+                const criteriaCheckboxes = document.querySelectorAll('input[name="comparison_criteria[]"]:checked');
+                const criteriaError = document.getElementById('criteriaError');
+
+                if (criteriaCheckboxes.length < 1) {
+                    e.preventDefault();
+                    criteriaError.classList.remove('hidden');
+                    isValid = false;
+                } else {
+                    criteriaError.classList.add('hidden');
+                }
+
+                if (!isValid) {
+                    return false;
+                }
+            });
+
+            // Real-time validation for tahun ajaran
+            document.addEventListener('change', function(e) {
+                if (e.target.classList.contains('tahun-checkbox')) {
+                    const checkedCount = document.querySelectorAll('input[name="tahun_ajaran[]"]:checked').length;
+                    const errorDiv = document.getElementById('tahunAjaranError');
+
+                    if (checkedCount >= 2) {
+                        errorDiv.classList.add('hidden');
+                    }
+                }
+
+                if (e.target.classList.contains('criteria-checkbox')) {
+                    const checkedCount = document.querySelectorAll('input[name="comparison_criteria[]"]:checked')
+                    .length;
+                    const errorDiv = document.getElementById('criteriaError');
+
+                    if (checkedCount >= 1) {
+                        errorDiv.classList.add('hidden');
+                    }
+                }
             });
 
             // Close modal when clicking outside
