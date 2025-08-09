@@ -112,7 +112,8 @@
                     </button>
                 </div>
 
-                <form method="POST" action="{{ route('admin.laporan.generate.individual') }}">
+                <form method="POST" action="{{ route('admin.laporan.generate.individual') }}"
+                    onsubmit="return validateIndividualForm()">
                     @csrf
                     <div class="space-y-4">
                         <div>
@@ -126,17 +127,20 @@
                                     <option value="{{ $tahun }}">{{ $tahun }}</option>
                                 @endforeach
                             </select>
+                            <p class="text-xs text-gray-500 mt-1">Data siswa akan dimuat setelah memilih tahun ajaran</p>
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">
                                 Pilih Peserta Didik <span class="text-red-500">*</span>
                             </label>
-                            <div class="max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-3">
-                                <div class="space-y-2" id="studentsList">
+                            <div class="border border-gray-300 rounded-lg">
+                                <div class="max-h-64 overflow-y-auto p-3" id="studentsList">
                                     <p class="text-gray-500 text-sm">Pilih tahun ajaran terlebih dahulu</p>
                                 </div>
                             </div>
+                            <p class="text-xs text-gray-500 mt-1">Hanya siswa yang sudah memiliki perhitungan TOPSIS yang
+                                dapat dipilih</p>
                         </div>
                     </div>
 
@@ -147,6 +151,10 @@
                         </button>
                         <button type="submit"
                             class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
+                            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
                             Generate Laporan
                         </button>
                     </div>
@@ -217,7 +225,7 @@
         </div>
     </div>
 
-    <!-- Comparison Report Modal - FIXED VERSION -->
+    <!-- Comparison Report Modal -->
     <div id="comparisonModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="bg-white rounded-xl max-w-lg w-full p-6 max-h-screen overflow-y-auto">
@@ -308,6 +316,7 @@
 
     @push('scripts')
         <script>
+            // Modal functions
             function openModal(type) {
                 document.getElementById(type + 'Modal').classList.remove('hidden');
 
@@ -320,112 +329,228 @@
 
             function closeModal(type) {
                 document.getElementById(type + 'Modal').classList.add('hidden');
+
+                // Reset students list when closing individual modal
+                if (type === 'individual') {
+                    const studentsList = document.getElementById('studentsList');
+                    if (studentsList) {
+                        studentsList.innerHTML = '<p class="text-gray-500 text-sm">Pilih tahun ajaran terlebih dahulu</p>';
+                    }
+                    // Reset tahun ajaran dropdown
+                    const tahunAjaranSelect = document.getElementById('individual_tahun_ajaran');
+                    if (tahunAjaranSelect) {
+                        tahunAjaranSelect.value = '';
+                    }
+                }
+            }
+
+            // Form validation for individual report
+            function validateIndividualForm() {
+                const tahunAjaran = document.getElementById('individual_tahun_ajaran').value;
+                const selectedStudents = document.querySelectorAll('input[name="peserta_didik_ids[]"]:checked');
+
+                if (!tahunAjaran) {
+                    alert('Pilih tahun ajaran terlebih dahulu');
+                    return false;
+                }
+
+                if (selectedStudents.length === 0) {
+                    alert('Pilih minimal satu peserta didik');
+                    return false;
+                }
+
+                return true;
             }
 
             // Load students when academic year is selected for individual report
-            document.getElementById('individual_tahun_ajaran').addEventListener('change', function() {
-                const tahunAjaran = this.value;
-                const studentsList = document.getElementById('studentsList');
+            document.addEventListener('DOMContentLoaded', function() {
+                const tahunAjaranSelect = document.getElementById('individual_tahun_ajaran');
 
-                if (!tahunAjaran) {
-                    studentsList.innerHTML = '<p class="text-gray-500 text-sm">Pilih tahun ajaran terlebih dahulu</p>';
-                    return;
-                }
+                if (tahunAjaranSelect) {
+                    tahunAjaranSelect.addEventListener('change', function() {
+                        const tahunAjaran = this.value;
+                        const studentsList = document.getElementById('studentsList');
 
-                studentsList.innerHTML = '<p class="text-gray-500 text-sm">Loading siswa...</p>';
+                        if (!tahunAjaran) {
+                            studentsList.innerHTML =
+                                '<p class="text-gray-500 text-sm">Pilih tahun ajaran terlebih dahulu</p>';
+                            return;
+                        }
 
-                // Make AJAX call to get students
-                fetch(`{{ route('admin.laporan.get-students') }}?tahun_ajaran=${encodeURIComponent(tahunAjaran)}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.students && data.students.length > 0) {
-                            let html = '<div class="space-y-2">';
-                            data.students.forEach(student => {
-                                html += `
-                                    <label class="flex items-center">
-                                        <input type="checkbox" name="peserta_didik_ids[]" value="${student.id}" 
-                                               class="rounded border-gray-300 text-navy focus:ring-navy">
-                                        <span class="ml-2 text-sm text-gray-700">
-                                            ${student.nama} - ${student.nisn}
-                                            <span class="text-xs text-gray-500">(${student.rekomendasi})</span>
-                                        </span>
-                                    </label>
+                        // Show loading state
+                        studentsList.innerHTML =
+                            '<div class="flex items-center justify-center py-4"><div class="text-gray-500 text-sm">Loading siswa...</div></div>';
+
+                        // Prepare URL with proper encoding
+                        const url = new URL('{{ route('admin.laporan.get-students') }}', window.location
+                            .origin);
+                        url.searchParams.append('tahun_ajaran', tahunAjaran);
+
+                        // Make AJAX call to get students
+                        fetch(url.toString())
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error(`HTTP error! status: ${response.status}`);
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                console.log('Response data:', data); // Debug log
+
+                                if (data.students && data.students.length > 0) {
+                                    let html = '<div class="space-y-2">';
+                                    data.students.forEach(student => {
+                                        html += `
+                                            <label class="flex items-center p-2 hover:bg-gray-50 rounded">
+                                                <input type="checkbox" name="peserta_didik_ids[]" value="${student.id}" 
+                                                       class="rounded border-gray-300 text-navy focus:ring-navy mr-3">
+                                                <div class="flex-1">
+                                                    <div class="text-sm font-medium text-gray-900">${student.nama}</div>
+                                                    <div class="text-xs text-gray-500">
+                                                        NISN: ${student.nisn} | ${student.jenis_kelamin}
+                                                    </div>
+                                                    <div class="text-xs text-blue-600">
+                                                        Rekomendasi: ${student.rekomendasi} (${student.nilai_preferensi})
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        `;
+                                    });
+                                    html += '</div>';
+
+                                    // Add select all checkbox
+                                    const selectAllHtml = `
+                                        <div class="border-b border-gray-200 pb-2 mb-2">
+                                            <label class="flex items-center">
+                                                <input type="checkbox" id="selectAllStudents" 
+                                                       class="rounded border-gray-300 text-navy focus:ring-navy mr-2">
+                                                <span class="text-sm font-medium text-gray-700">Pilih Semua (${data.students.length} siswa)</span>
+                                            </label>
+                                        </div>
+                                    `;
+
+                                    studentsList.innerHTML = selectAllHtml + html;
+
+                                    // Add select all functionality
+                                    const selectAllCheckbox = document.getElementById('selectAllStudents');
+                                    const studentCheckboxes = studentsList.querySelectorAll(
+                                        'input[name="peserta_didik_ids[]"]');
+
+                                    selectAllCheckbox.addEventListener('change', function() {
+                                        studentCheckboxes.forEach(checkbox => {
+                                            checkbox.checked = this.checked;
+                                        });
+                                    });
+
+                                    // Update select all when individual checkboxes change
+                                    studentCheckboxes.forEach(checkbox => {
+                                        checkbox.addEventListener('change', function() {
+                                            const checkedCount = Array.from(
+                                                studentCheckboxes).filter(cb => cb
+                                                .checked).length;
+                                            selectAllCheckbox.checked = checkedCount ===
+                                                studentCheckboxes.length;
+                                            selectAllCheckbox.indeterminate = checkedCount >
+                                                0 && checkedCount < studentCheckboxes
+                                                .length;
+                                        });
+                                    });
+
+                                } else {
+                                    studentsList.innerHTML = `
+                                        <div class="text-center py-8">
+                                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                                            </svg>
+                                            <p class="text-gray-500 text-sm mt-2">Tidak ada siswa dengan perhitungan TOPSIS</p>
+                                            <p class="text-gray-400 text-xs">untuk tahun ajaran ${tahunAjaran}</p>
+                                        </div>
+                                    `;
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error loading students:', error);
+                                studentsList.innerHTML = `
+                                    <div class="text-center py-8">
+                                        <svg class="mx-auto h-12 w-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                                        </svg>
+                                        <p class="text-red-500 text-sm mt-2">Error loading data siswa</p>
+                                        <p class="text-red-400 text-xs">${error.message}</p>
+                                    </div>
                                 `;
                             });
-                            html += '</div>';
-                            studentsList.innerHTML = html;
-                        } else {
-                            studentsList.innerHTML =
-                                '<p class="text-gray-500 text-sm">Tidak ada siswa dengan perhitungan TOPSIS untuk tahun ajaran ini</p>';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error loading students:', error);
-                        studentsList.innerHTML = '<p class="text-red-500 text-sm">Error loading data siswa</p>';
                     });
-            });
-
-            // Validation for comparison form
-            document.getElementById('comparisonForm').addEventListener('submit', function(e) {
-                let isValid = true;
-
-                // Check tahun ajaran selection
-                const tahunCheckboxes = document.querySelectorAll('input[name="tahun_ajaran[]"]:checked');
-                const tahunError = document.getElementById('tahunAjaranError');
-
-                if (tahunCheckboxes.length < 2) {
-                    e.preventDefault();
-                    tahunError.classList.remove('hidden');
-                    isValid = false;
-                } else {
-                    tahunError.classList.add('hidden');
                 }
 
-                // Check criteria selection
-                const criteriaCheckboxes = document.querySelectorAll('input[name="comparison_criteria[]"]:checked');
-                const criteriaError = document.getElementById('criteriaError');
+                // Validation for comparison form
+                const comparisonForm = document.getElementById('comparisonForm');
+                if (comparisonForm) {
+                    comparisonForm.addEventListener('submit', function(e) {
+                        let isValid = true;
 
-                if (criteriaCheckboxes.length < 1) {
-                    e.preventDefault();
-                    criteriaError.classList.remove('hidden');
-                    isValid = false;
-                } else {
-                    criteriaError.classList.add('hidden');
+                        // Check tahun ajaran selection
+                        const tahunCheckboxes = document.querySelectorAll(
+                            'input[name="tahun_ajaran[]"]:checked');
+                        const tahunError = document.getElementById('tahunAjaranError');
+
+                        if (tahunCheckboxes.length < 2) {
+                            e.preventDefault();
+                            tahunError.classList.remove('hidden');
+                            isValid = false;
+                        } else {
+                            tahunError.classList.add('hidden');
+                        }
+
+                        // Check criteria selection
+                        const criteriaCheckboxes = document.querySelectorAll(
+                            'input[name="comparison_criteria[]"]:checked');
+                        const criteriaError = document.getElementById('criteriaError');
+
+                        if (criteriaCheckboxes.length < 1) {
+                            e.preventDefault();
+                            criteriaError.classList.remove('hidden');
+                            isValid = false;
+                        } else {
+                            criteriaError.classList.add('hidden');
+                        }
+
+                        if (!isValid) {
+                            return false;
+                        }
+                    });
                 }
 
-                if (!isValid) {
-                    return false;
-                }
-            });
+                // Real-time validation for tahun ajaran
+                document.addEventListener('change', function(e) {
+                    if (e.target.classList.contains('tahun-checkbox')) {
+                        const checkedCount = document.querySelectorAll('input[name="tahun_ajaran[]"]:checked')
+                            .length;
+                        const errorDiv = document.getElementById('tahunAjaranError');
 
-            // Real-time validation for tahun ajaran
-            document.addEventListener('change', function(e) {
-                if (e.target.classList.contains('tahun-checkbox')) {
-                    const checkedCount = document.querySelectorAll('input[name="tahun_ajaran[]"]:checked').length;
-                    const errorDiv = document.getElementById('tahunAjaranError');
-
-                    if (checkedCount >= 2) {
-                        errorDiv.classList.add('hidden');
+                        if (checkedCount >= 2) {
+                            errorDiv.classList.add('hidden');
+                        }
                     }
-                }
 
-                if (e.target.classList.contains('criteria-checkbox')) {
-                    const checkedCount = document.querySelectorAll('input[name="comparison_criteria[]"]:checked')
-                    .length;
-                    const errorDiv = document.getElementById('criteriaError');
+                    if (e.target.classList.contains('criteria-checkbox')) {
+                        const checkedCount = document.querySelectorAll(
+                            'input[name="comparison_criteria[]"]:checked').length;
+                        const errorDiv = document.getElementById('criteriaError');
 
-                    if (checkedCount >= 1) {
-                        errorDiv.classList.add('hidden');
+                        if (checkedCount >= 1) {
+                            errorDiv.classList.add('hidden');
+                        }
                     }
-                }
-            });
+                });
 
-            // Close modal when clicking outside
-            document.querySelectorAll('.fixed.inset-0').forEach(modal => {
-                modal.addEventListener('click', function(e) {
-                    if (e.target === this) {
-                        this.classList.add('hidden');
-                    }
+                // Close modal when clicking outside
+                document.querySelectorAll('.fixed.inset-0').forEach(modal => {
+                    modal.addEventListener('click', function(e) {
+                        if (e.target === this) {
+                            this.classList.add('hidden');
+                        }
+                    });
                 });
             });
         </script>

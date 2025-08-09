@@ -352,27 +352,60 @@ class LaporanController extends Controller
         }
 
         try {
+            // Ambil semua peserta didik berdasarkan tahun ajaran yang memiliki perhitungan TOPSIS
             $students = PesertaDidik::where('tahun_ajaran', $tahunAjaran)
-                ->whereHas('perhitunganTopsis')
-                ->with(['perhitunganTerbaru'])
+                ->whereHas('perhitunganTopsis') // Pastikan ada perhitungan TOPSIS
+                ->with(['perhitunganTerbaru' => function ($query) {
+                    $query->orderBy('tanggal_perhitungan', 'desc');
+                }])
                 ->orderBy('nama_lengkap')
                 ->get()
                 ->map(function ($student) {
+                    $perhitungan = $student->perhitunganTerbaru;
+
                     return [
                         'id' => $student->peserta_didik_id,
                         'nama' => $student->nama_lengkap,
                         'nisn' => $student->nisn,
-                        'rekomendasi' => $student->perhitunganTerbaru->jurusan_rekomendasi ?? '-',
-                        'nilai_preferensi' => $student->perhitunganTerbaru ?
-                            number_format($student->perhitunganTerbaru->nilai_preferensi, 4) : '-'
+                        'jenis_kelamin' => $student->jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan',
+                        'rekomendasi' => $perhitungan ? $perhitungan->jurusan_rekomendasi : '-',
+                        'nilai_preferensi' => $perhitungan ?
+                            number_format($perhitungan->nilai_preferensi, 4) : '-',
+                        'tanggal_perhitungan' => $perhitungan ?
+                            $perhitungan->tanggal_perhitungan->format('d/m/Y') : '-'
                     ];
                 });
 
-            return response()->json(['students' => $students]);
+            return response()->json([
+                'students' => $students,
+                'count' => $students->count()
+            ]);
         } catch (\Exception $e) {
-            Log::error('Error getting students: ' . $e->getMessage());
-            return response()->json(['students' => [], 'error' => 'Gagal memuat data siswa']);
+            Log::error('Error getting students for laporan: ' . $e->getMessage());
+            return response()->json([
+                'students' => [],
+                'error' => 'Gagal memuat data siswa: ' . $e->getMessage()
+            ], 500);
         }
+    }
+
+    // Method safeDecodeParameter yang dibutuhkan untuk comparison report
+    private function safeDecodeParameter($parameter)
+    {
+        if (is_string($parameter)) {
+            try {
+                return json_decode($parameter, true) ?? [];
+            } catch (\Exception $e) {
+                Log::error('Failed to decode parameter: ' . $e->getMessage());
+                return [];
+            }
+        }
+
+        if (is_array($parameter)) {
+            return $parameter;
+        }
+
+        return [];
     }
 
     /**
