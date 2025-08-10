@@ -117,28 +117,22 @@ class PenilaianPesertaDidik extends Model
             return 2; // default value
         }
 
-        // Mapping minat to numeric values based on relevance to TKJ/TKR
+        // Mapping berdasarkan analisis Excel yang akurat
         $minatMapping = [
-            // High relevance to TKJ (6-7)
-            'Teknologi informasi & Komunikasi' => 7,
-            'Komputer' => 7,
-            'Desain Grafis' => 6,
-            'Fotografi & Videografi' => 6,
-
-            // Medium-High relevance (4-5)
-            'Elektronik' => 5,
-            'Fisika' => 4,
-            'Kimia' => 4,
-
-            // Medium relevance (3)
-            'Biologi & Lingkungan' => 3,
-            'Mesin' => 4, // More relevant for TKR
-            'Seni & Kerajinan' => 3,
-
-            // Low relevance (2)
-            'Musik & Teater' => 2,
-            'Bisnis & Enterpreneurship' => 2,
-            'Pemasaran' => 2,
+            // Berdasarkan data Excel aktual:
+            'Musik & Teater' => 1,                           // MUHAMMAD RIFFA: Excel=1
+            'Teknologi informasi & Komunikasi' => 6,         // Multiple siswa: Excel=6
+            'Kimia' => 4,                                     // SRI SITI NURLATIFAH: Excel=4
+            'Bisnis & Enterpreneurship' => 2,                // Multiple siswa: Excel=2
+            'Fotografi & Videografi' => 6,                   // NAILA RIZKI: Excel=6
+            'Komputer' => 6,                                  // NAILA RIZKI: Excel=6
+            'Biologi & Lingkungan' => 2,                     // Multiple siswa: Excel=2-3
+            'Seni & Kerajinan' => 3,                         // MUHAMMAD RAFFI: Excel estimasi
+            'Elektronik' => 2,                               // MUHAMMAD RAFFI: Excel=2
+            'Fisika' => 4,                                    // MUHAMMAD RAFFI: Excel=4
+            'Mesin' => 2,                                     // MUHAMMAD RIFFA: Excel=2
+            'Desain Grafis' => 6,                            // BALQISY: Excel=6
+            'Pemasaran' => 2,                                // Multiple siswa: Excel=2
         ];
 
         return $minatMapping[$minat] ?? 2; // default to 2 if not found
@@ -146,6 +140,7 @@ class PenilaianPesertaDidik extends Model
 
     /**
      * Convert keahlian to numeric value for TOPSIS calculation
+     * DIPERBAIKI: Mapping sesuai dengan data Excel yang aktual
      */
     public function convertKeahlianToNumeric(?string $keahlian): int
     {
@@ -153,25 +148,22 @@ class PenilaianPesertaDidik extends Model
             return 3; // default value
         }
 
+        // Mapping berdasarkan analisis Excel yang akurat
         $keahlianMapping = [
-            // High relevance to TKJ (6-7)
-            'perangkat lunak' => 7,
-            'menganalisa' => 7,
-            'Menggunakan Perangkat Lunak & Komputer' => 7,
-            'memecahkan masalah' => 6,
-
-            // Medium relevance for TKR (4-5)
-            'kelistrikan' => 5,
-
-            // General skills (2-3)
-            'Mengembangkan Rencana & Strategi' => 3,
+            'perangkat lunak' => 7,                          // SRI SITI NURLATIFAH: Excel=7
+            'menganalisa' => 7,                              // NAILA RIZKI: Excel=7
+            'kelistrikan' => 6,                              // MUHAMMAD RAFFI: Excel=6
+            'Mengembangkan Rencana & Strategi' => 6,         // MUHAMMAD RIFFA: Excel=6 (BUKAN 3!)
+            'Menggunakan Perangkat Lunak & Komputer' => 7,  // BALQISY: Excel=7
+            'memecahkan masalah' => 7,                       // SITI RAHAYU: Excel=7
         ];
 
         return $keahlianMapping[$keahlian] ?? 3; // default to 3 if not found
     }
 
     /**
-     * Convert penghasilan to numeric value for TOPSIS calculation
+     * Convert penghasilan to numeric value for TOPSIS calculation  
+     * VALIDASI: Sesuai dengan Excel
      */
     public function convertPenghasilanToNumeric(?string $penghasilan): int
     {
@@ -179,10 +171,10 @@ class PenilaianPesertaDidik extends Model
             return 3; // default value
         }
 
-        // Higher score for lower income (cost criteria, but treated as benefit for accessibility)
-        if (str_contains($penghasilan, 'G1')) return 5; // Lowest income, highest priority
-        if (str_contains($penghasilan, 'G2')) return 4; // Medium income
-        if (str_contains($penghasilan, 'G3')) return 2; // Highest income, lowest priority
+        // Mapping yang sudah benar berdasarkan Excel
+        if (str_contains($penghasilan, 'G1')) return 5; // Excel: 5
+        if (str_contains($penghasilan, 'G2')) return 4; // Excel: 4  
+        if (str_contains($penghasilan, 'G3')) return 2; // Excel: 2
 
         return 3; // default
     }

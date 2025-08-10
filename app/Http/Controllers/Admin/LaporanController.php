@@ -345,50 +345,148 @@ class LaporanController extends Controller
      */
     public function getStudents(Request $request)
     {
-        $tahunAjaran = $request->get('tahun_ajaran');
-
-        if (!$tahunAjaran) {
-            return response()->json(['students' => []]);
-        }
-
         try {
-            // Ambil semua peserta didik berdasarkan tahun ajaran yang memiliki perhitungan TOPSIS
-            $students = PesertaDidik::where('tahun_ajaran', $tahunAjaran)
-                ->whereHas('perhitunganTopsis') // Pastikan ada perhitungan TOPSIS
+            // Log request untuk debugging
+            Log::info('getStudents method called', [
+                'request_data' => $request->all(),
+                'user_id' => auth()->id(),
+                'user_role' => auth()->user()->role ?? 'unknown'
+            ]);
+
+            $tahunAjaran = $request->get('tahun_ajaran');
+
+            if (!$tahunAjaran) {
+                Log::warning('No tahun_ajaran provided in request');
+                return response()->json([
+                    'students' => [],
+                    'count' => 0,
+                    'message' => 'Tahun ajaran tidak ditemukan'
+                ]);
+            }
+
+            Log::info('Processing request for tahun_ajaran: ' . $tahunAjaran);
+
+            // Langkah 1: Cek apakah ada peserta didik untuk tahun ajaran ini
+            $totalPesertaDidik = \App\Models\PesertaDidik::where('tahun_ajaran', $tahunAjaran)->count();
+            Log::info('Total peserta didik found: ' . $totalPesertaDidik);
+
+            if ($totalPesertaDidik === 0) {
+                return response()->json([
+                    'students' => [],
+                    'count' => 0,
+                    'message' => 'Tidak ada peserta didik untuk tahun ajaran ' . $tahunAjaran
+                ]);
+            }
+
+            // Langkah 2: Cek apakah ada perhitungan TOPSIS
+            $totalPerhitungan = \App\Models\PerhitunganTopsis::whereHas('pesertaDidik', function ($query) use ($tahunAjaran) {
+                $query->where('tahun_ajaran', $tahunAjaran);
+            })->count();
+            Log::info('Total perhitungan TOPSIS found: ' . $totalPerhitungan);
+
+            if ($totalPerhitungan === 0) {
+                return response()->json([
+                    'students' => [],
+                    'count' => 0,
+                    'message' => 'Belum ada perhitungan TOPSIS untuk tahun ajaran ' . $tahunAjaran
+                ]);
+            }
+
+            // Langkah 3: Ambil data dengan query yang aman
+            $students = \App\Models\PesertaDidik::where('tahun_ajaran', $tahunAjaran)
+                ->whereHas('perhitunganTopsis', function ($query) {
+                    $query->whereNotNull('nilai_preferensi');
+                })
                 ->with(['perhitunganTerbaru' => function ($query) {
                     $query->orderBy('tanggal_perhitungan', 'desc');
                 }])
                 ->orderBy('nama_lengkap')
-                ->get()
-                ->map(function ($student) {
+                ->get();
+
+            Log::info('Students with calculations found: ' . $students->count());
+
+            // Langkah 4: Transform data dengan error handling
+            $studentsData = $students->map(function ($student) {
+                try {
                     $perhitungan = $student->perhitunganTerbaru;
+
+                    // Handle tanggal dengan aman
+                    $tanggalPerhitungan = '-';
+                    if ($perhitungan) {
+                        if ($perhitungan->tanggal_perhitungan) {
+                            try {
+                                $tanggalPerhitungan = \Carbon\Carbon::parse($perhitungan->tanggal_perhitungan)->format('d/m/Y');
+                            } catch (\Exception $e) {
+                                $tanggalPerhitungan = $perhitungan->created_at ? $perhitungan->created_at->format('d/m/Y') : '-';
+                            }
+                        } else {
+                            $tanggalPerhitungan = $perhitungan->created_at ? $perhitungan->created_at->format('d/m/Y') : '-';
+                        }
+                    }
 
                     return [
                         'id' => $student->peserta_didik_id,
-                        'nama' => $student->nama_lengkap,
-                        'nisn' => $student->nisn,
-                        'jenis_kelamin' => $student->jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan',
-                        'rekomendasi' => $perhitungan ? $perhitungan->jurusan_rekomendasi : '-',
-                        'nilai_preferensi' => $perhitungan ?
-                            number_format($perhitungan->nilai_preferensi, 4) : '-',
-                        'tanggal_perhitungan' => $perhitungan ?
-                            $perhitungan->tanggal_perhitungan->format('d/m/Y') : '-'
+                        'nama' => $student->nama_lengkap ?? 'Nama tidak tersedia',
+                        'nisn' => $student->nisn ?? 'NISN tidak tersedia',
+                        'jenis_kelamin' => ($student->jenis_kelamin === 'L') ? 'Laki-laki' : 'Perempuan',
+                        'rekomendasi' => $perhitungan ? ($perhitungan->jurusan_rekomendasi ?? '-') : '-',
+                        'nilai_preferensi' => $perhitungan ? number_format($perhitungan->nilai_preferensi ?? 0, 4) : '-',
+                        'tanggal_perhitungan' => $tanggalPerhitungan
                     ];
-                });
+                } catch (\Exception $e) {
+                    Log::error('Error processing student data', [
+                        'student_id' => $student->peserta_didik_id ?? 'unknown',
+                        'error' => $e->getMessage()
+                    ]);
+
+                    // Return safe default data
+                    return [
+                        'id' => $student->peserta_didik_id ?? 0,
+                        'nama' => $student->nama_lengkap ?? 'Error loading name',
+                        'nisn' => $student->nisn ?? 'Error loading NISN',
+                        'jenis_kelamin' => 'Tidak diketahui',
+                        'rekomendasi' => '-',
+                        'nilai_preferensi' => '-',
+                        'tanggal_perhitungan' => '-'
+                    ];
+                }
+            });
+
+            Log::info('Data transformation completed', [
+                'students_processed' => $studentsData->count()
+            ]);
 
             return response()->json([
-                'students' => $students,
-                'count' => $students->count()
+                'students' => $studentsData,
+                'count' => $studentsData->count(),
+                'message' => 'Data berhasil dimuat',
+                'debug_info' => [
+                    'total_peserta_didik' => $totalPesertaDidik,
+                    'total_perhitungan' => $totalPerhitungan,
+                    'students_with_calculation' => $students->count()
+                ]
             ]);
         } catch (\Exception $e) {
-            Log::error('Error getting students for laporan: ' . $e->getMessage());
+            Log::error('Critical error in getStudents method', [
+                'error_message' => $e->getMessage(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine(),
+                'stack_trace' => $e->getTraceAsString(),
+                'request_data' => $request->all()
+            ]);
+
             return response()->json([
                 'students' => [],
-                'error' => 'Gagal memuat data siswa: ' . $e->getMessage()
+                'count' => 0,
+                'error' => 'Terjadi kesalahan sistem: ' . $e->getMessage(),
+                'debug' => config('app.debug') ? [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ] : null
             ], 500);
         }
     }
-
     // Method safeDecodeParameter yang dibutuhkan untuk comparison report
     private function safeDecodeParameter($parameter)
     {

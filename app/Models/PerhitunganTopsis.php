@@ -111,6 +111,18 @@ class PerhitunganTopsis extends Model
         return $this->belongsTo(PenilaianPesertaDidik::class, 'penilaian_id', 'penilaian_id');
     }
 
+    public function perhitunganTerbaru()
+    {
+        return $this->hasOne(PerhitunganTopsis::class, 'peserta_didik_id', 'peserta_didik_id')
+            ->latest('tanggal_perhitungan');
+    }
+
+    // Method alternatif jika tanggal_perhitungan null:
+    public function perhitunganTerbaruAlternatif()
+    {
+        return $this->hasOne(PerhitunganTopsis::class, 'peserta_didik_id', 'peserta_didik_id')
+            ->latest('created_at');
+    }
     /**
      * Get tanggal perhitungan with safe formatting
      */
@@ -119,12 +131,12 @@ class PerhitunganTopsis extends Model
         if (!$this->tanggal_perhitungan) {
             return null;
         }
-        
+
         try {
             if ($this->tanggal_perhitungan instanceof Carbon) {
                 return $this->tanggal_perhitungan;
             }
-            
+
             return Carbon::parse($this->tanggal_perhitungan);
         } catch (\Exception $e) {
             return null;

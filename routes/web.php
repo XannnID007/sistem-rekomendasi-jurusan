@@ -77,13 +77,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::prefix('laporan')->name('laporan.')->group(function () {
         Route::get('/', [LaporanController::class, 'index'])->name('index');
         Route::get('/create', [LaporanController::class, 'create'])->name('create');
+
+        // PASTIKAN ROUTE INI ADA DAN SEBELUM ROUTE DENGAN PARAMETER:
+        Route::get('/get-students', [LaporanController::class, 'getStudents'])->name('get-students');
+
         Route::post('/', [LaporanController::class, 'store'])->name('store');
         Route::get('/{laporan}', [LaporanController::class, 'show'])->name('show');
         Route::get('/{laporan}/download', [LaporanController::class, 'download'])->name('download');
         Route::delete('/{laporan}', [LaporanController::class, 'destroy'])->name('destroy');
-
-        // AJAX route for getting students
-        Route::get('/get-students', [LaporanController::class, 'getStudents'])->name('get-students');
 
         // Generate specific reports
         Route::post('/generate/individual', [LaporanController::class, 'generateIndividual'])->name('generate.individual');
