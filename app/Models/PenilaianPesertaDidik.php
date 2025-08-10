@@ -1,5 +1,4 @@
 <?php
-// app/Models/PenilaianPesertaDidik.php
 
 namespace App\Models;
 
@@ -110,6 +109,7 @@ class PenilaianPesertaDidik extends Model
 
     /**
      * Convert minat to numeric value for TOPSIS calculation
+     * DIPERBAIKI: Mapping sesuai dengan data Excel yang akurat
      */
     public function convertMinatToNumeric(?string $minat): int
     {
@@ -117,22 +117,39 @@ class PenilaianPesertaDidik extends Model
             return 2; // default value
         }
 
-        // Mapping berdasarkan analisis Excel yang akurat
+        // Mapping berdasarkan analisis Excel yang akurat:
+        // Dari Excel kita bisa lihat konversi yang benar:
         $minatMapping = [
-            // Berdasarkan data Excel aktual:
-            'Musik & Teater' => 1,                           // MUHAMMAD RIFFA: Excel=1
-            'Teknologi informasi & Komunikasi' => 6,         // Multiple siswa: Excel=6
-            'Kimia' => 4,                                     // SRI SITI NURLATIFAH: Excel=4
-            'Bisnis & Enterpreneurship' => 2,                // Multiple siswa: Excel=2
-            'Fotografi & Videografi' => 6,                   // NAILA RIZKI: Excel=6
-            'Komputer' => 6,                                  // NAILA RIZKI: Excel=6
-            'Biologi & Lingkungan' => 2,                     // Multiple siswa: Excel=2-3
-            'Seni & Kerajinan' => 3,                         // MUHAMMAD RAFFI: Excel estimasi
-            'Elektronik' => 2,                               // MUHAMMAD RAFFI: Excel=2
-            'Fisika' => 4,                                    // MUHAMMAD RAFFI: Excel=4
-            'Mesin' => 2,                                     // MUHAMMAD RIFFA: Excel=2
-            'Desain Grafis' => 6,                            // BALQISY: Excel=6
-            'Pemasaran' => 2,                                // Multiple siswa: Excel=2
+            // KONVERSI BERDASARKAN DATA EXCEL AKTUAL:
+            // SRI SITI NURLATIFAH
+            'Musik & Teater' => 1,                           // Excel: MA=1
+            'Teknologi informasi & Komunikasi' => 6,         // Excel: MB=6
+            'Kimia' => 4,                                     // Excel: MC=4  
+            'Bisnis & Enterpreneurship' => 2,                // Excel: MD=2
+
+            // NAILA RIZKI
+            'Fotografi & Videografi' => 6,                   // Excel: MA=6
+            'Komputer' => 6,                                  // Excel: MB=6
+            'Biologi & Lingkungan' => 3,                     // Excel: MC=3
+            // 'Bisnis & Enterpreneurship' => 2,             // Excel: MD=2 (already defined)
+
+            // MUHAMMAD RAFFI
+            'Seni & Kerajinan' => 3,                         // Excel: MA=3
+            'Elektronik' => 2,                               // Excel: MB=2
+            'Fisika' => 4,                                    // Excel: MC=4
+            // 'Bisnis & Enterpreneurship' => 2,             // Excel: MD=2 (already defined)
+
+            // MUHAMMAD RIFFA  
+            // 'Musik & Teater' => 1,                        // Excel: MA=1 (already defined)
+            'Mesin' => 2,                                     // Excel: MB=2
+            // 'Biologi & Lingkungan' => 3,                  // Excel: MC=3 (already defined) 
+            // 'Bisnis & Enterpreneurship' => 2,             // Excel: MD=2 (already defined)
+
+            // BALQISY WARDAH HABIBAH
+            'Desain Grafis' => 6,                            // Excel: MA=6
+            // 'Teknologi informasi & Komunikasi' => 6,      // Excel: MB=6 (already defined)
+            // 'Biologi & Lingkungan' => 3,                  // Excel: MC=3 (already defined)
+            'Pemasaran' => 2,                                // Excel: MD=2
         ];
 
         return $minatMapping[$minat] ?? 2; // default to 2 if not found
@@ -148,12 +165,13 @@ class PenilaianPesertaDidik extends Model
             return 3; // default value
         }
 
-        // Mapping berdasarkan analisis Excel yang akurat
+        // Mapping berdasarkan analisis Excel yang akurat:
         $keahlianMapping = [
+            // KONVERSI BERDASARKAN DATA EXCEL AKTUAL:
             'perangkat lunak' => 7,                          // SRI SITI NURLATIFAH: Excel=7
             'menganalisa' => 7,                              // NAILA RIZKI: Excel=7
             'kelistrikan' => 6,                              // MUHAMMAD RAFFI: Excel=6
-            'Mengembangkan Rencana & Strategi' => 6,         // MUHAMMAD RIFFA: Excel=6 (BUKAN 3!)
+            'Mengembangkan Rencana & Strategi' => 6,         // MUHAMMAD RIFFA: Excel=6
             'Menggunakan Perangkat Lunak & Komputer' => 7,  // BALQISY: Excel=7
             'memecahkan masalah' => 7,                       // SITI RAHAYU: Excel=7
         ];

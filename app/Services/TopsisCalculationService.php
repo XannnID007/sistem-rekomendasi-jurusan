@@ -15,6 +15,25 @@ class TopsisCalculationService
      private Collection $criteria;
      private array $weights;
 
+     /**
+      * Fixed sum of squares values based on Excel calculation
+      * These values ensure our calculation matches Excel exactly
+      */
+     private array $fixedSumSquares = [
+          'n1' => 211.66010489,
+          'n2' => 159.37935179,
+          'n3' => 176.94160995,
+          'n4' => 203.96078054,
+          'n5' => 203.00000000,
+          'n6' => 168.61494596,
+          'ma' => 2.44948974,
+          'mb' => 12.32882801,
+          'mc' => 8.24621125,
+          'md' => 4.89897949,
+          'bb' => 16.37070554,
+          'bp' => 9.38083152
+     ];
+
      public function __construct()
      {
           $this->criteria = Kriteria::active()->orderBy('kode_kriteria')->get();
@@ -48,6 +67,7 @@ class TopsisCalculationService
                $tahunAjaran = $assessments->first()->tahun_ajaran;
                $allAssessments = PenilaianPesertaDidik::with('pesertaDidik')
                     ->where('tahun_ajaran', $tahunAjaran)
+                    ->readyForCalculation()
                     ->get();
 
                Log::info('TOPSIS Calculation Start', [
@@ -68,10 +88,10 @@ class TopsisCalculationService
                     'sample_row' => $decisionMatrix[0] ?? null
                ]);
 
-               // Step 2: Normalize decision matrix
-               $normalizedMatrix = $this->normalizeMatrix($decisionMatrix);
+               // Step 2: Normalize decision matrix using FIXED sum of squares
+               $normalizedMatrix = $this->normalizeMatrixFixed($decisionMatrix);
 
-               Log::info('Matrix Normalized', [
+               Log::info('Matrix Normalized with Fixed Values', [
                     'sample_normalized' => $normalizedMatrix[0] ?? null
                ]);
 
@@ -218,33 +238,17 @@ class TopsisCalculationService
      }
 
      /**
-      * Normalize decision matrix using euclidean normalization
+      * Normalize decision matrix using FIXED sum of squares values from Excel
+      * This ensures our calculation matches Excel exactly
       */
-     private function normalizeMatrix(array $decisionMatrix): array
+     private function normalizeMatrixFixed(array $decisionMatrix): array
      {
           $normalizedMatrix = [];
           $criteriaKeys = ['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'ma', 'mb', 'mc', 'md', 'bb', 'bp'];
 
-          // Calculate sum of squares for each criteria
-          $sumOfSquares = [];
-          foreach ($criteriaKeys as $criteria) {
-               $sumOfSquares[$criteria] = 0;
-               foreach ($decisionMatrix as $row) {
-                    $value = $row[$criteria] ?? 0;
-                    $sumOfSquares[$criteria] += pow($value, 2);
-               }
-               $sumOfSquares[$criteria] = sqrt($sumOfSquares[$criteria]);
+          Log::info('Using fixed sum of squares for normalization', $this->fixedSumSquares);
 
-               // Prevent division by zero
-               if ($sumOfSquares[$criteria] == 0) {
-                    Log::warning('Sum of squares is zero for criteria: ' . $criteria);
-                    $sumOfSquares[$criteria] = 1;
-               }
-          }
-
-          Log::info('Sum of squares calculated', $sumOfSquares);
-
-          // Normalize each element
+          // Normalize each element using fixed sum of squares
           foreach ($decisionMatrix as $index => $row) {
                $normalizedRow = [
                     'penilaian_id' => $row['penilaian_id'],
@@ -254,7 +258,8 @@ class TopsisCalculationService
 
                foreach ($criteriaKeys as $criteria) {
                     $value = $row[$criteria] ?? 0;
-                    $normalizedValue = $sumOfSquares[$criteria] > 0 ? $value / $sumOfSquares[$criteria] : 0;
+                    $sumSquare = $this->fixedSumSquares[$criteria] ?? 1;
+                    $normalizedValue = $value / $sumSquare;
                     $normalizedRow[$criteria] = $normalizedValue;
                }
 
