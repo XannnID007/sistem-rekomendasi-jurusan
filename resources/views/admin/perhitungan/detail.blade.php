@@ -84,8 +84,8 @@
                                 <span class="font-medium">{{ $perhitungan->penilaian->nilai_bahasa_inggris }}</span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-gray-600">Produktif:</span>
-                                <span class="font-medium">{{ $perhitungan->penilaian->nilai_produktif }}</span>
+                                <span class="text-gray-600">PKN:</span>
+                                <span class="font-medium">{{ $perhitungan->penilaian->nilai_pkn }}</span>
                             </div>
                         </div>
                     </div>

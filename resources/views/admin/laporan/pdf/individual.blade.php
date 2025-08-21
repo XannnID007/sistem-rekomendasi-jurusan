@@ -137,7 +137,8 @@
 
                 <div class="section">
                     <h4>{{ $index + 1 }}. {{ $pesertaDidik->nama_lengkap ?? 'N/A' }}
-                        ({{ $pesertaDidik->nisn ?? 'N/A' }})</h4>
+                        ({{ $pesertaDidik->nisn ?? 'N/A' }})
+                    </h4>
 
                     <div class="info-box">
                         <div class="info-grid">
@@ -215,8 +216,8 @@
                                     <td class="text-center">{{ number_format($item->weighted_n5 ?? 0, 4) }}</td>
                                 </tr>
                                 <tr>
-                                    <td>Produktif</td>
-                                    <td class="text-center">{{ $penilaian->nilai_produktif ?? 'N/A' }}</td>
+                                    <td>PKN</td>
+                                    <td class="text-center">{{ $penilaian->nilai_pkn ?? 'N/A' }}</td>
                                     <td class="text-center">{{ number_format($item->normalized_n6 ?? 0, 4) }}</td>
                                     <td class="text-center">{{ number_format($item->weighted_n6 ?? 0, 4) }}</td>
                                 </tr>

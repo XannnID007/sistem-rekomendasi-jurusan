@@ -184,15 +184,15 @@
                                             </div>
                                         </div>
                                         <div class="flex justify-between items-center">
-                                            <span class="text-sm text-blue-700">Produktif</span>
+                                            <span class="text-sm text-blue-700">PKN</span>
                                             <div class="flex items-center space-x-2">
                                                 <div class="w-16 bg-blue-200 rounded-full h-2">
                                                     <div class="bg-blue-500 h-2 rounded-full"
-                                                        style="width: {{ $perhitungan->penilaian->nilai_produktif }}%">
+                                                        style="width: {{ $perhitungan->penilaian->nilai_pkn }}%">
                                                     </div>
                                                 </div>
                                                 <span
-                                                    class="text-sm font-semibold text-blue-800 w-8">{{ $perhitungan->penilaian->nilai_produktif }}</span>
+                                                    class="text-sm font-semibold text-blue-800 w-8">{{ $perhitungan->penilaian->nilai_pkn }}</span>
                                             </div>
                                         </div>
                                         <div class="pt-2 border-t border-blue-200">

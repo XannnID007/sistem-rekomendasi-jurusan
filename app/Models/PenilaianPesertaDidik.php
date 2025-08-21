@@ -25,7 +25,7 @@ class PenilaianPesertaDidik extends Model
         'nilai_matematika',
         'nilai_bahasa_indonesia',
         'nilai_bahasa_inggris',
-        'nilai_produktif',
+        'nilai_pkn', // CHANGED: dari nilai_produktif ke nilai_pkn
         'minat_a',
         'minat_b',
         'minat_c',
@@ -48,7 +48,7 @@ class PenilaianPesertaDidik extends Model
             'nilai_matematika' => 'decimal:2',
             'nilai_bahasa_indonesia' => 'decimal:2',
             'nilai_bahasa_inggris' => 'decimal:2',
-            'nilai_produktif' => 'decimal:2',
+            'nilai_pkn' => 'decimal:2', // CHANGED: dari nilai_produktif ke nilai_pkn
             'sudah_dihitung' => 'boolean',
         ];
     }
@@ -80,7 +80,7 @@ class PenilaianPesertaDidik extends Model
             'n3' => (float) $this->nilai_matematika,
             'n4' => (float) $this->nilai_bahasa_indonesia,
             'n5' => (float) $this->nilai_bahasa_inggris,
-            'n6' => (float) $this->nilai_produktif,
+            'n6' => (float) $this->nilai_pkn, // CHANGED: dari nilai_produktif ke nilai_pkn
         ];
     }
 
@@ -103,7 +103,7 @@ class PenilaianPesertaDidik extends Model
     public function getRataNilaiAkademikAttribute(): float
     {
         $total = (float)$this->nilai_ipa + (float)$this->nilai_ips + (float)$this->nilai_matematika +
-            (float)$this->nilai_bahasa_indonesia + (float)$this->nilai_bahasa_inggris + (float)$this->nilai_produktif;
+            (float)$this->nilai_bahasa_indonesia + (float)$this->nilai_bahasa_inggris + (float)$this->nilai_pkn; // CHANGED
         return round($total / 6, 2);
     }
 
@@ -207,7 +207,7 @@ class PenilaianPesertaDidik extends Model
             !empty($this->nilai_matematika) &&
             !empty($this->nilai_bahasa_indonesia) &&
             !empty($this->nilai_bahasa_inggris) &&
-            !empty($this->nilai_produktif) &&
+            !empty($this->nilai_pkn) &&
             !empty($this->minat_a) &&
             !empty($this->minat_b) &&
             !empty($this->minat_c) &&
@@ -228,7 +228,7 @@ class PenilaianPesertaDidik extends Model
         if (empty($this->nilai_matematika)) $missing[] = 'Nilai Matematika';
         if (empty($this->nilai_bahasa_indonesia)) $missing[] = 'Nilai Bahasa Indonesia';
         if (empty($this->nilai_bahasa_inggris)) $missing[] = 'Nilai Bahasa Inggris';
-        if (empty($this->nilai_produktif)) $missing[] = 'Nilai Produktif';
+        if (empty($this->nilai_pkn)) $missing[] = 'Nilai PKN';
         if (empty($this->minat_a)) $missing[] = 'Minat A';
         if (empty($this->minat_b)) $missing[] = 'Minat B';
         if (empty($this->minat_c)) $missing[] = 'Minat C';
@@ -249,7 +249,7 @@ class PenilaianPesertaDidik extends Model
             ->whereNotNull('nilai_matematika')
             ->whereNotNull('nilai_bahasa_indonesia')
             ->whereNotNull('nilai_bahasa_inggris')
-            ->whereNotNull('nilai_produktif')
+            ->whereNotNull('nilai_pkn')
             ->whereNotNull('minat_a')
             ->whereNotNull('minat_b')
             ->whereNotNull('minat_c')

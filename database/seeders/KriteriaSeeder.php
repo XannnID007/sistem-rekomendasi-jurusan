@@ -55,11 +55,12 @@ class KriteriaSeeder extends Seeder
                 'is_active' => true,
             ],
             [
+                // CHANGED: dari "Nilai Produktif" ke "Nilai PKN"
                 'kode_kriteria' => 'N6',
-                'nama_kriteria' => 'Nilai Produktif',
+                'nama_kriteria' => 'Nilai PKN',
                 'jenis_kriteria' => 'benefit',
                 'bobot' => 0.0500,
-                'keterangan' => 'Nilai mata pelajaran Produktif',
+                'keterangan' => 'Nilai mata pelajaran Pendidikan Kewarganegaraan',
                 'is_active' => true,
             ],
 
@@ -107,7 +108,7 @@ class KriteriaSeeder extends Seeder
                 'is_active' => true,
             ],
 
-            // Faktor Ekonomi (15% total)
+            // Faktor Ekonomi (15% total)  
             [
                 'kode_kriteria' => 'BP',
                 'nama_kriteria' => 'Background Penghasilan',

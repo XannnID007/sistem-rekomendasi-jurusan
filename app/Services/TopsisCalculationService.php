@@ -25,7 +25,7 @@ class TopsisCalculationService
           'n3' => 176.94160995,
           'n4' => 203.96078054,
           'n5' => 203.00000000,
-          'n6' => 168.61494596,
+          'n6' => 168.61494596, // TETAP: ini untuk nilai PKN (dulu produktif)
           'ma' => 2.44948974,
           'mb' => 12.32882801,
           'mc' => 8.24621125,
@@ -38,6 +38,104 @@ class TopsisCalculationService
      {
           $this->criteria = Kriteria::active()->orderBy('kode_kriteria')->get();
           $this->weights = $this->getCriteriaWeights();
+     }
+
+     /**
+      * Build decision matrix from assessments
+      */
+     private function buildDecisionMatrix(Collection $assessments): array
+     {
+          $matrix = [];
+
+          foreach ($assessments as $assessment) {
+               // Ensure all required fields are present and not null
+               if (!$this->isAssessmentValid($assessment)) {
+                    Log::warning('Invalid assessment data', [
+                         'penilaian_id' => $assessment->penilaian_id,
+                         'missing_fields' => $assessment->getMissingFields()
+                    ]);
+                    continue;
+               }
+
+               $row = [
+                    'penilaian_id' => $assessment->penilaian_id,
+                    'peserta_didik_id' => $assessment->peserta_didik_id,
+                    'tahun_ajaran' => $assessment->tahun_ajaran,
+                    'n1' => (float) $assessment->nilai_ipa,
+                    'n2' => (float) $assessment->nilai_ips,
+                    'n3' => (float) $assessment->nilai_matematika,
+                    'n4' => (float) $assessment->nilai_bahasa_indonesia,
+                    'n5' => (float) $assessment->nilai_bahasa_inggris,
+                    'n6' => (float) $assessment->nilai_pkn, // CHANGED: dari nilai_produktif ke nilai_pkn
+                    'ma' => (float) $assessment->convertMinatToNumeric($assessment->minat_a ?? ''),
+                    'mb' => (float) $assessment->convertMinatToNumeric($assessment->minat_b ?? ''),
+                    'mc' => (float) $assessment->convertMinatToNumeric($assessment->minat_c ?? ''),
+                    'md' => (float) $assessment->convertMinatToNumeric($assessment->minat_d ?? ''),
+                    'bb' => (float) $assessment->convertKeahlianToNumeric($assessment->keahlian ?? ''),
+                    'bp' => (float) $assessment->convertPenghasilanToNumeric($assessment->penghasilan_ortu ?? ''),
+               ];
+
+               // Validate that all values are positive
+               $criteriaKeys = ['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'ma', 'mb', 'mc', 'md', 'bb', 'bp'];
+               $hasZeroValues = false;
+
+               foreach ($criteriaKeys as $key) {
+                    if ($row[$key] <= 0) {
+                         Log::warning('Zero or negative value detected', [
+                              'penilaian_id' => $assessment->penilaian_id,
+                              'field' => $key,
+                              'value' => $row[$key]
+                         ]);
+                         // Set minimum value to avoid division by zero
+                         $row[$key] = 0.1;
+                         $hasZeroValues = true;
+                    }
+               }
+
+               if ($hasZeroValues) {
+                    Log::info('Fixed zero values for assessment', [
+                         'penilaian_id' => $assessment->penilaian_id
+                    ]);
+               }
+
+               $matrix[] = $row;
+          }
+
+          Log::info('Decision matrix built', [
+               'total_rows' => count($matrix),
+               'criteria_count' => 12
+          ]);
+
+          return $matrix;
+     }
+
+     /**
+      * Check if assessment has valid data
+      */
+     private function isAssessmentValid($assessment): bool
+     {
+          $requiredFields = [
+               'nilai_ipa',
+               'nilai_ips',
+               'nilai_matematika',
+               'nilai_bahasa_indonesia',
+               'nilai_bahasa_inggris',
+               'nilai_pkn', // CHANGED: dari nilai_produktif ke nilai_pkn
+               'minat_a',
+               'minat_b',
+               'minat_c',
+               'minat_d',
+               'keahlian',
+               'penghasilan_ortu'
+          ];
+
+          foreach ($requiredFields as $field) {
+               if (empty($assessment->$field)) {
+                    return false;
+               }
+          }
+
+          return true;
      }
 
      /**
@@ -137,104 +235,6 @@ class TopsisCalculationService
                ]);
                throw new Exception('TOPSIS calculation failed: ' . $e->getMessage());
           }
-     }
-
-     /**
-      * Build decision matrix from assessments
-      */
-     private function buildDecisionMatrix(Collection $assessments): array
-     {
-          $matrix = [];
-
-          foreach ($assessments as $assessment) {
-               // Ensure all required fields are present and not null
-               if (!$this->isAssessmentValid($assessment)) {
-                    Log::warning('Invalid assessment data', [
-                         'penilaian_id' => $assessment->penilaian_id,
-                         'missing_fields' => $assessment->getMissingFields()
-                    ]);
-                    continue;
-               }
-
-               $row = [
-                    'penilaian_id' => $assessment->penilaian_id,
-                    'peserta_didik_id' => $assessment->peserta_didik_id,
-                    'tahun_ajaran' => $assessment->tahun_ajaran,
-                    'n1' => (float) $assessment->nilai_ipa,
-                    'n2' => (float) $assessment->nilai_ips,
-                    'n3' => (float) $assessment->nilai_matematika,
-                    'n4' => (float) $assessment->nilai_bahasa_indonesia,
-                    'n5' => (float) $assessment->nilai_bahasa_inggris,
-                    'n6' => (float) $assessment->nilai_produktif,
-                    'ma' => (float) $assessment->convertMinatToNumeric($assessment->minat_a ?? ''),
-                    'mb' => (float) $assessment->convertMinatToNumeric($assessment->minat_b ?? ''),
-                    'mc' => (float) $assessment->convertMinatToNumeric($assessment->minat_c ?? ''),
-                    'md' => (float) $assessment->convertMinatToNumeric($assessment->minat_d ?? ''),
-                    'bb' => (float) $assessment->convertKeahlianToNumeric($assessment->keahlian ?? ''),
-                    'bp' => (float) $assessment->convertPenghasilanToNumeric($assessment->penghasilan_ortu ?? ''),
-               ];
-
-               // Validate that all values are positive
-               $criteriaKeys = ['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'ma', 'mb', 'mc', 'md', 'bb', 'bp'];
-               $hasZeroValues = false;
-
-               foreach ($criteriaKeys as $key) {
-                    if ($row[$key] <= 0) {
-                         Log::warning('Zero or negative value detected', [
-                              'penilaian_id' => $assessment->penilaian_id,
-                              'field' => $key,
-                              'value' => $row[$key]
-                         ]);
-                         // Set minimum value to avoid division by zero
-                         $row[$key] = 0.1;
-                         $hasZeroValues = true;
-                    }
-               }
-
-               if ($hasZeroValues) {
-                    Log::info('Fixed zero values for assessment', [
-                         'penilaian_id' => $assessment->penilaian_id
-                    ]);
-               }
-
-               $matrix[] = $row;
-          }
-
-          Log::info('Decision matrix built', [
-               'total_rows' => count($matrix),
-               'criteria_count' => 12
-          ]);
-
-          return $matrix;
-     }
-
-     /**
-      * Check if assessment has valid data
-      */
-     private function isAssessmentValid($assessment): bool
-     {
-          $requiredFields = [
-               'nilai_ipa',
-               'nilai_ips',
-               'nilai_matematika',
-               'nilai_bahasa_indonesia',
-               'nilai_bahasa_inggris',
-               'nilai_produktif',
-               'minat_a',
-               'minat_b',
-               'minat_c',
-               'minat_d',
-               'keahlian',
-               'penghasilan_ortu'
-          ];
-
-          foreach ($requiredFields as $field) {
-               if (empty($assessment->$field)) {
-                    return false;
-               }
-          }
-
-          return true;
      }
 
      /**

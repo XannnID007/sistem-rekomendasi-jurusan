@@ -22,7 +22,7 @@ class PenilaianSeeder extends Seeder
                 'nilai_matematika' => 85,
                 'nilai_bahasa_indonesia' => 80,
                 'nilai_bahasa_inggris' => 87,
-                'nilai_produktif' => 81,
+                'nilai_pkn' => 81, // CHANGED: dari nilai_produktif ke nilai_pkn
                 'minat_a' => 'Musik & Teater',
                 'minat_b' => 'Teknologi informasi & Komunikasi',
                 'minat_c' => 'Kimia',
@@ -37,7 +37,7 @@ class PenilaianSeeder extends Seeder
                 'nilai_matematika' => 85,
                 'nilai_bahasa_indonesia' => 80,
                 'nilai_bahasa_inggris' => 86,
-                'nilai_produktif' => 83,
+                'nilai_pkn' => 83, // CHANGED: dari nilai_produktif ke nilai_pkn
                 'minat_a' => 'Fotografi & Videografi',
                 'minat_b' => 'Komputer',
                 'minat_c' => 'Biologi & Lingkungan',
@@ -52,7 +52,7 @@ class PenilaianSeeder extends Seeder
                 'nilai_matematika' => 78,
                 'nilai_bahasa_indonesia' => 80,
                 'nilai_bahasa_inggris' => 82,
-                'nilai_produktif' => 82,
+                'nilai_pkn' => 82, // CHANGED: dari nilai_produktif ke nilai_pkn
                 'minat_a' => 'Seni & Kerajinan',
                 'minat_b' => 'Elektronik',
                 'minat_c' => 'Fisika',
@@ -67,7 +67,7 @@ class PenilaianSeeder extends Seeder
                 'nilai_matematika' => 77,
                 'nilai_bahasa_indonesia' => 85,
                 'nilai_bahasa_inggris' => 80,
-                'nilai_produktif' => 82,
+                'nilai_pkn' => 82, // CHANGED: dari nilai_produktif ke nilai_pkn
                 'minat_a' => 'Musik & Teater',
                 'minat_b' => 'Mesin',
                 'minat_c' => 'Biologi & Lingkungan',
@@ -82,7 +82,7 @@ class PenilaianSeeder extends Seeder
                 'nilai_matematika' => 77,
                 'nilai_bahasa_indonesia' => 80,
                 'nilai_bahasa_inggris' => 85,
-                'nilai_produktif' => 80,
+                'nilai_pkn' => 80, // CHANGED: dari nilai_produktif ke nilai_pkn
                 'minat_a' => 'Desain Grafis',
                 'minat_b' => 'Teknologi informasi & Komunikasi',
                 'minat_c' => 'Biologi & Lingkungan',
@@ -97,7 +97,7 @@ class PenilaianSeeder extends Seeder
                 'nilai_matematika' => 70,
                 'nilai_bahasa_indonesia' => 74,
                 'nilai_bahasa_inggris' => 80,
-                'nilai_produktif' => 79,
+                'nilai_pkn' => 79, // CHANGED: dari nilai_produktif ke nilai_pkn
                 'minat_a' => 'Musik & Teater',
                 'minat_b' => 'Teknologi informasi & Komunikasi',
                 'minat_c' => 'Biologi & Lingkungan',
@@ -120,7 +120,7 @@ class PenilaianSeeder extends Seeder
                     'nilai_matematika' => $data['nilai_matematika'],
                     'nilai_bahasa_indonesia' => $data['nilai_bahasa_indonesia'],
                     'nilai_bahasa_inggris' => $data['nilai_bahasa_inggris'],
-                    'nilai_produktif' => $data['nilai_produktif'],
+                    'nilai_pkn' => $data['nilai_pkn'], // CHANGED: dari nilai_produktif ke nilai_pkn
                     'minat_a' => $data['minat_a'],
                     'minat_b' => $data['minat_b'],
                     'minat_c' => $data['minat_c'],

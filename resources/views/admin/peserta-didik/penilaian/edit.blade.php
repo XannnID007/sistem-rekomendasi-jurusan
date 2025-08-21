@@ -119,15 +119,15 @@
                         </div>
 
                         <div>
-                            <label for="nilai_produktif" class="block text-sm font-medium text-gray-700 mb-2">
-                                Nilai Produktif <span class="text-red-500">*</span>
+                            <label for="nilai_pkn" class="block text-sm font-medium text-gray-700 mb-2">
+                                Nilai pkn <span class="text-red-500">*</span>
                             </label>
-                            <input type="number" id="nilai_produktif" name="nilai_produktif"
-                                value="{{ old('nilai_produktif', $penilaian->nilai_produktif) }}" min="0"
-                                max="100" step="0.1"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy focus:border-transparent @error('nilai_produktif') border-red-500 @enderror"
+                            <input type="number" id="nilai_pkn" name="nilai_pkn"
+                                value="{{ old('nilai_pkn', $penilaian->nilai_pkn) }}" min="0" max="100"
+                                step="0.1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy focus:border-transparent @error('nilai_pkn') border-red-500 @enderror"
                                 placeholder="0-100" required>
-                            @error('nilai_produktif')
+                            @error('nilai_pkn')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
@@ -319,7 +319,7 @@
                     parseFloat(document.getElementById('nilai_matematika').value) || 0,
                     parseFloat(document.getElementById('nilai_bahasa_indonesia').value) || 0,
                     parseFloat(document.getElementById('nilai_bahasa_inggris').value) || 0,
-                    parseFloat(document.getElementById('nilai_produktif').value) || 0
+                    parseFloat(document.getElementById('nilai_pkn').value) || 0
                 ];
 
                 const validValues = values.filter(v => v > 0);
