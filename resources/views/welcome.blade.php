@@ -161,31 +161,6 @@
         </div>
     </section>
 
-    <!-- Quick Search Section -->
-    <section class="py-16 bg-white -mt-20 relative z-20">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-                <div class="text-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Cek Rekomendasi Jurusan Anda</h2>
-                    <p class="text-gray-600">Masukkan NISN untuk melihat hasil rekomendasi jurusan</p>
-                </div>
-
-                <form action="{{ route('rekomendasi.search') }}" method="GET" class="max-w-md mx-auto">
-                    <div class="flex gap-3">
-                        <input type="text" name="nisn" placeholder="Masukkan NISN (10 digit)" maxlength="10"
-                            class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy focus:border-transparent"
-                            required pattern="[0-9]{10}">
-                        <button type="submit"
-                            class="px-6 py-3 bg-navy text-white rounded-lg hover:bg-navy-dark transition duration-200 font-medium">
-                            Cari
-                        </button>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-2 text-center">Contoh: 0066731537</p>
-                </form>
-            </div>
-        </div>
-    </section>
-
     <!-- About Section -->
     <section id="about" class="py-16 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
