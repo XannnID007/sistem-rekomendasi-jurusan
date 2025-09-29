@@ -90,6 +90,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/generate/individual', [LaporanController::class, 'generateIndividual'])->name('generate.individual');
         Route::post('/generate/summary', [LaporanController::class, 'generateSummary'])->name('generate.summary');
         Route::post('/generate/comparison', [LaporanController::class, 'generateComparison'])->name('generate.comparison');
+        Route::post('/generate/recommendation', [LaporanController::class, 'generateByRecommendation'])->name('generate.recommendation');
     });
 
     // Kriteria Management

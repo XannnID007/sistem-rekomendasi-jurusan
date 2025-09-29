@@ -22,7 +22,7 @@ return new class extends Migration
             $table->decimal('nilai_matematika', 5, 2);
             $table->decimal('nilai_bahasa_indonesia', 5, 2);
             $table->decimal('nilai_bahasa_inggris', 5, 2);
-            $table->decimal('nilai_produktif', 5, 2);
+            $table->decimal('nilai_pkn', 5, 2);
 
             // Minat (akan dikonversi ke nilai numerik)
             $table->string('minat_a')->nullable(); // Minat A

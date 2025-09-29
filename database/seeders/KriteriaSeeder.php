@@ -9,11 +9,12 @@ class KriteriaSeeder extends Seeder
 {
     /**
      * Run the database seeds.
+     * Bobot kriteria yang telah disesuaikan untuk sistem TOPSIS SMK Penida 2
      */
     public function run(): void
     {
         $kriteria = [
-            // Nilai Akademik (30% total)
+            // Nilai Akademik (30% total - masing-masing 5%)
             [
                 'kode_kriteria' => 'N1',
                 'nama_kriteria' => 'Nilai IPA',
@@ -55,7 +56,6 @@ class KriteriaSeeder extends Seeder
                 'is_active' => true,
             ],
             [
-                // CHANGED: dari "Nilai Produktif" ke "Nilai PKN"
                 'kode_kriteria' => 'N6',
                 'nama_kriteria' => 'Nilai PKN',
                 'jenis_kriteria' => 'benefit',
@@ -67,60 +67,74 @@ class KriteriaSeeder extends Seeder
             // Minat (35% total)
             [
                 'kode_kriteria' => 'MA',
-                'nama_kriteria' => 'Minat A',
+                'nama_kriteria' => 'Minat Seni & Kreativitas',
                 'jenis_kriteria' => 'benefit',
                 'bobot' => 0.1000,
-                'keterangan' => 'Minat pada bidang seni dan kreativitas',
+                'keterangan' => 'Minat pada bidang seni, musik, fotografi, dan kreativitas',
                 'is_active' => true,
             ],
             [
                 'kode_kriteria' => 'MB',
-                'nama_kriteria' => 'Minat B',
+                'nama_kriteria' => 'Minat Teknologi',
                 'jenis_kriteria' => 'benefit',
                 'bobot' => 0.1500,
-                'keterangan' => 'Minat pada bidang teknologi dan komputer',
+                'keterangan' => 'Minat pada bidang teknologi, komputer, elektronik, dan mesin',
                 'is_active' => true,
             ],
             [
                 'kode_kriteria' => 'MC',
-                'nama_kriteria' => 'Minat C',
+                'nama_kriteria' => 'Minat Sains',
                 'jenis_kriteria' => 'benefit',
                 'bobot' => 0.1000,
-                'keterangan' => 'Minat pada bidang sains dan penelitian',
+                'keterangan' => 'Minat pada bidang sains, fisika, kimia, dan biologi',
                 'is_active' => true,
             ],
             [
                 'kode_kriteria' => 'MD',
-                'nama_kriteria' => 'Minat D',
+                'nama_kriteria' => 'Minat Bisnis',
                 'jenis_kriteria' => 'benefit',
                 'bobot' => 0.0500,
-                'keterangan' => 'Minat pada bidang bisnis dan kewirausahaan',
+                'keterangan' => 'Minat pada bidang bisnis, kewirausahaan, dan pemasaran',
                 'is_active' => true,
             ],
 
-            // Keahlian (20% total)
+            // Keahlian Teknis (20% total)
             [
                 'kode_kriteria' => 'BB',
                 'nama_kriteria' => 'Bidang Keahlian',
                 'jenis_kriteria' => 'benefit',
                 'bobot' => 0.2000,
-                'keterangan' => 'Keahlian yang dimiliki peserta didik',
+                'keterangan' => 'Keahlian teknis yang dimiliki peserta didik',
                 'is_active' => true,
             ],
 
-            // Faktor Ekonomi (15% total)  
+            // Background Ekonomi (15% total)  
             [
                 'kode_kriteria' => 'BP',
                 'nama_kriteria' => 'Background Penghasilan',
                 'jenis_kriteria' => 'benefit',
                 'bobot' => 0.1000,
-                'keterangan' => 'Latar belakang penghasilan orang tua',
+                'keterangan' => 'Latar belakang ekonomi keluarga sebagai pertimbangan praktis',
                 'is_active' => true,
             ],
         ];
 
         foreach ($kriteria as $k) {
-            Kriteria::create($k);
+            Kriteria::updateOrCreate(
+                ['kode_kriteria' => $k['kode_kriteria']],
+                $k
+            );
         }
+
+        // Validasi total bobot = 100%
+        $totalBobot = Kriteria::sum('bobot');
+
+        if (abs($totalBobot - 1.0) > 0.001) {
+            $this->command->warn("Warning: Total bobot kriteria = " . ($totalBobot * 100) . "%, seharusnya 100%");
+        } else {
+            $this->command->info("✓ Total bobot kriteria = 100% (Valid)");
+        }
+
+        $this->command->info('Kriteria seeded successfully!');
     }
 }

@@ -260,6 +260,8 @@
         @include('admin.laporan.pdf.summary', ['data' => $reportData])
     @elseif($laporan->jenis_laporan === 'perbandingan')
         @include('admin.laporan.pdf.comparison', ['data' => $reportData])
+    @elseif($laporan->jenis_laporan === 'recommendation_filter')
+        @include('admin.laporan.pdf.recommendation_filter', ['data' => $reportData])
     @else
         <div class="no-data">
             <p>Jenis laporan tidak dikenali: {{ $laporan->jenis_laporan }}</p>

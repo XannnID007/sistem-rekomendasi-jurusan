@@ -41,11 +41,19 @@
                     <select name="jenis_laporan" id="jenis_laporan"
                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy focus:border-transparent">
                         <option value="">Semua Jenis</option>
-                        @foreach ($jenisLaporan as $jenis)
-                            <option value="{{ $jenis }}" {{ request('jenis_laporan') === $jenis ? 'selected' : '' }}>
-                                {{ ucfirst($jenis) }}
-                            </option>
-                        @endforeach
+                        <option value="individual" {{ request('jenis_laporan') === 'individual' ? 'selected' : '' }}>
+                            Individual
+                        </option>
+                        <option value="ringkasan" {{ request('jenis_laporan') === 'ringkasan' ? 'selected' : '' }}>
+                            Ringkasan
+                        </option>
+                        <option value="perbandingan" {{ request('jenis_laporan') === 'perbandingan' ? 'selected' : '' }}>
+                            Perbandingan
+                        </option>
+                        <option value="recommendation_filter"
+                            {{ request('jenis_laporan') === 'recommendation_filter' ? 'selected' : '' }}>
+                            Filter Rekomendasi
+                        </option>
                     </select>
                 </div>
 
@@ -114,7 +122,9 @@
                                         class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
                                         @if ($report->jenis_laporan === 'individual') bg-blue-100 text-blue-800
                                         @elseif($report->jenis_laporan === 'ringkasan') bg-green-100 text-green-800
-                                        @else bg-purple-100 text-purple-800 @endif">
+                                        @elseif($report->jenis_laporan === 'perbandingan') bg-purple-100 text-purple-800
+                                        @elseif($report->jenis_laporan === 'recommendation_filter') bg-orange-100 text-orange-800
+                                        @else bg-gray-100 text-gray-800 @endif">
                                         {{ $report->jenis_laporan_indonesia }}
                                     </span>
                                 </td>

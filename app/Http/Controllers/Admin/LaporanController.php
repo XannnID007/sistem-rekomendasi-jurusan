@@ -507,23 +507,6 @@ class LaporanController extends Controller
     }
 
     /**
-     * Get report data based on type
-     */
-    private function getReportData(Laporan $laporan)
-    {
-        switch ($laporan->jenis_laporan) {
-            case 'individual':
-                return $this->getIndividualReportData($laporan);
-            case 'ringkasan':
-                return $this->getSummaryReportData($laporan);
-            case 'perbandingan':
-                return $this->getComparisonReportData($laporan);
-            default:
-                return [];
-        }
-    }
-
-    /**
      * Get individual report data
      */
     private function getIndividualReportData(Laporan $laporan)
@@ -762,6 +745,155 @@ class LaporanController extends Controller
         } catch (\Exception $e) {
             Log::error('PDF Generation Error: ' . $e->getMessage());
             throw new \Exception('Gagal generate PDF: ' . $e->getMessage());
+        }
+    }
+
+    public function generateByRecommendation(Request $request)
+    {
+        $validated = $request->validate([
+            'tahun_ajaran' => 'required|string',
+            'jurusan_filter' => 'required|in:TKJ,TKR,all',
+            'include_charts' => 'boolean',
+            'include_statistics' => 'boolean'
+        ], [
+            'tahun_ajaran.required' => 'Tahun ajaran wajib dipilih',
+            'jurusan_filter.required' => 'Filter jurusan wajib dipilih',
+            'jurusan_filter.in' => 'Filter jurusan harus TKJ, TKR, atau semua',
+        ]);
+
+        try {
+            $tahunAjaran = $validated['tahun_ajaran'];
+            $jurusanFilter = $validated['jurusan_filter'];
+
+            // Tentukan judul berdasarkan filter
+            $judulMap = [
+                'TKJ' => 'Laporan Siswa Rekomendasi TKJ',
+                'TKR' => 'Laporan Siswa Rekomendasi TKR',
+                'all' => 'Laporan Semua Rekomendasi'
+            ];
+
+            $judul = $judulMap[$jurusanFilter] . ' - ' . $tahunAjaran;
+
+            $laporan = Laporan::create([
+                'judul_laporan' => $judul,
+                'jenis_laporan' => 'recommendation_filter',
+                'tahun_ajaran' => $tahunAjaran,
+                'dibuat_oleh' => auth()->id(),
+                'parameter' => json_encode([
+                    'jurusan_filter' => $jurusanFilter,
+                    'include_charts' => $validated['include_charts'] ?? false,
+                    'include_statistics' => $validated['include_statistics'] ?? true
+                ]),
+            ]);
+
+            // Generate PDF file
+            $this->generateReportFile($laporan);
+
+            return redirect()
+                ->route('admin.laporan.show', $laporan)
+                ->with('success', 'Laporan berhasil dibuat');
+        } catch (\Exception $e) {
+            Log::error('Error generating recommendation filter report: ' . $e->getMessage());
+            return back()
+                ->withInput()
+                ->with('error', 'Gagal membuat laporan: ' . $e->getMessage());
+        }
+    }
+
+    // Update method getReportData untuk menangani jenis laporan baru
+    private function getReportData(Laporan $laporan)
+    {
+        switch ($laporan->jenis_laporan) {
+            case 'individual':
+                return $this->getIndividualReportData($laporan);
+            case 'ringkasan':
+                return $this->getSummaryReportData($laporan);
+            case 'perbandingan':
+                return $this->getComparisonReportData($laporan);
+            case 'recommendation_filter':
+                return $this->getRecommendationFilterReportData($laporan);
+            default:
+                return [];
+        }
+    }
+
+    // Tambahkan method baru untuk mengambil data laporan filter rekomendasi
+    private function getRecommendationFilterReportData(Laporan $laporan)
+    {
+        try {
+            $parameter = $this->safeDecodeParameter($laporan->parameter);
+            $jurusanFilter = $parameter['jurusan_filter'] ?? 'all';
+
+            $query = PerhitunganTopsis::with(['pesertaDidik', 'penilaian'])
+                ->where('tahun_ajaran', $laporan->tahun_ajaran);
+
+            // Apply filter berdasarkan rekomendasi
+            if ($jurusanFilter !== 'all') {
+                $query->where('jurusan_rekomendasi', $jurusanFilter);
+            }
+
+            $data = $query->orderBy('nilai_preferensi', 'desc')->get();
+
+            if ($data->isEmpty()) {
+                return [
+                    'filter_type' => $jurusanFilter,
+                    'total_siswa' => 0,
+                    'rata_preferensi' => 0,
+                    'tertinggi' => 0,
+                    'terendah' => 0,
+                    'distribusi_gender' => ['laki' => 0, 'perempuan' => 0],
+                    'data_lengkap' => collect(),
+                    'statistics' => []
+                ];
+            }
+
+            // Hitung statistik
+            $totalSiswa = $data->count();
+            $rataPreferensi = $data->avg('nilai_preferensi');
+            $tertinggi = $data->max('nilai_preferensi');
+            $terendah = $data->min('nilai_preferensi');
+
+            // Distribusi gender
+            $distribusiGender = [
+                'laki' => $data->filter(fn($item) => $item->pesertaDidik && $item->pesertaDidik->jenis_kelamin === 'L')->count(),
+                'perempuan' => $data->filter(fn($item) => $item->pesertaDidik && $item->pesertaDidik->jenis_kelamin === 'P')->count(),
+            ];
+
+            // Statistik tambahan berdasarkan nilai
+            $nilaiTinggi = $data->filter(fn($item) => $item->nilai_preferensi > 0.5)->count();
+            $nilaiSedang = $data->filter(fn($item) => $item->nilai_preferensi >= 0.3 && $item->nilai_preferensi <= 0.5)->count();
+            $nilaiRendah = $data->filter(fn($item) => $item->nilai_preferensi < 0.3)->count();
+
+            return [
+                'filter_type' => $jurusanFilter,
+                'total_siswa' => $totalSiswa,
+                'rata_preferensi' => $rataPreferensi,
+                'tertinggi' => $tertinggi,
+                'terendah' => $terendah,
+                'distribusi_gender' => $distribusiGender,
+                'data_lengkap' => $data,
+                'statistics' => [
+                    'nilai_tinggi' => $nilaiTinggi,
+                    'nilai_sedang' => $nilaiSedang,
+                    'nilai_rendah' => $nilaiRendah,
+                    'persentase_tinggi' => $totalSiswa > 0 ? ($nilaiTinggi / $totalSiswa) * 100 : 0,
+                    'persentase_sedang' => $totalSiswa > 0 ? ($nilaiSedang / $totalSiswa) * 100 : 0,
+                    'persentase_rendah' => $totalSiswa > 0 ? ($nilaiRendah / $totalSiswa) * 100 : 0,
+                ]
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error in getRecommendationFilterReportData: ' . $e->getMessage());
+            return [
+                'filter_type' => 'unknown',
+                'total_siswa' => 0,
+                'rata_preferensi' => 0,
+                'tertinggi' => 0,
+                'terendah' => 0,
+                'distribusi_gender' => ['laki' => 0, 'perempuan' => 0],
+                'data_lengkap' => collect(),
+                'statistics' => [],
+                'error' => $e->getMessage()
+            ];
         }
     }
 }

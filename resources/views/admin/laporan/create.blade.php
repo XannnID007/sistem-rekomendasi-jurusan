@@ -76,6 +76,26 @@
                     Buat Laporan Perbandingan
                 </button>
             </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+                <div class="flex items-center space-x-4 mb-4">
+                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-navy">Filter Rekomendasi</h3>
+                        <p class="text-sm text-gray-500">TKJ atau TKR saja</p>
+                    </div>
+                </div>
+                <p class="text-gray-600 mb-4">Generate laporan khusus siswa dengan rekomendasi TKJ atau TKR saja.</p>
+                <button onclick="openModal('recommendation_filter')"
+                    class="w-full bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition duration-200">
+                    Buat Laporan Filter
+                </button>
+            </div>
         </div>
 
         <!-- Quick Stats -->
@@ -318,6 +338,101 @@
         </div>
     </div>
 
+    <div id="recommendation_filterModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl max-w-lg w-full p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-semibold text-navy">Laporan Filter Rekomendasi</h3>
+                    <button onclick="closeModal('recommendation_filter')" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <form method="POST" action="{{ route('admin.laporan.generate.recommendation') }}">
+                    @csrf
+                    <div class="space-y-4">
+                        <div>
+                            <label for="recommendation_tahun_ajaran" class="block text-sm font-medium text-gray-700 mb-2">
+                                Tahun Ajaran <span class="text-red-500">*</span>
+                            </label>
+                            <select name="tahun_ajaran" id="recommendation_tahun_ajaran" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy focus:border-transparent">
+                                <option value="">Pilih Tahun Ajaran</option>
+                                @foreach ($tahunAjaran as $tahun)
+                                    <option value="{{ $tahun }}">{{ $tahun }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="jurusan_filter" class="block text-sm font-medium text-gray-700 mb-2">
+                                Filter Rekomendasi <span class="text-red-500">*</span>
+                            </label>
+                            <div class="space-y-2">
+                                <label
+                                    class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                    <input type="radio" name="jurusan_filter" value="TKJ" required
+                                        class="mr-3 text-navy focus:ring-navy">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-900">TKJ (Teknik Komputer dan Jaringan)</div>
+                                        <div class="text-sm text-gray-500">Hanya siswa yang direkomendasikan TKJ</div>
+                                    </div>
+                                </label>
+                                <label
+                                    class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                    <input type="radio" name="jurusan_filter" value="TKR" required
+                                        class="mr-3 text-navy focus:ring-navy">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-900">TKR (Teknik Kendaraan Ringan)</div>
+                                        <div class="text-sm text-gray-500">Hanya siswa yang direkomendasikan TKR</div>
+                                    </div>
+                                </label>
+                                <label
+                                    class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                    <input type="radio" name="jurusan_filter" value="all"
+                                        class="mr-3 text-navy focus:ring-navy">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-900">Semua Rekomendasi</div>
+                                        <div class="text-sm text-gray-500">Siswa TKJ dan TKR</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Opsi Tambahan</label>
+                            <div class="space-y-2">
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="include_charts" value="1"
+                                        class="rounded border-gray-300 text-navy focus:ring-navy">
+                                    <span class="ml-2 text-sm text-gray-700">Sertakan grafik dan chart</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="include_statistics" value="1" checked
+                                        class="rounded border-gray-300 text-navy focus:ring-navy">
+                                    <span class="ml-2 text-sm text-gray-700">Sertakan statistik detail</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" onclick="closeModal('recommendation_filter')"
+                            class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition duration-200">
+                            Batal
+                        </button>
+                        <button type="submit"
+                            class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition duration-200">
+                            Generate Laporan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     @push('scripts')
         <script>
             // Modal functions
@@ -419,7 +534,7 @@
                                 if (!response.ok) {
                                     throw new Error(
                                         `HTTP error! status: ${response.status} - ${response.statusText}`
-                                        );
+                                    );
                                 }
                                 return response.json();
                             })

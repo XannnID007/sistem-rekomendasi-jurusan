@@ -331,6 +331,199 @@
                     </table>
                 </div>
             </div>
+        @elseif($laporan->jenis_laporan === 'recommendation_filter')
+            <!-- Recommendation Filter Report -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                @php
+                    $filterType = $reportData['filter_type'] ?? 'all';
+                    $filterTitles = [
+                        'TKJ' => 'TKJ (Teknik Komputer dan Jaringan)',
+                        'TKR' => 'TKR (Teknik Kendaraan Ringan)',
+                        'all' => 'Semua Rekomendasi',
+                    ];
+                @endphp
+
+                <h3 class="text-lg font-semibold text-navy mb-4">
+                    Laporan Filter: {{ $filterTitles[$filterType] ?? 'Unknown' }}
+                </h3>
+
+                <!-- Filter Info -->
+                <div class="bg-blue-50 rounded-lg p-4 mb-6">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                        <span class="text-blue-800 font-medium">
+                            Filter Diterapkan: {{ $filterTitles[$filterType] ?? 'Unknown' }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="text-center p-4 bg-blue-50 rounded-lg">
+                        <div class="text-2xl font-bold text-blue-600 mb-1">{{ $reportData['total_siswa'] ?? 0 }}</div>
+                        <div class="text-sm text-gray-600">Total Siswa</div>
+                    </div>
+                    <div class="text-center p-4 bg-green-50 rounded-lg">
+                        <div class="text-2xl font-bold text-green-600 mb-1">
+                            {{ number_format($reportData['rata_preferensi'] ?? 0, 4) }}
+                        </div>
+                        <div class="text-sm text-gray-600">Rata-rata Preferensi</div>
+                    </div>
+                    <div class="text-center p-4 bg-purple-50 rounded-lg">
+                        <div class="text-2xl font-bold text-purple-600 mb-1">
+                            {{ number_format($reportData['tertinggi'] ?? 0, 4) }}
+                        </div>
+                        <div class="text-sm text-gray-600">Nilai Tertinggi</div>
+                    </div>
+                    <div class="text-center p-4 bg-yellow-50 rounded-lg">
+                        <div class="text-2xl font-bold text-yellow-600 mb-1">
+                            {{ number_format($reportData['terendah'] ?? 0, 4) }}
+                        </div>
+                        <div class="text-sm text-gray-600">Nilai Terendah</div>
+                    </div>
+                </div>
+
+                <!-- Gender Distribution -->
+                @if (isset($reportData['distribusi_gender']))
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div class="text-center p-4 bg-blue-50 rounded-lg">
+                            <div class="text-2xl font-bold text-blue-600 mb-1">
+                                {{ $reportData['distribusi_gender']['laki'] ?? 0 }}
+                            </div>
+                            <div class="text-sm text-gray-600">Laki-laki</div>
+                            <div class="text-xs text-gray-500">
+                                @if (($reportData['total_siswa'] ?? 0) > 0)
+                                    {{ number_format(($reportData['distribusi_gender']['laki'] / $reportData['total_siswa']) * 100, 1) }}%
+                                @else
+                                    0%
+                                @endif
+                            </div>
+                        </div>
+                        <div class="text-center p-4 bg-pink-50 rounded-lg">
+                            <div class="text-2xl font-bold text-pink-600 mb-1">
+                                {{ $reportData['distribusi_gender']['perempuan'] ?? 0 }}
+                            </div>
+                            <div class="text-sm text-gray-600">Perempuan</div>
+                            <div class="text-xs text-gray-500">
+                                @if (($reportData['total_siswa'] ?? 0) > 0)
+                                    {{ number_format(($reportData['distribusi_gender']['perempuan'] / $reportData['total_siswa']) * 100, 1) }}%
+                                @else
+                                    0%
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                <!-- Performance Statistics -->
+                @if (isset($reportData['statistics']))
+                    <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                        <h4 class="text-md font-semibold text-navy mb-3">Distribusi Tingkat Nilai Preferensi</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="text-center p-3 bg-green-100 rounded-lg">
+                                <div class="text-lg font-bold text-green-600">
+                                    {{ $reportData['statistics']['nilai_tinggi'] ?? 0 }}</div>
+                                <div class="text-xs text-gray-600">Tinggi (> 0.50)</div>
+                                <div class="text-xs text-gray-500">
+                                    {{ number_format($reportData['statistics']['persentase_tinggi'] ?? 0, 1) }}%</div>
+                            </div>
+                            <div class="text-center p-3 bg-yellow-100 rounded-lg">
+                                <div class="text-lg font-bold text-yellow-600">
+                                    {{ $reportData['statistics']['nilai_sedang'] ?? 0 }}</div>
+                                <div class="text-xs text-gray-600">Sedang (0.30-0.50)</div>
+                                <div class="text-xs text-gray-500">
+                                    {{ number_format($reportData['statistics']['persentase_sedang'] ?? 0, 1) }}%</div>
+                            </div>
+                            <div class="text-center p-3 bg-red-100 rounded-lg">
+                                <div class="text-lg font-bold text-red-600">
+                                    {{ $reportData['statistics']['nilai_rendah'] ?? 0 }}</div>
+                                <div class="text-xs text-gray-600">Rendah (< 0.30)</div>
+                                        <div class="text-xs text-gray-500">
+                                            {{ number_format($reportData['statistics']['persentase_rendah'] ?? 0, 1) }}%
+                                        </div>
+                                </div>
+                            </div>
+                        </div>
+                @endif
+
+                <!-- Students Table -->
+                @if (isset($reportData['data_lengkap']) && $reportData['data_lengkap']->count() > 0)
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        No</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Nama</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        NISN</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        L/P</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Nilai Preferensi</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Rekomendasi</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Kategori</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @foreach ($reportData['data_lengkap'] as $index => $perhitungan)
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $index + 1 }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">
+                                                {{ $perhitungan->pesertaDidik->nama_lengkap }}</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {{ $perhitungan->pesertaDidik->nisn }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {{ $perhitungan->pesertaDidik->jenis_kelamin }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {{ number_format($perhitungan->nilai_preferensi, 4) }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span
+                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $perhitungan->jurusan_rekomendasi === 'TKJ' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
+                                                {{ $perhitungan->jurusan_rekomendasi }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            @php
+                                                $nilai = $perhitungan->nilai_preferensi;
+                                                $kategori =
+                                                    $nilai > 0.5 ? 'Tinggi' : ($nilai >= 0.3 ? 'Sedang' : 'Rendah');
+                                                $colorClass =
+                                                    $nilai > 0.5
+                                                        ? 'text-green-600'
+                                                        : ($nilai >= 0.3
+                                                            ? 'text-yellow-600'
+                                                            : 'text-red-600');
+                                            @endphp
+                                            <span class="{{ $colorClass }} font-medium">{{ $kategori }}</span>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div class="text-center py-8">
+                        <p class="text-gray-500">Tidak ada data siswa untuk filter yang dipilih</p>
+                    </div>
+                @endif
+            </div>
         @endif
 
         <!-- Report Parameters -->

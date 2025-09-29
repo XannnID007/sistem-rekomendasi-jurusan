@@ -58,7 +58,8 @@ class Laporan extends Model
         $types = [
             'individual' => 'Laporan Individual',
             'ringkasan' => 'Laporan Ringkasan',
-            'perbandingan' => 'Laporan Perbandingan'
+            'perbandingan' => 'Laporan Perbandingan',
+            'recommendation_filter' => 'Laporan Filter Rekomendasi'
         ];
 
         return $types[$this->jenis_laporan] ?? 'Laporan Umum';
