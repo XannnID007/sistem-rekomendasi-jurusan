@@ -2,16 +2,13 @@
 
 use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PublicRekomendasiController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\PesertaDidikController;
 use App\Http\Controllers\Admin\PerhitunganController;
 use App\Http\Controllers\Admin\RekomendasiController;
 use App\Http\Controllers\Admin\LaporanController;
 use App\Http\Controllers\Admin\KriteriaController;
-use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
-use App\Http\Controllers\Student\RekomendasiController as StudentRekomendasiController;
-use App\Http\Controllers\Student\AnalisController;
-use App\Http\Controllers\Student\ProfilController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -22,6 +19,15 @@ use Illuminate\Support\Facades\Route;
 
 // Welcome Page
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
+
+// Public Rekomendasi Routes (Tidak perlu login)
+Route::prefix('rekomendasi')->name('rekomendasi.')->group(function () {
+    Route::get('/', [PublicRekomendasiController::class, 'index'])->name('index');
+    Route::get('/search', [PublicRekomendasiController::class, 'search'])->name('search');
+    Route::get('/{nisn}', [PublicRekomendasiController::class, 'show'])->name('show');
+    Route::get('/{nisn}/detail', [PublicRekomendasiController::class, 'detail'])->name('detail');
+    Route::get('/{nisn}/analisis', [PublicRekomendasiController::class, 'analisis'])->name('analisis');
+});
 
 // Authentication Routes
 Route::middleware('guest')->group(function () {
@@ -77,10 +83,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::prefix('laporan')->name('laporan.')->group(function () {
         Route::get('/', [LaporanController::class, 'index'])->name('index');
         Route::get('/create', [LaporanController::class, 'create'])->name('create');
-
-        // PASTIKAN ROUTE INI ADA DAN SEBELUM ROUTE DENGAN PARAMETER:
         Route::get('/get-students', [LaporanController::class, 'getStudents'])->name('get-students');
-
         Route::post('/', [LaporanController::class, 'store'])->name('store');
         Route::get('/{laporan}', [LaporanController::class, 'show'])->name('show');
         Route::get('/{laporan}/download', [LaporanController::class, 'download'])->name('download');
@@ -106,42 +109,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
 });
 
-// Student Routes
-Route::middleware(['auth', 'student'])->prefix('student')->name('student.')->group(function () {
-    // Dashboard
-    Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
-
-    // Hasil Rekomendasi
-    Route::prefix('rekomendasi')->name('rekomendasi.')->group(function () {
-        Route::get('/', [StudentRekomendasiController::class, 'index'])->name('index');
-        Route::get('/detail', [StudentRekomendasiController::class, 'detail'])->name('detail');
-    });
-
-    // Detail Analisis
-    Route::prefix('analisis')->name('analisis.')->group(function () {
-        Route::get('/', [AnalisController::class, 'index'])->name('index');
-        Route::get('/topsis', [AnalisController::class, 'topsisDetail'])->name('topsis');
-        Route::get('/kriteria', [AnalisController::class, 'kriteriaDetail'])->name('kriteria');
-    });
-
-    // Profil
-    Route::prefix('profil')->name('profil.')->group(function () {
-        Route::get('/', [ProfilController::class, 'index'])->name('index');
-        Route::get('/edit', [ProfilController::class, 'edit'])->name('edit');
-        Route::put('/', [ProfilController::class, 'update'])->name('update');
-        Route::get('/password', [ProfilController::class, 'password'])->name('password');
-        Route::put('/password', [ProfilController::class, 'updatePassword'])->name('password.update');
-    });
-});
-
-// Redirect routes based on user role
+// Redirect to admin dashboard if authenticated
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
-        if (auth()->user()->isAdmin()) {
-            return redirect()->route('admin.dashboard');
-        } else {
-            return redirect()->route('student.dashboard');
-        }
+        return redirect()->route('admin.dashboard');
     })->name('dashboard');
 
     Route::get('/home', function () {
