@@ -90,9 +90,8 @@
                         class="text-gray-700 hover:text-navy transition duration-200 text-sm font-medium">Tentang</a>
                     <a href="#jurusan"
                         class="text-gray-700 hover:text-navy transition duration-200 text-sm font-medium">Jurusan</a>
-                    <a href="{{ route('rekomendasi.index') }}"
-                        class="text-gray-700 hover:text-navy transition duration-200 text-sm font-medium">Cek
-                        Rekomendasi</a>
+                    <a href="{{ route('submission.index') }}"
+                        class="block py-2 text-gray-700 hover:text-navy text-sm font-semibold">Rekomendasi</a>
                     <a href="#contact"
                         class="text-gray-700 hover:text-navy transition duration-200 text-sm font-medium">Kontak</a>
                     <a href="/login"
@@ -117,8 +116,8 @@
                 <div class="space-y-2">
                     <a href="#about" class="block py-2 text-gray-700 hover:text-navy text-sm">Tentang</a>
                     <a href="#jurusan" class="block py-2 text-gray-700 hover:text-navy text-sm">Jurusan</a>
-                    <a href="{{ route('rekomendasi.index') }}"
-                        class="block py-2 text-gray-700 hover:text-navy text-sm">Cek Rekomendasi</a>
+                    <a href="{{ route('submission.index') }}"
+                        class="block py-2 text-gray-700 hover:text-navy text-sm font-semibold">Rekomendasi</a>
                     <a href="#contact" class="block py-2 text-gray-700 hover:text-navy text-sm">Kontak</a>
                     <a href="/login"
                         class="block mt-2 bg-navy text-white px-4 py-2 rounded-lg text-center text-sm">Login Admin</a>
@@ -148,7 +147,7 @@
                     </div>
                     <h1 class="text-3xl md:text-5xl font-bold mb-4 leading-tight">Sistem Pendukung Keputusan</h1>
                     <p class="text-lg md:text-xl text-gold mb-6 font-medium">Pemilihan Jurusan dengan Metode TOPSIS</p>
-                    <a href="{{ route('rekomendasi.index') }}"
+                    <a href="{{ route('submission.index') }}"
                         class="inline-flex items-center px-6 py-3 bg-gold text-navy rounded-lg hover:bg-gold-dark transition duration-200 font-semibold text-lg shadow-lg hover:shadow-xl">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -415,7 +414,7 @@
                         <li><a href="#about" class="hover:text-gold transition duration-200">Tentang Sekolah</a></li>
                         <li><a href="#jurusan" class="hover:text-gold transition duration-200">Program Keahlian</a>
                         </li>
-                        <li><a href="{{ route('rekomendasi.index') }}"
+                        <li><a href="{{ route('submission.index') }}"
                                 class="hover:text-gold transition duration-200">Cek Rekomendasi</a></li>
                         <li><a href="/login" class="hover:text-gold transition duration-200">Login Admin</a></li>
                     </ul>
