@@ -90,8 +90,9 @@
                         class="text-gray-700 hover:text-navy transition duration-200 text-sm font-medium">Tentang</a>
                     <a href="#jurusan"
                         class="text-gray-700 hover:text-navy transition duration-200 text-sm font-medium">Jurusan</a>
-                    <a href="{{ route('submission.index') }}"
-                        class="block py-2 text-gray-700 hover:text-navy text-sm font-semibold">Rekomendasi</a>
+                    <a href="{{ route('rekomendasi.index') }}"
+                        class="text-gray-700 hover:text-navy transition duration-200 text-sm font-medium">Cek
+                        Rekomendasi</a>
                     <a href="#contact"
                         class="text-gray-700 hover:text-navy transition duration-200 text-sm font-medium">Kontak</a>
                     <a href="/login"
@@ -116,8 +117,8 @@
                 <div class="space-y-2">
                     <a href="#about" class="block py-2 text-gray-700 hover:text-navy text-sm">Tentang</a>
                     <a href="#jurusan" class="block py-2 text-gray-700 hover:text-navy text-sm">Jurusan</a>
-                    <a href="{{ route('submission.index') }}"
-                        class="block py-2 text-gray-700 hover:text-navy text-sm font-semibold">Rekomendasi</a>
+                    <a href="{{ route('rekomendasi.index') }}"
+                        class="block py-2 text-gray-700 hover:text-navy text-sm">Cek Rekomendasi</a>
                     <a href="#contact" class="block py-2 text-gray-700 hover:text-navy text-sm">Kontak</a>
                     <a href="/login"
                         class="block mt-2 bg-navy text-white px-4 py-2 rounded-lg text-center text-sm">Login Admin</a>
@@ -146,15 +147,34 @@
                         </svg>
                     </div>
                     <h1 class="text-3xl md:text-5xl font-bold mb-4 leading-tight">Sistem Pendukung Keputusan</h1>
-                    <p class="text-lg md:text-xl text-gold mb-6 font-medium">Pemilihan Jurusan dengan Metode TOPSIS</p>
-                    <a href="{{ route('submission.index') }}"
-                        class="inline-flex items-center px-6 py-3 bg-gold text-navy rounded-lg hover:bg-gold-dark transition duration-200 font-semibold text-lg shadow-lg hover:shadow-xl">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                        Cek Rekomendasi Jurusan Saya
-                    </a>
+                    <p class="text-lg md:text-xl text-gold mb-8 font-medium">Pemilihan Jurusan dengan Metode TOPSIS</p>
+
+                    <!-- Dua tombol pilihan -->
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                        <!-- Tombol untuk PENDAFTARAN BARU -->
+                        <a href="{{ route('submission.index') }}"
+                            class="inline-flex items-center px-6 py-3 bg-gold text-navy rounded-lg hover:bg-gold-dark transition duration-200 font-semibold text-lg shadow-lg hover:shadow-xl">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Daftar & Dapatkan Rekomendasi
+                        </a>
+
+                        <!-- Tombol untuk CEK HASIL yang sudah ada -->
+                        <a href="{{ route('rekomendasi.index') }}"
+                            class="inline-flex items-center px-6 py-3 bg-white text-navy rounded-lg hover:bg-gray-100 transition duration-200 font-semibold text-lg shadow-lg hover:shadow-xl border-2 border-white">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            Cek Hasil Rekomendasi Saya
+                        </a>
+                    </div>
+
+                    <p class="mt-6 text-sm text-white text-opacity-80">
+                        Belum pernah daftar? Klik "Daftar" | Sudah pernah daftar? Klik "Cek Hasil"
+                    </p>
                 </div>
             </div>
         </div>
@@ -408,16 +428,22 @@
                         jurusan yang sesuai dengan minat dan bakat menggunakan metode TOPSIS.</p>
                 </div>
 
+                <h4 class="text-lg font-semibold mb-4">Menu Utama</h4>
+                <ul class="space-y-2 text-sm text-gray-400">
+                    <li><a href="#about" class="hover:text-gold transition duration-200">Tentang Sekolah</a></li>
+                    <li><a href="#jurusan" class="hover:text-gold transition duration-200">Program Keahlian</a>
+                    </li>
+                    <li><a href="{{ route('submission.index') }}"
+                            class="hover:text-gold transition duration-200">Daftar Rekomendasi</a></li>
+                    <li><a href="{{ route('rekomendasi.index') }}" class="hover:text-gold transition duration-200">Cek
+                            Hasil Rekomendasi</a></li>
+                    <li><a href="/login" class="hover:text-gold transition duration-200">Login Admin</a></li>
+                </ul>
+            </div>
+            <div class="grid md:grid-cols-2 gap-8" id="contact">
                 <div>
-                    <h4 class="text-lg font-semibold mb-4">Menu Utama</h4>
-                    <ul class="space-y-2 text-sm text-gray-400">
-                        <li><a href="#about" class="hover:text-gold transition duration-200">Tentang Sekolah</a></li>
-                        <li><a href="#jurusan" class="hover:text-gold transition duration-200">Program Keahlian</a>
-                        </li>
-                        <li><a href="{{ route('submission.index') }}"
-                                class="hover:text-gold transition duration-200">Cek Rekomendasi</a></li>
-                        <li><a href="/login" class="hover:text-gold transition duration-200">Login Admin</a></li>
-                    </ul>
+                    <h4 class="text-lg font-semibold mb-4">Alamat</h4>
+                    <p class="text-sm text-gray-400">Jl. Raya Katapang No.123, Katapang, Bandung</p>
                 </div>
 
                 <div>

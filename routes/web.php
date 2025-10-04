@@ -21,7 +21,9 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 // Welcome Page
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
 
-Route::prefix('rekomendasi')->name('submission.')->group(function () {
+// ===== PUBLIC ROUTES - SUBMISSION FORM =====
+// Ubah prefix dari 'rekomendasi' ke 'daftar' atau 'formulir'
+Route::prefix('daftar')->name('submission.')->group(function () {
     Route::get('/', [PublicSubmissionController::class, 'index'])->name('index');
     Route::post('/submit', [PublicSubmissionController::class, 'submit'])->name('submit');
     Route::get('/{nisn}/result', [PublicSubmissionController::class, 'result'])->name('result');
@@ -29,6 +31,15 @@ Route::prefix('rekomendasi')->name('submission.')->group(function () {
     Route::post('/{nisn}/reject', [PublicSubmissionController::class, 'reject'])->name('reject');
     Route::get('/{nisn}/certificate', [PublicSubmissionController::class, 'certificate'])->name('certificate');
     Route::get('/{nisn}/download-pdf', [PublicSubmissionController::class, 'downloadPdf'])->name('download-pdf');
+});
+
+// ===== PUBLIC ROUTES - CEK REKOMENDASI (untuk yang sudah ada data) =====
+Route::prefix('rekomendasi')->name('rekomendasi.')->group(function () {
+    Route::get('/', [PublicRekomendasiController::class, 'index'])->name('index');
+    Route::get('/search', [PublicRekomendasiController::class, 'search'])->name('search');
+    Route::get('/{nisn}', [PublicRekomendasiController::class, 'show'])->name('show');
+    Route::get('/{nisn}/detail', [PublicRekomendasiController::class, 'detail'])->name('detail');
+    Route::get('/{nisn}/analisis', [PublicRekomendasiController::class, 'analisis'])->name('analisis');
 });
 
 // Authentication Routes
@@ -110,6 +121,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/reset-weights', [KriteriaController::class, 'resetWeights'])->name('reset-weights');
     });
 
+    // Submission Management (Admin)
     Route::prefix('submission')->name('submission.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\SubmissionController::class, 'index'])->name('index');
         Route::get('/{pesertaDidik}', [\App\Http\Controllers\Admin\SubmissionController::class, 'show'])->name('show');
