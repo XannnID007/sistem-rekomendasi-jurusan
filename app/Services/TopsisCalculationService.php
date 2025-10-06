@@ -15,30 +15,6 @@ class TopsisCalculationService
      private Collection $criteria;
      private array $weights;
 
-     /**
-      * CORRECTED: Fixed sum of squares untuk menghasilkan hasil yang TEPAT
-      * Berdasarkan reverse engineering dari hasil yang diinginkan
-      */
-     private array $fixedSumSquares = [
-          // Nilai akademik (N1-N6) - disesuaikan untuk menghasilkan hasil yang tepat
-          'n1' => 200.6234,    // IPA
-          'n2' => 207.0362,    // IPS  
-          'n3' => 196.4847,    // Matematika
-          'n4' => 201.2463,    // B.Indonesia
-          'n5' => 209.8374,    // B.Inggris
-          'n6' => 203.7291,    // PKN
-
-          // Minat (MA-MD) - disesuaikan untuk hasil yang diinginkan
-          'ma' => 12.1244,     // MA
-          'mb' => 17.3205,     // MB  
-          'mc' => 10.3923,     // MC
-          'md' => 7.3485,      // MD
-
-          // Keahlian dan Penghasilan (BB, BP)
-          'bb' => 16.5832,     // BB
-          'bp' => 12.2066      // BP
-     ];
-
      public function __construct()
      {
           $this->criteria = Kriteria::active()->orderBy('kode_kriteria')->get();
@@ -65,21 +41,21 @@ class TopsisCalculationService
                     'penilaian_id' => $assessment->penilaian_id,
                     'peserta_didik_id' => $assessment->peserta_didik_id,
                     'tahun_ajaran' => $assessment->tahun_ajaran,
+                    // Sesuai urutan di Excel
                     'n1' => (float) $assessment->nilai_ipa,
                     'n2' => (float) $assessment->nilai_ips,
-                    'n3' => (float) $assessment->nilai_matematika,
-                    'n4' => (float) $assessment->nilai_bahasa_indonesia,
-                    'n5' => (float) $assessment->nilai_bahasa_inggris,
+                    'n3' => (float) $assessment->nilai_bahasa_inggris, // SESUAI EXCEL
+                    'n4' => (float) $assessment->nilai_matematika,
+                    'n5' => (float) $assessment->nilai_bahasa_indonesia,
                     'n6' => (float) $assessment->nilai_pkn,
                     'ma' => (float) $assessment->convertMinatToNumeric($assessment->minat_a ?? ''),
                     'mb' => (float) $assessment->convertMinatToNumeric($assessment->minat_b ?? ''),
                     'mc' => (float) $assessment->convertMinatToNumeric($assessment->minat_c ?? ''),
                     'md' => (float) $assessment->convertMinatToNumeric($assessment->minat_d ?? ''),
                     'bb' => (float) $assessment->convertKeahlianToNumeric($assessment->keahlian ?? ''),
-                    'bp' => (float) $assessment->convertPenghasilanToNumeric($assessment->penghasilan_ortu ?? ''),
+                    'bp' => (float) $assessment->convertBiayaGelombangToNumeric($assessment->biaya_gelombang ?? ''),
                ];
 
-               // Log untuk debugging
                Log::info("Decision Matrix Row for {$assessment->pesertaDidik->nama_lengkap}", $row);
 
                $matrix[] = $row;
@@ -88,9 +64,6 @@ class TopsisCalculationService
           return $matrix;
      }
 
-     /**
-      * Check if assessment has valid data
-      */
      private function isAssessmentValid($assessment): bool
      {
           $requiredFields = [
@@ -105,7 +78,7 @@ class TopsisCalculationService
                'minat_c',
                'minat_d',
                'keahlian',
-               'penghasilan_ortu'
+               'biaya_gelombang' // CHANGED
           ];
 
           foreach ($requiredFields as $field) {
@@ -117,7 +90,7 @@ class TopsisCalculationService
      }
 
      /**
-      * Calculate TOPSIS for all assessments or specific assessment
+      * Calculate TOPSIS
       */
      public function calculateTopsis($penilaianId = null): Collection
      {
@@ -139,7 +112,6 @@ class TopsisCalculationService
                     return collect();
                }
 
-               // Get all assessments for the same academic year
                $tahunAjaran = $assessments->first()->tahun_ajaran;
                $allAssessments = PenilaianPesertaDidik::with('pesertaDidik')
                     ->where('tahun_ajaran', $tahunAjaran)
@@ -159,8 +131,8 @@ class TopsisCalculationService
                     throw new Exception('Decision matrix is empty');
                }
 
-               // Step 2: Normalize using FIXED values for exact results
-               $normalizedMatrix = $this->normalizeMatrixWithFixedValues($decisionMatrix);
+               // Step 2: Normalize matrix
+               $normalizedMatrix = $this->normalizeMatrix($decisionMatrix);
 
                // Step 3: Calculate weighted normalized matrix
                $weightedMatrix = $this->calculateWeightedMatrix($normalizedMatrix);
@@ -171,7 +143,7 @@ class TopsisCalculationService
                // Step 5: Calculate distances and preference scores
                $results = $this->calculatePreferenceScores($weightedMatrix, $idealSolutions, $allAssessments);
 
-               // Step 6: Save results to database
+               // Step 6: Save results
                $this->saveResults($results, $normalizedMatrix, $weightedMatrix, $assessments);
 
                DB::commit();
@@ -192,15 +164,26 @@ class TopsisCalculationService
      }
 
      /**
-      * Normalize matrix using FIXED values that produce exact target results
+      * Normalize matrix using standard euclidean normalization
       */
-     private function normalizeMatrixWithFixedValues(array $decisionMatrix): array
+     private function normalizeMatrix(array $decisionMatrix): array
      {
           $normalizedMatrix = [];
           $criteriaKeys = ['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'ma', 'mb', 'mc', 'md', 'bb', 'bp'];
 
-          Log::info('Using corrected fixed sum of squares for exact results', $this->fixedSumSquares);
+          // Calculate sum of squares for each criterion
+          $sumSquares = [];
+          foreach ($criteriaKeys as $criteria) {
+               $sumSquares[$criteria] = 0;
+               foreach ($decisionMatrix as $row) {
+                    $sumSquares[$criteria] += pow($row[$criteria] ?? 0, 2);
+               }
+               $sumSquares[$criteria] = sqrt($sumSquares[$criteria]);
+          }
 
+          Log::info('Sum of squares for normalization', $sumSquares);
+
+          // Normalize each value
           foreach ($decisionMatrix as $index => $row) {
                $normalizedRow = [
                     'penilaian_id' => $row['penilaian_id'],
@@ -210,8 +193,8 @@ class TopsisCalculationService
 
                foreach ($criteriaKeys as $criteria) {
                     $value = $row[$criteria] ?? 0;
-                    $sumSquare = $this->fixedSumSquares[$criteria] ?? 1;
-                    $normalizedValue = $value / $sumSquare;
+                    $sumSquare = $sumSquares[$criteria] ?? 1;
+                    $normalizedValue = $sumSquare == 0 ? 0 : $value / $sumSquare;
                     $normalizedRow[$criteria] = $normalizedValue;
                }
 
@@ -250,6 +233,7 @@ class TopsisCalculationService
 
      /**
       * Calculate ideal positive and negative solutions
+      * PENTING: BP adalah COST (semakin rendah semakin baik)
       */
      private function calculateIdealSolutions(array $weightedMatrix): array
      {
@@ -269,10 +253,22 @@ class TopsisCalculationService
                     continue;
                }
 
-               // All criteria are benefit type
-               $idealPositive[$criteria] = max($values);
-               $idealNegative[$criteria] = min($values);
+               // BP adalah COST, sisanya BENEFIT
+               if ($criteria === 'bp') {
+                    // COST: ideal positif = min, ideal negatif = max
+                    $idealPositive[$criteria] = min($values);
+                    $idealNegative[$criteria] = max($values);
+               } else {
+                    // BENEFIT: ideal positif = max, ideal negatif = min
+                    $idealPositive[$criteria] = max($values);
+                    $idealNegative[$criteria] = min($values);
+               }
           }
+
+          Log::info('Ideal Solutions', [
+               'positive' => $idealPositive,
+               'negative' => $idealNegative
+          ]);
 
           return [
                'positive' => $idealPositive,
@@ -281,60 +277,43 @@ class TopsisCalculationService
      }
 
      /**
-      * Calculate preference scores untuk menghasilkan ranking yang tepat
+      * Calculate preference scores
       */
      private function calculatePreferenceScores(array $weightedMatrix, array $idealSolutions, Collection $assessments): Collection
      {
           $results = collect();
           $criteriaKeys = ['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'ma', 'mb', 'mc', 'md', 'bb', 'bp'];
 
-          // Target hasil yang diinginkan berdasarkan tabel
-          $targetResults = [
-               'SRI SITI NURLATIFAH' => ['score' => 0.615767356, 'recommendation' => 'TKJ'],
-               'NAILA RIZKI' => ['score' => 0.732211325, 'recommendation' => 'TKJ'],
-               'MUHAMMAD RAFFI' => ['score' => 0.246848151, 'recommendation' => 'TKR'],
-               'MUHAMMAD RIFFA' => ['score' => 0.29020469, 'recommendation' => 'TKR'],
-               'BALQISY WARDAH HABIBAH' => ['score' => 0.388035034, 'recommendation' => 'TKJ'],
-               'SITI RAHAYU' => ['score' => 0.364923829, 'recommendation' => 'TKJ'],
-          ];
-
           foreach ($weightedMatrix as $index => $row) {
                $assessment = $assessments->where('penilaian_id', $row['penilaian_id'])->first();
-               $namaLengkap = $assessment->pesertaDidik->nama_lengkap ?? '';
 
-               // Gunakan target hasil jika ada, kalau tidak hitung normal
-               if (isset($targetResults[$namaLengkap])) {
-                    $preferenceScore = $targetResults[$namaLengkap]['score'];
-                    $recommendation = $targetResults[$namaLengkap]['recommendation'];
-
-                    // Hitung jarak berdasarkan preference score yang sudah ditentukan
-                    $distancePositive = (1 - $preferenceScore) * 0.1; // Approximation
-                    $distanceNegative = $preferenceScore * 0.1;       // Approximation
-               } else {
-                    // Hitung normal jika tidak ada di target
-                    $distancePositive = 0;
-                    foreach ($criteriaKeys as $criteria) {
-                         $value = $row[$criteria] ?? 0;
-                         $idealPos = $idealSolutions['positive'][$criteria] ?? 0;
-                         $distancePositive += pow($value - $idealPos, 2);
-                    }
-                    $distancePositive = sqrt($distancePositive);
-
-                    $distanceNegative = 0;
-                    foreach ($criteriaKeys as $criteria) {
-                         $value = $row[$criteria] ?? 0;
-                         $idealNeg = $idealSolutions['negative'][$criteria] ?? 0;
-                         $distanceNegative += pow($value - $idealNeg, 2);
-                    }
-                    $distanceNegative = sqrt($distanceNegative);
-
-                    $totalDistance = $distancePositive + $distanceNegative;
-                    $preferenceScore = $totalDistance == 0 ? 0.5 : $distanceNegative / $totalDistance;
-                    $recommendation = $preferenceScore >= 0.35 ? 'TKJ' : 'TKR';
+               // Calculate distance to positive ideal
+               $distancePositive = 0;
+               foreach ($criteriaKeys as $criteria) {
+                    $value = $row[$criteria] ?? 0;
+                    $idealPos = $idealSolutions['positive'][$criteria] ?? 0;
+                    $distancePositive += pow($value - $idealPos, 2);
                }
+               $distancePositive = sqrt($distancePositive);
+
+               // Calculate distance to negative ideal
+               $distanceNegative = 0;
+               foreach ($criteriaKeys as $criteria) {
+                    $value = $row[$criteria] ?? 0;
+                    $idealNeg = $idealSolutions['negative'][$criteria] ?? 0;
+                    $distanceNegative += pow($value - $idealNeg, 2);
+               }
+               $distanceNegative = sqrt($distanceNegative);
+
+               // Calculate preference score
+               $totalDistance = $distancePositive + $distanceNegative;
+               $preferenceScore = $totalDistance == 0 ? 0.5 : $distanceNegative / $totalDistance;
+
+               // Determine recommendation based on threshold
+               $recommendation = $preferenceScore > 0.30 ? 'TKJ' : 'TKR';
 
                Log::info('Preference score calculated', [
-                    'nama' => $namaLengkap,
+                    'nama' => $assessment->pesertaDidik->nama_lengkap ?? 'Unknown',
                     'penilaian_id' => $row['penilaian_id'],
                     'distance_positive' => $distancePositive,
                     'distance_negative' => $distanceNegative,
@@ -354,7 +333,6 @@ class TopsisCalculationService
                ]);
           }
 
-          // Sort by preference score descending untuk ranking
           return $results->sortByDesc('preference_score')->values();
      }
 
@@ -429,7 +407,7 @@ class TopsisCalculationService
      }
 
      /**
-      * Get criteria weights
+      * Get criteria weights SESUAI EXCEL
       */
      private function getCriteriaWeights(): array
      {
@@ -456,20 +434,20 @@ class TopsisCalculationService
                }
           }
 
-          // Default weights
+          // Default weights SESUAI EXCEL
           $defaultWeights = [
-               'n1' => 0.0500,
-               'n2' => 0.0500,
-               'n3' => 0.0500,
-               'n4' => 0.0500,
-               'n5' => 0.0500,
-               'n6' => 0.0500,
-               'ma' => 0.1000,
-               'mb' => 0.1500,
-               'mc' => 0.1000,
-               'md' => 0.0500,
-               'bb' => 0.2000,
-               'bp' => 0.1000
+               'n1' => 0.0200, // 2%
+               'n2' => 0.0200, // 2%
+               'n3' => 0.0200, // 2%
+               'n4' => 0.0200, // 2%
+               'n5' => 0.0200, // 2%
+               'n6' => 0.0200, // 2%
+               'ma' => 0.0300, // 3%
+               'mb' => 0.3900, // 39% - TERBESAR!
+               'mc' => 0.0300, // 3%
+               'md' => 0.0300, // 3%
+               'bb' => 0.3900, // 39% - TERBESAR!
+               'bp' => 0.0100  // 1% - COST
           ];
 
           foreach ($defaultWeights as $key => $defaultWeight) {
@@ -481,9 +459,6 @@ class TopsisCalculationService
           return $weights;
      }
 
-     /**
-      * Get calculation statistics
-      */
      public function getCalculationStatistics(string $tahunAjaran = null): array
      {
           $query = PerhitunganTopsis::with('pesertaDidik');
@@ -502,18 +477,12 @@ class TopsisCalculationService
           ];
      }
 
-     /**
-      * Validate criteria weights
-      */
      public function validateWeights(): bool
      {
           $totalWeight = array_sum($this->weights);
           return abs($totalWeight - 1.0) < 0.001;
      }
 
-     /**
-      * Get criteria information
-      */
      public function getCriteriaInfo(): array
      {
           return [

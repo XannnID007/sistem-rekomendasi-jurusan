@@ -249,26 +249,31 @@
                         </div>
 
                         <div>
-                            <label for="penghasilan_ortu" class="block text-sm font-medium text-gray-700 mb-2">
-                                Penghasilan Orang Tua <span class="text-red-500">*</span>
+                            <label for="biaya_gelombang" class="block text-sm font-medium text-gray-700 mb-2">
+                                Biaya Gelombang Pendaftaran <span class="text-red-500">*</span>
                             </label>
-                            <select name="penghasilan_ortu" id="penghasilan_ortu"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy focus:border-transparent @error('penghasilan_ortu') border-red-500 @enderror"
+                            <select name="biaya_gelombang" id="biaya_gelombang"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy focus:border-transparent @error('biaya_gelombang') border-red-500 @enderror"
                                 required>
-                                <option value="">Pilih Tingkat Penghasilan</option>
-                                <option value="G1. 1.000.000"
-                                    {{ old('penghasilan_ortu') === 'G1. 1.000.000' ? 'selected' : '' }}>G1. Rp 1.000.000
-                                    (Rendah)</option>
-                                <option value="G2. 1.500.000"
-                                    {{ old('penghasilan_ortu') === 'G2. 1.500.000' ? 'selected' : '' }}>G2. Rp 1.500.000
-                                    (Sedang)</option>
-                                <option value="G3. 2.000.000"
-                                    {{ old('penghasilan_ortu') === 'G3. 2.000.000' ? 'selected' : '' }}>G3. Rp 2.000.000
-                                    (Tinggi)</option>
+                                <option value="">Pilih Gelombang Pendaftaran</option>
+                                <option value="G1. Rp 1.000.000"
+                                    {{ old('biaya_gelombang') === 'G1. Rp 1.000.000' ? 'selected' : '' }}>
+                                    G1. Rp 1.000.000 (Gelombang 1 - Paling Murah)</option>
+                                <option value="G2. Rp 1.500.000"
+                                    {{ old('biaya_gelombang') === 'G2. Rp 1.500.000' ? 'selected' : '' }}>
+                                    G2. Rp 1.500.000 (Gelombang 2 - Menengah)</option>
+                                <option value="G3. Rp 2.000.000"
+                                    {{ old('biaya_gelombang') === 'G3. Rp 2.000.000' ? 'selected' : '' }}>
+                                    G3. Rp 2.000.000 (Gelombang 3 - Paling Mahal)</option>
                             </select>
-                            @error('penghasilan_ortu')
+                            @error('biaya_gelombang')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
+                            <p class="mt-1 text-xs text-gray-500">
+                                Biaya pendaftaran berdasarkan gelombang. Gelombang 1 paling murah, Gelombang 3 paling mahal.
+                                <br><strong>Catatan:</strong> Biaya lebih rendah akan mendapat nilai preferensi lebih tinggi
+                                dalam perhitungan TOPSIS.
+                            </p>
                         </div>
                     </div>
                 </div>

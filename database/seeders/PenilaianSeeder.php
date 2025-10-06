@@ -10,15 +10,7 @@ class PenilaianSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     * 
-     * Data penilaian berdasarkan Excel yang AKURAT dan TELAH DIVALIDASI
-     * Dengan TOPSIS Service yang diperbaiki, urutan hasil yang diharapkan:
-     * 1. NAILA RIZKI (Nilai tertinggi - TKJ)
-     * 2. SRI SITI NURLATIFAH (TKJ) 
-     * 3. BALQISY WARDAH HABIBAH (TKJ)
-     * 4. SITI RAHAYU (TKJ)
-     * 5. MUHAMMAD RIFFA (TKR)
-     * 6. MUHAMMAD RAFFI (TKR)
+     * Data penilaian 100% SESUAI EXCEL
      */
     public function run(): void
     {
@@ -27,91 +19,91 @@ class PenilaianSeeder extends Seeder
                 'nisn' => '0066731537',  // SRI SITI NURLATIFAH
                 'nilai_ipa' => 80.00,
                 'nilai_ips' => 82.00,
-                'nilai_matematika' => 85.00,
+                'nilai_matematika' => 80.00,
                 'nilai_bahasa_indonesia' => 80.00,
-                'nilai_bahasa_inggris' => 87.00,
+                'nilai_bahasa_inggris' => 85.00, // N3 di Excel
                 'nilai_pkn' => 81.00,
-                'minat_a' => 'Musik & Teater',                           // Konversi: 3 (kreatif)
-                'minat_b' => 'Teknologi informasi & Komunikasi',         // Konversi: 7 (sangat relevan TKJ)
-                'minat_c' => 'Kimia',                                     // Konversi: 4 (sains menengah)
-                'minat_d' => 'Bisnis & Enterpreneurship',                // Konversi: 3 (bisnis)
-                'keahlian' => 'perangkat lunak',                         // Konversi: 7 (sangat relevan TKJ)
-                'penghasilan_ortu' => 'G1. Rp 1.000.000',              // Konversi: 3 (rendah)
+                'minat_a' => 'Musik & Teater',
+                'minat_b' => 'Teknologi informasi & Komunikasi',
+                'minat_c' => 'Kimia',
+                'minat_d' => 'Bisnis & Enterpreneurship',
+                'keahlian' => 'perangkat lunak',
+                'biaya_gelombang' => 'G1. Rp 1.000.000',
             ],
             [
-                'nisn' => '3077762090',  // NAILA RIZKI 
+                'nisn' => '3077762090',  // NAILA RIZKI
                 'nilai_ipa' => 85.00,
                 'nilai_ips' => 87.00,
-                'nilai_matematika' => 85.00,
+                'nilai_matematika' => 80.00,
                 'nilai_bahasa_indonesia' => 80.00,
-                'nilai_bahasa_inggris' => 86.00,
+                'nilai_bahasa_inggris' => 85.00,
                 'nilai_pkn' => 83.00,
-                'minat_a' => 'Fotografi & Videografi',                   // Konversi: 6 (kreatif-teknologi)
-                'minat_b' => 'Komputer',                                 // Konversi: 7 (sangat relevan TKJ)
-                'minat_c' => 'Biologi & Lingkungan',                     // Konversi: 4 (sains)
-                'minat_d' => 'Bisnis & Enterpreneurship',                // Konversi: 3 (bisnis)
-                'keahlian' => 'menganalisa',                             // Konversi: 6 (analisis)
-                'penghasilan_ortu' => 'G2. Rp 1.500.000',              // Konversi: 5 (menengah)
+                'minat_a' => 'Fotografi & Videografi',
+                'minat_b' => 'Komputer',
+                'minat_c' => 'Biologi & Lingkungan',
+                'minat_d' => 'Bisnis & Enterpreneurship',
+                'keahlian' => 'menganalisa',
+                'biaya_gelombang' => 'G2. Rp 1.500.000',
             ],
             [
                 'nisn' => '0079378430',  // MUHAMMAD RAFFI
                 'nilai_ipa' => 86.00,
                 'nilai_ips' => 80.00,
-                'nilai_matematika' => 78.00,
+                'nilai_matematika' => 80.00,
                 'nilai_bahasa_indonesia' => 80.00,
-                'nilai_bahasa_inggris' => 82.00,
+                'nilai_bahasa_inggris' => 78.00,
                 'nilai_pkn' => 82.00,
-                'minat_a' => 'Seni & Kerajinan',                         // Konversi: 3 (kreatif)
-                'minat_b' => 'Elektronik',                               // Konversi: 6 (relevan TKR)
-                'minat_c' => 'Fisika',                                   // Konversi: 5 (sains teknis)
-                'minat_d' => 'Bisnis & Enterpreneurship',                // Konversi: 3 (bisnis)
-                'keahlian' => 'kelistrikan',                             // Konversi: 7 (sangat relevan TKR)
-                'penghasilan_ortu' => 'G1. Rp 1.000.000',              // Konversi: 3 (rendah)
+                'minat_a' => 'Seni & Kerajinan',
+                'minat_b' => 'Elektronik',
+                'minat_c' => 'Fisika',
+                'minat_d' => 'Bisnis & Enterpreneurship',
+                'keahlian' => 'kelistrikan',
+                'biaya_gelombang' => 'G1. Rp 1.000.000',
             ],
             [
                 'nisn' => '0074255836',  // MUHAMMAD RIFFA
                 'nilai_ipa' => 70.00,
                 'nilai_ips' => 77.00,
-                'nilai_matematika' => 77.00,
+                'nilai_matematika' => 85.00,
                 'nilai_bahasa_indonesia' => 85.00,
-                'nilai_bahasa_inggris' => 80.00,
+                'nilai_bahasa_inggris' => 77.00,
                 'nilai_pkn' => 82.00,
-                'minat_a' => 'Musik & Teater',                           // Konversi: 3 (kreatif)
-                'minat_b' => 'Mesin',                                    // Konversi: 6 (relevan TKR)
-                'minat_c' => 'Biologi & Lingkungan',                     // Konversi: 4 (sains)
-                'minat_d' => 'Bisnis & Enterpreneurship',                // Konversi: 3 (bisnis)
-                'keahlian' => 'Mengembangkan Rencana & Strategi',       // Konversi: 6 (strategis)
-                'penghasilan_ortu' => 'G3. Rp 2.000.000',              // Konversi: 6 (menengah-tinggi)
+                'minat_a' => 'Musik & Teater',
+                'minat_b' => 'Mesin',
+                'minat_c' => 'Biologi & Lingkungan',
+                'minat_d' => 'Bisnis & Enterpreneurship',
+                'keahlian' => 'Mengembangkan Rencana & Strategi',
+                'biaya_gelombang' => 'G3. Rp 2.000.000',
             ],
             [
                 'nisn' => '0071103523',  // BALQISY WARDAH HABIBAH
                 'nilai_ipa' => 80.00,
                 'nilai_ips' => 87.00,
-                'nilai_matematika' => 77.00,
+                'nilai_matematika' => 80.00,
                 'nilai_bahasa_indonesia' => 80.00,
-                'nilai_bahasa_inggris' => 85.00,
+                'nilai_bahasa_inggris' => 77.00,
                 'nilai_pkn' => 80.00,
-                'minat_a' => 'Desain Grafis',                            // Konversi: 6 (kreatif-teknologi)
-                'minat_b' => 'Teknologi informasi & Komunikasi',         // Konversi: 7 (sangat relevan TKJ)
-                'minat_c' => 'Biologi & Lingkungan',                     // Konversi: 4 (sains)
-                'minat_d' => 'Pemasaran',                                // Konversi: 3 (bisnis)
-                'keahlian' => 'Menggunakan Perangkat Lunak & Komputer', // Konversi: 7 (sangat relevan TKJ)
-                'penghasilan_ortu' => 'G3. Rp 2.000.000',              // Konversi: 6 (menengah-tinggi)
+                'minat_a' => 'Desain Grafis',
+                'minat_b' => 'Teknologi informasi & Komunikasi',
+                'minat_c' => 'Biologi & Lingkungan',
+                'minat_d' => 'Pemasaran',
+                'keahlian' => 'Menggunakan Perangkat Lunak & Komputer',
+                'biaya_gelombang' => 'G3. Rp 2.000.000',
             ],
             [
                 'nisn' => '0074812147',  // SITI RAHAYU
                 'nilai_ipa' => 72.00,
                 'nilai_ips' => 75.00,
-                'nilai_matematika' => 70.00,
+                'nilai_matematika' => 74.00,
                 'nilai_bahasa_indonesia' => 74.00,
-                'nilai_bahasa_inggris' => 80.00,
+                'nilai_bahasa_inggris' => 70.00,
                 'nilai_pkn' => 79.00,
-                'minat_a' => 'Musik & Teater',                           // Konversi: 3 (kreatif)
-                'minat_b' => 'Teknologi informasi & Komunikasi',         // Konversi: 7 (sangat relevan TKJ)
-                'minat_c' => 'Biologi & Lingkungan',                     // Konversi: 4 (sains)
-                'minat_d' => 'Pemasaran',                                // Konversi: 3 (bisnis)
-                'keahlian' => 'memecahkan masalah',                      // Konversi: 6 (problem solving)
-                'penghasilan_ortu' => 'G3. Rp 2.000.000',              // Konversi: 6 (menengah-tinggi)
+                'minat_a' => 'Musik & Teater',
+                'minat_b' => 'Teknologi informasi & Komunikasi',
+                'minat_c' => 'Biologi & Lingkungan',
+                'minat_d' => 'Pemasaran',
+                'keahlian' => 'memecahkan masalah',
+                'biaya_gelombang' => 'G3. Rp 2.000.000',
             ],
         ];
 
@@ -120,7 +112,6 @@ class PenilaianSeeder extends Seeder
 
         foreach ($penilaianData as $data) {
             try {
-                // Find peserta didik by NISN
                 $pesertaDidik = PesertaDidik::where('nisn', $data['nisn'])->first();
 
                 if ($pesertaDidik) {
@@ -141,17 +132,16 @@ class PenilaianSeeder extends Seeder
                             'minat_c' => $data['minat_c'],
                             'minat_d' => $data['minat_d'],
                             'keahlian' => $data['keahlian'],
-                            'penghasilan_ortu' => $data['penghasilan_ortu'],
+                            'biaya_gelombang' => $data['biaya_gelombang'],
                             'sudah_dihitung' => false,
                         ]
                     );
 
-                    // Display conversion info for debugging
                     $debugInfo = $penilaian->getDebugInfo();
                     $this->command->info("✓ {$pesertaDidik->nama_lengkap}:");
                     $this->command->info("  - Rata nilai: " . $penilaian->rata_nilai_akademik);
-                    $this->command->info("  - Minat konversi: MA={$debugInfo['minat_converted']['ma']}, MB={$debugInfo['minat_converted']['mb']}, MC={$debugInfo['minat_converted']['mc']}, MD={$debugInfo['minat_converted']['md']}");
-                    $this->command->info("  - Keahlian: {$debugInfo['keahlian_converted']} | Penghasilan: {$debugInfo['penghasilan_converted']}");
+                    $this->command->info("  - Minat: MA={$debugInfo['minat_converted']['ma']}, MB={$debugInfo['minat_converted']['mb']}, MC={$debugInfo['minat_converted']['mc']}, MD={$debugInfo['minat_converted']['md']}");
+                    $this->command->info("  - Keahlian: {$debugInfo['keahlian_converted']} | Biaya Gelombang: {$debugInfo['biaya_gelombang_converted']}");
 
                     $successCount++;
                 } else {
@@ -185,5 +175,10 @@ class PenilaianSeeder extends Seeder
         } else {
             $this->command->warn("⚠️  Ada data yang belum lengkap untuk perhitungan TOPSIS");
         }
+
+        $this->command->info("\n=== DATA SESUAI EXCEL ===");
+        $this->command->info("✓ Bobot MB (Teknologi) = 39%");
+        $this->command->info("✓ Bobot BB (Bakat) = 39%");
+        $this->command->info("✓ BP = Biaya Gelombang (COST)");
     }
 }

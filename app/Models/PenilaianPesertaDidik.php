@@ -12,11 +12,6 @@ class PenilaianPesertaDidik extends Model
     protected $table = 'penilaian_peserta_didik';
     protected $primaryKey = 'penilaian_id';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'peserta_didik_id',
         'tahun_ajaran',
@@ -31,15 +26,10 @@ class PenilaianPesertaDidik extends Model
         'minat_c',
         'minat_d',
         'keahlian',
-        'penghasilan_ortu',
+        'biaya_gelombang', // CHANGED dari penghasilan_ortu
         'sudah_dihitung'
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -53,40 +43,28 @@ class PenilaianPesertaDidik extends Model
         ];
     }
 
-    /**
-     * Get the peserta didik that owns the penilaian.
-     */
     public function pesertaDidik()
     {
         return $this->belongsTo(PesertaDidik::class, 'peserta_didik_id', 'peserta_didik_id');
     }
 
-    /**
-     * Get the perhitungan TOPSIS for the penilaian.
-     */
     public function perhitunganTopsis()
     {
         return $this->hasMany(PerhitunganTopsis::class, 'penilaian_id', 'penilaian_id');
     }
 
-    /**
-     * Get all academic grades as array
-     */
     public function getNilaiAkademikAttribute(): array
     {
         return [
             'n1' => (float) $this->nilai_ipa,
             'n2' => (float) $this->nilai_ips,
-            'n3' => (float) $this->nilai_matematika,
-            'n4' => (float) $this->nilai_bahasa_indonesia,
-            'n5' => (float) $this->nilai_bahasa_inggris,
+            'n3' => (float) $this->nilai_bahasa_inggris, // SESUAI EXCEL
+            'n4' => (float) $this->nilai_matematika,
+            'n5' => (float) $this->nilai_bahasa_indonesia,
             'n6' => (float) $this->nilai_pkn,
         ];
     }
 
-    /**
-     * Get all interests as array
-     */
     public function getMinatAttribute(): array
     {
         return [
@@ -97,9 +75,6 @@ class PenilaianPesertaDidik extends Model
         ];
     }
 
-    /**
-     * Get average academic score
-     */
     public function getRataNilaiAkademikAttribute(): float
     {
         $total = (float)$this->nilai_ipa + (float)$this->nilai_ips + (float)$this->nilai_matematika +
@@ -108,149 +83,117 @@ class PenilaianPesertaDidik extends Model
     }
 
     /**
-     * Convert minat to numeric value - CORRECTED untuk hasil yang tepat
-     * Mapping berdasarkan data aktual untuk menghasilkan ranking yang diinginkan
+     * Convert minat to numeric value SESUAI EXCEL
+     * SEMUA MINAT = BENEFIT (semakin tinggi semakin baik)
      */
     public function convertMinatToNumeric(?string $minat): int
     {
         if (empty($minat)) {
-            return 3; // default neutral
+            return 2; // default neutral
         }
 
-        /**
-         * Mapping yang disesuaikan berdasarkan hasil target:
-         * - NAILA RIZKI harus mendapat skor tertinggi (0.732211325)
-         * - SRI SITI NURLATIFAH kedua (0.615767356)
-         * - BALQISY WARDAH HABIBAH ketiga (0.388035034)
-         * - SITI RAHAYU keempat (0.364923829)
-         * - MUHAMMAD RIFFA kelima (0.29020469)
-         * - MUHAMMAD RAFFI terendah (0.246848151)
-         */
+        // Mapping SESUAI EXCEL - SEMUA minat adalah benefit
         $minatMapping = [
-            // Minat yang sangat mendukung TKJ (skor tinggi untuk target ranking)
-            'Komputer' => 8,                                    // NAILA (target tertinggi)
-            'Teknologi informasi & Komunikasi' => 7,            // SRI SITI, BALQISY, SITI RAHAYU
-            'Fotografi & Videografi' => 6,                      // NAILA (kreatif-teknologi)
-            'Desain Grafis' => 6,                               // BALQISY
+            // Minat A - Kreatif (MA)
+            'Musik & Teater' => 4,
+            'Fotografi & Videografi' => 4,
+            'Seni & Kerajinan' => 4,
+            'Desain Grafis' => 4,
 
-            // Minat yang mendukung TKR (skor menengah)
-            'Elektronik' => 4,                                  // MUHAMMAD RAFFI
-            'Mesin' => 4,                                       // MUHAMMAD RIFFA
+            // Minat B - Teknologi (MB) - PALING PENTING!
+            'Teknologi informasi & Komunikasi' => 6,
+            'Komputer' => 6,
+            'Elektronik' => 2,
+            'Mesin' => 2,
 
-            // Minat umum/kreatif (skor rendah-menengah)
-            'Musik & Teater' => 2,                              // SRI SITI, RIFFA, SITI RAHAYU
-            'Seni & Kerajinan' => 2,                            // MUHAMMAD RAFFI
+            // Minat C - Ilmiah (MC)
+            'Kimia' => 4,
+            'Biologi & Lingkungan' => 4,
+            'Fisika' => 4,
 
-            // Minat sains (skor menengah)
-            'Kimia' => 3,                                       // SRI SITI
-            'Fisika' => 3,                                      // MUHAMMAD RAFFI
-            'Biologi & Lingkungan' => 3,                        // NAILA, RIFFA, BALQISY, SITI RAHAYU
-
-            // Minat bisnis (skor rendah untuk jurusan teknik)
-            'Bisnis & Enterpreneurship' => 2,                   // SRI SITI, NAILA, RAFFI, RIFFA
-            'Pemasaran' => 2,                                   // BALQISY, SITI RAHAYU
+            // Minat D - Bisnis (MD)
+            'Bisnis & Enterpreneurship' => 2,
+            'Pemasaran' => 2,
         ];
 
-        return $minatMapping[$minat] ?? 3; // default 3 if not found
+        return $minatMapping[$minat] ?? 2;
     }
 
     /**
-     * Convert keahlian to numeric value - CORRECTED untuk hasil yang tepat
+     * Convert keahlian to numeric value SESUAI EXCEL
+     * BB = BENEFIT (semakin tinggi semakin baik)
      */
     public function convertKeahlianToNumeric(?string $keahlian): int
     {
         if (empty($keahlian)) {
-            return 4; // default neutral
+            return 4;
         }
 
-        /**
-         * Mapping disesuaikan untuk mencapai target ranking:
-         * Keahlian yang lebih relevan untuk TKJ mendapat skor tinggi
-         */
         $keahlianMapping = [
-            // Keahlian sangat relevan TKJ (skor tinggi)
-            'perangkat lunak' => 9,                              // SRI SITI (target kedua)
-            'Menggunakan Perangkat Lunak & Komputer' => 8,       // BALQISY (target ketiga)
-            'menganalisa' => 8,                                  // NAILA (target tertinggi)
-            'memecahkan masalah' => 7,                           // SITI RAHAYU (target keempat)
+            // Keahlian yang sangat relevan untuk TKJ
+            'perangkat lunak' => 7,
+            'Menggunakan Perangkat Lunak & Komputer' => 7,
+            'menganalisa' => 7,
 
-            // Keahlian relevan TKR (skor menengah-tinggi)
-            'kelistrikan' => 6,                                  // MUHAMMAD RAFFI (target terendah)
-            'Mengembangkan Rencana & Strategi' => 5,
+            // Keahlian yang relevan untuk TKR
+            'kelistrikan' => 6,
 
-            // Keahlian umum yang relevan dengan kedua jurusan
-            'menganalisa' => 6,
-            'memecahkan masalah' => 6,
+            // Keahlian umum
             'Mengembangkan Rencana & Strategi' => 6,
-            'troubleshooting' => 6,
+            'memecahkan masalah' => 7,
 
-            // Keahlian dasar
+            // Default
             'komunikasi' => 5,
             'kerja sama tim' => 5,
-            'manajemen waktu' => 5,
-
-            // Keahlian kurang relevan
-            'presentasi' => 4,
-            'menulis' => 4,
-            'seni' => 3,
         ];
 
-        // Cari kecocokan dengan case-insensitive
         foreach ($keahlianMapping as $key => $value) {
             if (stripos($keahlian, $key) !== false) {
                 return $value;
             }
         }
 
-        return 4; // default if not found
+        return 4;
     }
 
     /**
-     * Convert penghasilan to numeric value for TOPSIS calculation  
-     * Menggunakan skala 1-7 berdasarkan kemampuan ekonomi
+     * Convert biaya gelombang to numeric value
+     * BP = COST (semakin rendah semakin baik)
+     * Jadi nilai yang lebih tinggi = biaya lebih mahal = lebih tidak diinginkan
      */
-    public function convertPenghasilanToNumeric(?string $penghasilan): int
+    public function convertBiayaGelombangToNumeric(?string $biaya): int
     {
-        if (empty($penghasilan)) {
-            return 4; // default neutral value
+        if (empty($biaya)) {
+            return 2; // default middle
         }
 
-        // Ekstrak nilai numerik dari string penghasilan
-        if (preg_match('/(\d+)/', $penghasilan, $matches)) {
-            $amount = (int) $matches[1];
-
-            // Konversi berdasarkan rentang penghasilan
-            if ($amount <= 1000000) {
-                return 3; // Penghasilan rendah
-            } elseif ($amount <= 1500000) {
-                return 5; // Penghasilan menengah
-            } elseif ($amount <= 2000000) {
-                return 6; // Penghasilan menengah-tinggi
-            } else {
-                return 7; // Penghasilan tinggi
-            }
-        }
-
-        // Mapping alternatif berdasarkan kode G1, G2, G3
-        $penghasilanMapping = [
-            'G1' => 3, // Penghasilan rendah (< 1.5 juta)
-            'G2' => 5, // Penghasilan menengah (1.5 - 2.5 juta)
-            'G3' => 6, // Penghasilan menengah-tinggi (2.5 - 4 juta)
-            'G4' => 7, // Penghasilan tinggi (> 4 juta)
+        // Mapping SESUAI EXCEL
+        // G1 = 1 juta (paling murah) = nilai 4 (rendah)
+        // G2 = 1.5 juta (menengah) = nilai 3 (menengah)
+        // G3 = 2 juta (paling mahal) = nilai 2 (tinggi/lebih mahal)
+        $biayaMapping = [
+            'G1' => 4, // Paling murah - nilai rendah karena COST
+            'G2' => 3, // Menengah
+            'G3' => 2, // Paling mahal - nilai tinggi karena COST
         ];
 
-        foreach ($penghasilanMapping as $code => $value) {
-            if (stripos($penghasilan, $code) !== false) {
+        foreach ($biayaMapping as $code => $value) {
+            if (stripos($biaya, $code) !== false) {
                 return $value;
             }
         }
 
-        return 4; // default if no pattern found
+        return 2; // default
     }
 
     /**
-     * Check if all required data is available for TOPSIS calculation
+     * BACKWARD COMPATIBILITY - alias untuk method lama
      */
+    public function convertPenghasilanToNumeric(?string $penghasilan): int
+    {
+        return $this->convertBiayaGelombangToNumeric($penghasilan);
+    }
+
     public function isReadyForCalculation(): bool
     {
         return !empty($this->nilai_ipa) &&
@@ -264,12 +207,9 @@ class PenilaianPesertaDidik extends Model
             !empty($this->minat_c) &&
             !empty($this->minat_d) &&
             !empty($this->keahlian) &&
-            !empty($this->penghasilan_ortu);
+            !empty($this->biaya_gelombang);
     }
 
-    /**
-     * Get missing data fields
-     */
     public function getMissingFields(): array
     {
         $missing = [];
@@ -285,14 +225,11 @@ class PenilaianPesertaDidik extends Model
         if (empty($this->minat_c)) $missing[] = 'Minat C';
         if (empty($this->minat_d)) $missing[] = 'Minat D';
         if (empty($this->keahlian)) $missing[] = 'Keahlian';
-        if (empty($this->penghasilan_ortu)) $missing[] = 'Penghasilan Orang Tua';
+        if (empty($this->biaya_gelombang)) $missing[] = 'Biaya Gelombang';
 
         return $missing;
     }
 
-    /**
-     * Scope for assessments ready for calculation
-     */
     public function scopeReadyForCalculation($query)
     {
         return $query->whereNotNull('nilai_ipa')
@@ -306,36 +243,24 @@ class PenilaianPesertaDidik extends Model
             ->whereNotNull('minat_c')
             ->whereNotNull('minat_d')
             ->whereNotNull('keahlian')
-            ->whereNotNull('penghasilan_ortu');
+            ->whereNotNull('biaya_gelombang');
     }
 
-    /**
-     * Scope for uncalculated assessments
-     */
     public function scopeUncalculated($query)
     {
         return $query->where('sudah_dihitung', false);
     }
 
-    /**
-     * Mark as calculated
-     */
     public function markAsCalculated(): bool
     {
         return $this->update(['sudah_dihitung' => true]);
     }
 
-    /**
-     * Mark as uncalculated
-     */
     public function markAsUncalculated(): bool
     {
         return $this->update(['sudah_dihitung' => false]);
     }
 
-    /**
-     * Get debug information for TOPSIS calculation
-     */
     public function getDebugInfo(): array
     {
         return [
@@ -349,7 +274,7 @@ class PenilaianPesertaDidik extends Model
                 'md' => $this->convertMinatToNumeric($this->minat_d),
             ],
             'keahlian_converted' => $this->convertKeahlianToNumeric($this->keahlian),
-            'penghasilan_converted' => $this->convertPenghasilanToNumeric($this->penghasilan_ortu),
+            'biaya_gelombang_converted' => $this->convertBiayaGelombangToNumeric($this->biaya_gelombang),
             'is_ready' => $this->isReadyForCalculation(),
             'missing_fields' => $this->getMissingFields(),
         ];

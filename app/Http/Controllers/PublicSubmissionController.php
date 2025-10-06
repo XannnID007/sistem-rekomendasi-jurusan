@@ -61,7 +61,7 @@ class PublicSubmissionController extends Controller
                 'minat_c' => 'required|string',
                 'minat_d' => 'required|string',
                 'keahlian' => 'required|string',
-                'penghasilan_ortu' => 'required|string',
+                'biaya_gelombang' => 'required|string',
             ], [
                 // Custom error messages
                 'nisn.required' => 'NISN wajib diisi',
@@ -69,6 +69,7 @@ class PublicSubmissionController extends Controller
                 'nisn.unique' => 'NISN sudah terdaftar dalam sistem',
                 'email.email' => 'Format email tidak valid',
                 'tanggal_lahir.before' => 'Tanggal lahir harus sebelum hari ini',
+                'biaya_gelombang.required' => 'Biaya gelombang wajib dipilih',
                 // ... tambahkan pesan error lainnya
             ]);
 
@@ -122,7 +123,7 @@ class PublicSubmissionController extends Controller
                 'minat_c' => $validated['minat_c'],
                 'minat_d' => $validated['minat_d'],
                 'keahlian' => $validated['keahlian'],
-                'penghasilan_ortu' => $validated['penghasilan_ortu'],
+                'biaya_gelombang' => $validated['biaya_gelombang'],
                 'sudah_dihitung' => false,
                 'status_submission' => 'pending',
                 'tanggal_submission' => now(),

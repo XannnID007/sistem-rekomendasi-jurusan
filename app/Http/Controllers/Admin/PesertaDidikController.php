@@ -267,13 +267,14 @@ class PesertaDidikController extends Controller
             'minat_c' => 'required|string|max:255',
             'minat_d' => 'required|string|max:255',
             'keahlian' => 'required|string|max:255',
-            'penghasilan_ortu' => 'required|string|max:50',
+            'biaya_gelombang' => 'required|string|max:50',,
         ], [
             'tahun_ajaran.required' => 'Tahun ajaran wajib diisi',
             'nilai_ipa.required' => 'Nilai IPA wajib diisi',
             'nilai_ipa.numeric' => 'Nilai IPA harus berupa angka',
             'nilai_ipa.min' => 'Nilai IPA minimal 0',
             'nilai_ipa.max' => 'Nilai IPA maksimal 100',
+            'biaya_gelombang.required' => 'Biaya gelombang wajib dipilih',
             // Add more validation messages as needed
         ]);
 
@@ -292,7 +293,7 @@ class PesertaDidikController extends Controller
                 'minat_c' => $validated['minat_c'],
                 'minat_d' => $validated['minat_d'],
                 'keahlian' => $validated['keahlian'],
-                'penghasilan_ortu' => $validated['penghasilan_ortu'],
+                'biaya_gelombang' => $validated['biaya_gelombang'],
                 'sudah_dihitung' => false,
             ]);
 
