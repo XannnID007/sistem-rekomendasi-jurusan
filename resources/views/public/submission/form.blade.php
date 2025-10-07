@@ -29,9 +29,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center space-x-3">
-                    <img src="/images/logo.png" alt="Logo SPK" class="w-10 h-10 object-contain"
-                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="w-10 h-10 bg-navy rounded-lg flex items-center justify-center" style="display: none;">
+                    <div class="w-10 h-10 bg-navy rounded-lg flex items-center justify-center">
                         <span class="text-white font-semibold text-lg">SP</span>
                     </div>
                     <div>
@@ -67,6 +65,26 @@
                 </div>
             @endif
 
+            @if ($errors->any())
+                <div class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div class="flex">
+                        <svg class="w-5 h-5 text-red-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        <div>
+                            <h3 class="text-red-800 font-semibold mb-2">Terdapat kesalahan:</h3>
+                            <ul class="list-disc list-inside text-red-700 text-sm space-y-1">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <!-- Form -->
             <form action="{{ route('submission.submit') }}" method="POST" class="space-y-6">
                 @csrf
@@ -85,7 +103,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">NISN <span
                                     class="text-red-500">*</span></label>
                             <input type="text" name="nisn" maxlength="10" value="{{ old('nisn') }}" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy">
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy @error('nisn') border-red-500 @enderror">
                             <p class="mt-1 text-xs text-gray-500">10 digit angka</p>
                             @error('nisn')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -96,7 +114,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap <span
                                     class="text-red-500">*</span></label>
                             <input type="text" name="nama_lengkap" value="{{ old('nama_lengkap') }}" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy">
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy @error('nama_lengkap') border-red-500 @enderror">
                             @error('nama_lengkap')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
@@ -106,7 +124,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">Jenis Kelamin <span
                                     class="text-red-500">*</span></label>
                             <select name="jenis_kelamin" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy">
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy @error('jenis_kelamin') border-red-500 @enderror">
                                 <option value="">Pilih</option>
                                 <option value="L" {{ old('jenis_kelamin') == 'L' ? 'selected' : '' }}>Laki-laki
                                 </option>
@@ -122,7 +140,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Lahir <span
                                     class="text-red-500">*</span></label>
                             <input type="date" name="tanggal_lahir" value="{{ old('tanggal_lahir') }}" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy">
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy @error('tanggal_lahir') border-red-500 @enderror">
                             @error('tanggal_lahir')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
@@ -132,7 +150,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">Email <span
                                     class="text-red-500">*</span></label>
                             <input type="email" name="email" value="{{ old('email') }}" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy">
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy @error('email') border-red-500 @enderror">
                             @error('email')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
@@ -142,7 +160,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">No. Telepon <span
                                     class="text-red-500">*</span></label>
                             <input type="tel" name="no_telepon" value="{{ old('no_telepon') }}" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy">
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy @error('no_telepon') border-red-500 @enderror">
                             @error('no_telepon')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
@@ -152,7 +170,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">Alamat <span
                                     class="text-red-500">*</span></label>
                             <textarea name="alamat" rows="3" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy">{{ old('alamat') }}</textarea>
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy @error('alamat') border-red-500 @enderror">{{ old('alamat') }}</textarea>
                             @error('alamat')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
@@ -162,7 +180,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">Nama Orang Tua <span
                                     class="text-red-500">*</span></label>
                             <input type="text" name="nama_orang_tua" value="{{ old('nama_orang_tua') }}" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy">
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy @error('nama_orang_tua') border-red-500 @enderror">
                             @error('nama_orang_tua')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
@@ -173,7 +191,7 @@
                                     class="text-red-500">*</span></label>
                             <input type="tel" name="no_telepon_orang_tua"
                                 value="{{ old('no_telepon_orang_tua') }}" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy">
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy @error('no_telepon_orang_tua') border-red-500 @enderror">
                             @error('no_telepon_orang_tua')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
@@ -184,13 +202,14 @@
                                     class="text-red-500">*</span></label>
                             <input type="text" name="tahun_ajaran" value="{{ old('tahun_ajaran', '2024/2025') }}"
                                 required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy">
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy @error('tahun_ajaran') border-red-500 @enderror">
                             @error('tahun_ajaran')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
                     </div>
                 </div>
+
                 <!-- Section 2: Nilai Akademik -->
                 <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
                     <div class="flex items-center space-x-3 mb-6">
@@ -201,77 +220,26 @@
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Nilai IPA <span
-                                    class="text-red-500">*</span></label>
-                            <input type="number" name="nilai_ipa" min="0" max="100" step="0.01"
-                                value="{{ old('nilai_ipa') }}" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
-                            <p class="mt-1 text-xs text-gray-500">Skala 0-100</p>
-                            @error('nilai_ipa')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Nilai IPS <span
-                                    class="text-red-500">*</span></label>
-                            <input type="number" name="nilai_ips" min="0" max="100" step="0.01"
-                                value="{{ old('nilai_ips') }}" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
-                            <p class="mt-1 text-xs text-gray-500">Skala 0-100</p>
-                            @error('nilai_ips')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Nilai Matematika <span
-                                    class="text-red-500">*</span></label>
-                            <input type="number" name="nilai_matematika" min="0" max="100"
-                                step="0.01" value="{{ old('nilai_matematika') }}" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
-                            <p class="mt-1 text-xs text-gray-500">Skala 0-100</p>
-                            @error('nilai_matematika')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Nilai Bahasa Indonesia <span
-                                    class="text-red-500">*</span></label>
-                            <input type="number" name="nilai_bahasa_indonesia" min="0" max="100"
-                                step="0.01" value="{{ old('nilai_bahasa_indonesia') }}" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
-                            <p class="mt-1 text-xs text-gray-500">Skala 0-100</p>
-                            @error('nilai_bahasa_indonesia')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Nilai Bahasa Inggris <span
-                                    class="text-red-500">*</span></label>
-                            <input type="number" name="nilai_bahasa_inggris" min="0" max="100"
-                                step="0.01" value="{{ old('nilai_bahasa_inggris') }}" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
-                            <p class="mt-1 text-xs text-gray-500">Skala 0-100</p>
-                            @error('nilai_bahasa_inggris')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Nilai PKN <span
-                                    class="text-red-500">*</span></label>
-                            <input type="number" name="nilai_pkn" min="0" max="100" step="0.01"
-                                value="{{ old('nilai_pkn') }}" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
-                            <p class="mt-1 text-xs text-gray-500">Skala 0-100</p>
-                            @error('nilai_pkn')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
+                        @foreach ([
+        'nilai_ipa' => 'Nilai IPA',
+        'nilai_ips' => 'Nilai IPS',
+        'nilai_matematika' => 'Nilai Matematika',
+        'nilai_bahasa_indonesia' => 'Nilai Bahasa Indonesia',
+        'nilai_bahasa_inggris' => 'Nilai Bahasa Inggris',
+        'nilai_pkn' => 'Nilai PKN',
+    ] as $field => $label)
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">{{ $label }} <span
+                                        class="text-red-500">*</span></label>
+                                <input type="number" name="{{ $field }}" min="0" max="100"
+                                    step="0.01" value="{{ old($field) }}" required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy @error($field) border-red-500 @enderror">
+                                <p class="mt-1 text-xs text-gray-500">Skala 0-100</p>
+                                @error($field)
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        @endforeach
                     </div>
                 </div>
 
@@ -285,124 +253,70 @@
                     </div>
 
                     <div class="space-y-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Minat Bidang Teknologi
-                                <span class="text-red-500">*</span></label>
-                            <select name="minat_a" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
-                                <option value="">Pilih tingkat minat</option>
-                                <option value="Sangat Tinggi"
-                                    {{ old('minat_a') == 'Sangat Tinggi' ? 'selected' : '' }}>
-                                    Sangat Tinggi</option>
-                                <option value="Tinggi" {{ old('minat_a') == 'Tinggi' ? 'selected' : '' }}>Tinggi
-                                </option>
-                                <option value="Sedang" {{ old('minat_a') == 'Sedang' ? 'selected' : '' }}>Sedang
-                                </option>
-                                <option value="Rendah" {{ old('minat_a') == 'Rendah' ? 'selected' : '' }}>Rendah
-                                </option>
-                                <option value="Sangat Rendah"
-                                    {{ old('minat_a') == 'Sangat Rendah' ? 'selected' : '' }}>
-                                    Sangat Rendah</option>
-                            </select>
-                            @error('minat_a')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
+                        @php
+                            $minatOptions = [
+                                'minat_a' => [
+                                    'label' => 'Minat Bidang Kreatif',
+                                    'options' => [
+                                        'Musik & Teater',
+                                        'Fotografi & Videografi',
+                                        'Seni & Kerajinan',
+                                        'Desain Grafis',
+                                    ],
+                                ],
+                                'minat_b' => [
+                                    'label' => 'Minat Bidang Teknologi (Paling Penting)',
+                                    'options' => [
+                                        'Teknologi informasi & Komunikasi',
+                                        'Komputer',
+                                        'Elektronik',
+                                        'Mesin',
+                                    ],
+                                ],
+                                'minat_c' => [
+                                    'label' => 'Minat Bidang Ilmiah',
+                                    'options' => ['Kimia', 'Biologi & Lingkungan', 'Fisika'],
+                                ],
+                                'minat_d' => [
+                                    'label' => 'Minat Bidang Bisnis',
+                                    'options' => ['Bisnis & Enterpreneurship', 'Pemasaran'],
+                                ],
+                            ];
+                        @endphp
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Minat Bidang Otomotif <span
-                                    class="text-red-500">*</span></label>
-                            <select name="minat_b" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
-                                <option value="">Pilih tingkat minat</option>
-                                <option value="Sangat Tinggi"
-                                    {{ old('minat_b') == 'Sangat Tinggi' ? 'selected' : '' }}>
-                                    Sangat Tinggi</option>
-                                <option value="Tinggi" {{ old('minat_b') == 'Tinggi' ? 'selected' : '' }}>Tinggi
-                                </option>
-                                <option value="Sedang" {{ old('minat_b') == 'Sedang' ? 'selected' : '' }}>Sedang
-                                </option>
-                                <option value="Rendah" {{ old('minat_b') == 'Rendah' ? 'selected' : '' }}>Rendah
-                                </option>
-                                <option value="Sangat Rendah"
-                                    {{ old('minat_b') == 'Sangat Rendah' ? 'selected' : '' }}>
-                                    Sangat Rendah</option>
-                            </select>
-                            @error('minat_b')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Minat Bekerja dengan
-                                Komputer <span class="text-red-500">*</span></label>
-                            <select name="minat_c" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
-                                <option value="">Pilih tingkat minat</option>
-                                <option value="Sangat Tinggi"
-                                    {{ old('minat_c') == 'Sangat Tinggi' ? 'selected' : '' }}>
-                                    Sangat Tinggi</option>
-                                <option value="Tinggi" {{ old('minat_c') == 'Tinggi' ? 'selected' : '' }}>Tinggi
-                                </option>
-                                <option value="Sedang" {{ old('minat_c') == 'Sedang' ? 'selected' : '' }}>Sedang
-                                </option>
-                                <option value="Rendah" {{ old('minat_c') == 'Rendah' ? 'selected' : '' }}>Rendah
-                                </option>
-                                <option value="Sangat Rendah"
-                                    {{ old('minat_c') == 'Sangat Rendah' ? 'selected' : '' }}>
-                                    Sangat Rendah</option>
-                            </select>
-                            @error('minat_c')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Minat Bekerja dengan Mesin
-                                <span class="text-red-500">*</span></label>
-                            <select name="minat_d" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
-                                <option value="">Pilih tingkat minat</option>
-                                <option value="Sangat Tinggi"
-                                    {{ old('minat_d') == 'Sangat Tinggi' ? 'selected' : '' }}>
-                                    Sangat Tinggi</option>
-                                <option value="Tinggi" {{ old('minat_d') == 'Tinggi' ? 'selected' : '' }}>Tinggi
-                                </option>
-                                <option value="Sedang" {{ old('minat_d') == 'Sedang' ? 'selected' : '' }}>Sedang
-                                </option>
-                                <option value="Rendah" {{ old('minat_d') == 'Rendah' ? 'selected' : '' }}>Rendah
-                                </option>
-                                <option value="Sangat Rendah"
-                                    {{ old('minat_d') == 'Sangat Rendah' ? 'selected' : '' }}>
-                                    Sangat Rendah</option>
-                            </select>
-                            @error('minat_d')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
+                        @foreach ($minatOptions as $field => $data)
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    {{ $data['label'] }} <span class="text-red-500">*</span>
+                                </label>
+                                <select name="{{ $field }}" required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy @error($field) border-red-500 @enderror">
+                                    <option value="">Pilih minat</option>
+                                    @foreach ($data['options'] as $option)
+                                        <option value="{{ $option }}"
+                                            {{ old($field) == $option ? 'selected' : '' }}>
+                                            {{ $option }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error($field)
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        @endforeach
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Keahlian Khusus <span
                                     class="text-red-500">*</span></label>
                             <select name="keahlian" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy @error('keahlian') border-red-500 @enderror">
                                 <option value="">Pilih keahlian</option>
-                                <option value="Programming" {{ old('keahlian') == 'Programming' ? 'selected' : '' }}>
-                                    Programming</option>
-                                <option value="Networking" {{ old('keahlian') == 'Networking' ? 'selected' : '' }}>
-                                    Networking</option>
-                                <option value="Hardware" {{ old('keahlian') == 'Hardware' ? 'selected' : '' }}>
-                                    Hardware
-                                </option>
-                                <option value="Mekanik" {{ old('keahlian') == 'Mekanik' ? 'selected' : '' }}>Mekanik
-                                </option>
-                                <option value="Elektronik" {{ old('keahlian') == 'Elektronik' ? 'selected' : '' }}>
-                                    Elektronik</option>
-                                <option value="Otomotif" {{ old('keahlian') == 'Otomotif' ? 'selected' : '' }}>
-                                    Otomotif
-                                </option>
-                                <option value="Lainnya" {{ old('keahlian') == 'Lainnya' ? 'selected' : '' }}>Lainnya
-                                </option>
+                                @foreach (['perangkat lunak', 'menganalisa', 'kelistrikan', 'Mengembangkan Rencana & Strategi', 'memecahkan masalah', 'Menggunakan Perangkat Lunak & Komputer'] as $option)
+                                    <option value="{{ $option }}"
+                                        {{ old('keahlian') == $option ? 'selected' : '' }}>
+                                        {{ ucfirst($option) }}
+                                    </option>
+                                @endforeach
                             </select>
                             @error('keahlian')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -411,31 +325,38 @@
                     </div>
                 </div>
 
-                <!-- Section 4: Data Ekonomi -->
+                <!-- Section 4: Biaya Pergelombang -->
                 <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
                     <div class="flex items-center space-x-3 mb-6">
                         <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
                             <span class="text-amber-600 font-bold text-lg">4</span>
                         </div>
-                        <h3 class="text-xl font-bold text-navy">Data Ekonomi Keluarga</h3>
+                        <h3 class="text-xl font-bold text-navy">Biaya Pendaftaran</h3>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Penghasilan Orang Tua per Bulan
-                            <span class="text-red-500">*</span></label>
-                        <select name="penghasilan_ortu" required
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
-                            <option value="">Pilih rentang penghasilan</option>
-                            <option value="< 1 Juta" {{ old('penghasilan_ortu') == '< 1 Juta' ? 'selected' : '' }}>
-                                &lt; Rp 1.000.000</option>
-                            <option value="1-3 Juta" {{ old('penghasilan_ortu') == '1-3 Juta' ? 'selected' : '' }}>Rp
-                                1.000.000 - Rp 3.000.000</option>
-                            <option value="3-5 Juta" {{ old('penghasilan_ortu') == '3-5 Juta' ? 'selected' : '' }}>Rp
-                                3.000.000 - Rp 5.000.000</option>
-                            <option value="> 5 Juta" {{ old('penghasilan_ortu') == '> 5 Juta' ? 'selected' : '' }}>
-                                &gt; Rp 5.000.000</option>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Pilihan Biaya Pergelombang <span
+                                class="text-red-500">*</span></label>
+                        <select name="biaya_gelombang" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy @error('biaya_gelombang') border-red-500 @enderror">
+                            <option value="">Pilih gelombang pendaftaran</option>
+                            <option value="G1. Rp 1.000.000"
+                                {{ old('biaya_gelombang') == 'G1. Rp 1.000.000' ? 'selected' : '' }}>
+                                Gelombang 1 - Rp 1.000.000 (Paling Murah)
+                            </option>
+                            <option value="G2. Rp 1.500.000"
+                                {{ old('biaya_gelombang') == 'G2. Rp 1.500.000' ? 'selected' : '' }}>
+                                Gelombang 2 - Rp 1.500.000 (Menengah)
+                            </option>
+                            <option value="G3. Rp 2.000.000"
+                                {{ old('biaya_gelombang') == 'G3. Rp 2.000.000' ? 'selected' : '' }}>
+                                Gelombang 3 - Rp 2.000.000 (Terakhir)
+                            </option>
                         </select>
-                        @error('penghasilan_ortu')
+                        <p class="mt-2 text-xs text-gray-500">
+                            💡 Info: Gelombang 1 adalah yang termurah. Semakin cepat mendaftar, semakin hemat biaya!
+                        </p>
+                        @error('biaya_gelombang')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
@@ -466,6 +387,20 @@
             </p>
         </div>
     </footer>
+
+    <script>
+        // Auto format NISN - only numbers
+        document.querySelector('input[name="nisn"]').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+
+        // Auto format phone numbers - only numbers
+        document.querySelectorAll('input[type="tel"]').forEach(function(input) {
+            input.addEventListener('input', function(e) {
+                this.value = this.value.replace(/[^0-9]/g, '');
+            });
+        });
+    </script>
 
 </body>
 
