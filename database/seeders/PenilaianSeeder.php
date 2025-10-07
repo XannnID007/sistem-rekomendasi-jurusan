@@ -20,8 +20,8 @@ class PenilaianSeeder extends Seeder
                 'nilai_ipa' => 80.00,
                 'nilai_ips' => 82.00,
                 'nilai_matematika' => 80.00,
-                'nilai_bahasa_indonesia' => 80.00,
-                'nilai_bahasa_inggris' => 85.00, // N3 di Excel
+                'nilai_bahasa_indonesia' => 87.00, // <-- BENAR SESUAI EXCEL
+                'nilai_bahasa_inggris' => 85.00,
                 'nilai_pkn' => 81.00,
                 'minat_a' => 'Musik & Teater',
                 'minat_b' => 'Teknologi informasi & Komunikasi',
@@ -35,7 +35,7 @@ class PenilaianSeeder extends Seeder
                 'nilai_ipa' => 85.00,
                 'nilai_ips' => 87.00,
                 'nilai_matematika' => 80.00,
-                'nilai_bahasa_indonesia' => 80.00,
+                'nilai_bahasa_indonesia' => 86.00, // <-- BENAR SESUAI EXCEL
                 'nilai_bahasa_inggris' => 85.00,
                 'nilai_pkn' => 83.00,
                 'minat_a' => 'Fotografi & Videografi',
@@ -50,7 +50,7 @@ class PenilaianSeeder extends Seeder
                 'nilai_ipa' => 86.00,
                 'nilai_ips' => 80.00,
                 'nilai_matematika' => 80.00,
-                'nilai_bahasa_indonesia' => 80.00,
+                'nilai_bahasa_indonesia' => 82.00, // <-- BENAR SESUAI EXCEL
                 'nilai_bahasa_inggris' => 78.00,
                 'nilai_pkn' => 82.00,
                 'minat_a' => 'Seni & Kerajinan',
@@ -65,7 +65,7 @@ class PenilaianSeeder extends Seeder
                 'nilai_ipa' => 70.00,
                 'nilai_ips' => 77.00,
                 'nilai_matematika' => 85.00,
-                'nilai_bahasa_indonesia' => 85.00,
+                'nilai_bahasa_indonesia' => 80.00, // <-- BENAR SESUAI EXCEL
                 'nilai_bahasa_inggris' => 77.00,
                 'nilai_pkn' => 82.00,
                 'minat_a' => 'Musik & Teater',
@@ -80,7 +80,7 @@ class PenilaianSeeder extends Seeder
                 'nilai_ipa' => 80.00,
                 'nilai_ips' => 87.00,
                 'nilai_matematika' => 80.00,
-                'nilai_bahasa_indonesia' => 80.00,
+                'nilai_bahasa_indonesia' => 85.00, // <-- BENAR SESUAI EXCEL
                 'nilai_bahasa_inggris' => 77.00,
                 'nilai_pkn' => 80.00,
                 'minat_a' => 'Desain Grafis',
@@ -95,7 +95,7 @@ class PenilaianSeeder extends Seeder
                 'nilai_ipa' => 72.00,
                 'nilai_ips' => 75.00,
                 'nilai_matematika' => 74.00,
-                'nilai_bahasa_indonesia' => 74.00,
+                'nilai_bahasa_indonesia' => 80.00, // <-- BENAR SESUAI EXCEL
                 'nilai_bahasa_inggris' => 70.00,
                 'nilai_pkn' => 79.00,
                 'minat_a' => 'Musik & Teater',
