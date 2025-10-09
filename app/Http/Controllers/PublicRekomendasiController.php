@@ -230,7 +230,7 @@ class PublicRekomendasiController extends Controller
                 'bahasa_indonesia' => $penilaian->nilai_bahasa_indonesia,
                 'bahasa_inggris' => $penilaian->nilai_bahasa_inggris,
                 'produktif' => $penilaian->nilai_pkn,
-                'rata_rata' => $penilaian->rata_nilai_akademik
+                'rata_rata' => $penilaian->rata_rata_nilai_akademik
             ],
             'minat' => [
                 'minat_a' => $penilaian->minat_a,
@@ -239,7 +239,7 @@ class PublicRekomendasiController extends Controller
                 'minat_d' => $penilaian->minat_d
             ],
             'keahlian' => $penilaian->keahlian,
-            'penghasilan_ortu' => $penilaian->penghasilan_ortu,
+            'biaya_gelombang' => $penilaian->biaya_gelombang, // FIXED: Changed from penghasilan_ortu
             'nilai_preferensi' => $perhitungan->nilai_preferensi,
             'rekomendasi' => $perhitungan->jurusan_rekomendasi
         ];

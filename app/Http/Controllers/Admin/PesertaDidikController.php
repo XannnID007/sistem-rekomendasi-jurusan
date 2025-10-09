@@ -267,15 +267,14 @@ class PesertaDidikController extends Controller
             'minat_c' => 'required|string|max:255',
             'minat_d' => 'required|string|max:255',
             'keahlian' => 'required|string|max:255',
-            'biaya_gelombang' => 'required|string|max:50',
+            'biaya_gelombang' => 'required|string|max:50', // FIXED: Changed from penghasilan_ortu
         ], [
             'tahun_ajaran.required' => 'Tahun ajaran wajib diisi',
             'nilai_ipa.required' => 'Nilai IPA wajib diisi',
             'nilai_ipa.numeric' => 'Nilai IPA harus berupa angka',
             'nilai_ipa.min' => 'Nilai IPA minimal 0',
             'nilai_ipa.max' => 'Nilai IPA maksimal 100',
-            'biaya_gelombang.required' => 'Biaya gelombang wajib dipilih',
-            // Add more validation messages as needed
+            'biaya_gelombang.required' => 'Biaya gelombang wajib dipilih', // FIXED
         ]);
 
         try {
@@ -293,7 +292,7 @@ class PesertaDidikController extends Controller
                 'minat_c' => $validated['minat_c'],
                 'minat_d' => $validated['minat_d'],
                 'keahlian' => $validated['keahlian'],
-                'biaya_gelombang' => $validated['biaya_gelombang'],
+                'biaya_gelombang' => $validated['biaya_gelombang'], // FIXED
                 'sudah_dihitung' => false,
             ]);
 
@@ -305,14 +304,6 @@ class PesertaDidikController extends Controller
                 ->withInput()
                 ->with('error', 'Gagal menambahkan penilaian: ' . $e->getMessage());
         }
-    }
-
-    /**
-     * Show form for editing penilaian
-     */
-    public function editPenilaian(PesertaDidik $pesertaDidik, PenilaianPesertaDidik $penilaian)
-    {
-        return view('admin.peserta-didik.penilaian.edit', compact('pesertaDidik', 'penilaian'));
     }
 
     /**
@@ -333,7 +324,7 @@ class PesertaDidikController extends Controller
             'minat_c' => 'required|string|max:255',
             'minat_d' => 'required|string|max:255',
             'keahlian' => 'required|string|max:255',
-            'penghasilan_ortu' => 'required|string|max:50',
+            'biaya_gelombang' => 'required|string|max:50', // FIXED: Changed from penghasilan_ortu
         ]);
 
         try {
@@ -350,6 +341,14 @@ class PesertaDidikController extends Controller
                 ->withInput()
                 ->with('error', 'Gagal memperbarui penilaian: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Show form for editing penilaian
+     */
+    public function editPenilaian(PesertaDidik $pesertaDidik, PenilaianPesertaDidik $penilaian)
+    {
+        return view('admin.peserta-didik.penilaian.edit', compact('pesertaDidik', 'penilaian'));
     }
 
     /**

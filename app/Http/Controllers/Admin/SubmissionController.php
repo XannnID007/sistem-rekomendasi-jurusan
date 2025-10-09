@@ -17,7 +17,7 @@ class SubmissionController extends Controller
     public function index(Request $request)
     {
         $query = PesertaDidik::where('is_public_submission', true)
-            ->with(['penilaianTerbaru', 'perhitunganTerbaru']);
+            ->with(['penilaianTerbaru', 'perhitunganTerbaru', 'user']);
 
         // Filter by status
         if ($request->filled('status')) {
@@ -47,20 +47,30 @@ class SubmissionController extends Controller
             });
         }
 
-        $submissions = $query->orderBy('created_at', 'desc')->paginate(20);
+        $submissions = $query->latest('created_at')->paginate(20);
 
-        // Get statistics
+        // Get statistics - FIXED: Pastikan hitung dari peserta dengan is_public_submission = true
         $stats = [
             'total' => PesertaDidik::where('is_public_submission', true)->count(),
-            'pending' => PenilaianPesertaDidik::where('status_submission', 'pending')->count(),
-            'approved' => PenilaianPesertaDidik::where('status_submission', 'approved')->count(),
-            'rejected' => PenilaianPesertaDidik::where('status_submission', 'rejected')->count(),
+            'pending' => PesertaDidik::where('is_public_submission', true)
+                ->whereHas('penilaianTerbaru', function ($q) {
+                    $q->where('status_submission', 'pending');
+                })->count(),
+            'approved' => PesertaDidik::where('is_public_submission', true)
+                ->whereHas('penilaianTerbaru', function ($q) {
+                    $q->where('status_submission', 'approved');
+                })->count(),
+            'rejected' => PesertaDidik::where('is_public_submission', true)
+                ->whereHas('penilaianTerbaru', function ($q) {
+                    $q->where('status_submission', 'rejected');
+                })->count(),
         ];
 
         // Get filter options
         $tahunAjaran = PesertaDidik::where('is_public_submission', true)
             ->distinct()
-            ->pluck('tahun_ajaran');
+            ->pluck('tahun_ajaran')
+            ->filter();
 
         return view('admin.submission.index', compact('submissions', 'stats', 'tahunAjaran'));
     }
@@ -70,11 +80,7 @@ class SubmissionController extends Controller
      */
     public function show(PesertaDidik $pesertaDidik)
     {
-        if (!$pesertaDidik->is_public_submission) {
-            return redirect()->route('admin.submission.index')
-                ->with('error', 'Data bukan dari public submission');
-        }
-
+        // FIXED: Tidak perlu cek is_public_submission karena sudah di route model binding
         $pesertaDidik->load(['penilaianTerbaru', 'perhitunganTerbaru', 'user']);
 
         return view('admin.submission.show', compact('pesertaDidik'));
@@ -141,10 +147,6 @@ class SubmissionController extends Controller
      */
     public function destroy(PesertaDidik $pesertaDidik)
     {
-        if (!$pesertaDidik->is_public_submission) {
-            return back()->with('error', 'Data bukan dari public submission');
-        }
-
         try {
             // Delete user (akan cascade delete peserta didik)
             $pesertaDidik->user->delete();

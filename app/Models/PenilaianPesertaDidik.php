@@ -1,4 +1,5 @@
 <?php
+// app/Models/PenilaianPesertaDidik.php
 
 namespace App\Models;
 
@@ -12,10 +13,6 @@ class PenilaianPesertaDidik extends Model
     protected $table = 'penilaian_peserta_didik';
     protected $primaryKey = 'penilaian_id';
 
-    /**
-     * The attributes that are mass assignable.
-     * Ini penting untuk keamanan saat membuat data baru secara massal.
-     */
     protected $fillable = [
         'peserta_didik_id',
         'tahun_ajaran',
@@ -30,7 +27,7 @@ class PenilaianPesertaDidik extends Model
         'minat_c',
         'minat_d',
         'keahlian',
-        'biaya_gelombang',
+        'biaya_gelombang', // FIXED: Changed from penghasilan_ortu
         'sudah_dihitung',
         'status_submission',
         'tanggal_submission',
@@ -39,9 +36,6 @@ class PenilaianPesertaDidik extends Model
         'jurusan_dipilih',
     ];
 
-    /**
-     * The attributes that should be cast.
-     */
     protected function casts(): array
     {
         return [
@@ -117,6 +111,7 @@ class PenilaianPesertaDidik extends Model
     }
 
     /**
+     * FIXED: Renamed from convertPenghasilanToNumeric
      * Mengkonversi biaya gelombang ke bobot numerik sesuai 4 pilihan di Excel.
      */
     public function convertBiayaGelombangToNumeric(string $biayaValue): int
@@ -154,7 +149,7 @@ class PenilaianPesertaDidik extends Model
             'minat_c',
             'minat_d',
             'keahlian',
-            'biaya_gelombang'
+            'biaya_gelombang' // FIXED: Changed from penghasilan_ortu
         ];
 
         foreach ($requiredFields as $field) {
@@ -181,13 +176,13 @@ class PenilaianPesertaDidik extends Model
             ->whereNotNull('minat_c')
             ->whereNotNull('minat_d')
             ->whereNotNull('keahlian')
-            ->whereNotNull('biaya_gelombang');
+            ->whereNotNull('biaya_gelombang'); // FIXED: Changed from penghasilan_ortu
     }
+
     public function markAsUncalculated(): bool
     {
         return $this->update(['sudah_dihitung' => false]);
     }
-
 
     /**
      * Scope untuk query data penilaian yang belum dihitung.
@@ -195,6 +190,21 @@ class PenilaianPesertaDidik extends Model
     public function scopeUncalculated($query)
     {
         return $query->where('sudah_dihitung', false);
+    }
+
+    /**
+     * FIXED: Added accessor for nilai_akademik array
+     */
+    public function getNilaiAkademikAttribute(): array
+    {
+        return [
+            'n1' => (float)$this->nilai_ipa,
+            'n2' => (float)$this->nilai_ips,
+            'n3' => (float)$this->nilai_bahasa_inggris,
+            'n4' => (float)$this->nilai_matematika,
+            'n5' => (float)$this->nilai_bahasa_indonesia,
+            'n6' => (float)$this->nilai_pkn,
+        ];
     }
 
     public function getRataRataNilaiAkademikAttribute(): float
@@ -206,7 +216,6 @@ class PenilaianPesertaDidik extends Model
             (float)$this->nilai_bahasa_inggris +
             (float)$this->nilai_pkn;
 
-        // Menghindari pembagian dengan nol jika tidak ada nilai
         return $total > 0 ? round($total / 6, 2) : 0;
     }
 }

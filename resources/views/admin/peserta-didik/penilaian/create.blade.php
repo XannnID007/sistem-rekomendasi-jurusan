@@ -258,22 +258,20 @@
                                 <option value="">Pilih Gelombang Pendaftaran</option>
                                 <option value="G1. Rp 1.000.000"
                                     {{ old('biaya_gelombang') === 'G1. Rp 1.000.000' ? 'selected' : '' }}>
-                                    G1. Rp 1.000.000 (Gelombang 1 - Paling Murah)</option>
+                                    G1. Rp 1.000.000 </option>
                                 <option value="G2. Rp 1.500.000"
                                     {{ old('biaya_gelombang') === 'G2. Rp 1.500.000' ? 'selected' : '' }}>
-                                    G2. Rp 1.500.000 (Gelombang 2 - Menengah)</option>
+                                    G2. Rp 1.500.000 </option>
                                 <option value="G3. Rp 2.000.000"
                                     {{ old('biaya_gelombang') === 'G3. Rp 2.000.000' ? 'selected' : '' }}>
-                                    G3. Rp 2.000.000 (Gelombang 3 - Paling Mahal)</option>
+                                    G3. Rp 2.000.000 </option>
+                                <option value="G4. Rp 2.500.000"
+                                    {{ old('biaya_gelombang') === 'G4. Rp 2.500.000' ? 'selected' : '' }}>
+                                    G4. Rp 2.500.000 </option>
                             </select>
                             @error('biaya_gelombang')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
-                            <p class="mt-1 text-xs text-gray-500">
-                                Biaya pendaftaran berdasarkan gelombang. Gelombang 1 paling murah, Gelombang 3 paling mahal.
-                                <br><strong>Catatan:</strong> Biaya lebih rendah akan mendapat nilai preferensi lebih tinggi
-                                dalam perhitungan TOPSIS.
-                            </p>
                         </div>
                     </div>
                 </div>
