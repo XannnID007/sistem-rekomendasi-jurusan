@@ -236,7 +236,17 @@
 
             <p style="margin-top: 10px; font-size: 10px;">
                 Tanggal:
-                {{ $penilaian->tanggal_approved ? $penilaian->tanggal_approved->format('d F Y, H:i') : now()->format('d F Y, H:i') }}
+                @if ($penilaian->tanggal_approved)
+                    @php
+                        $tanggalApproved =
+                            $penilaian->tanggal_approved instanceof \Carbon\Carbon
+                                ? $penilaian->tanggal_approved
+                                : \Carbon\Carbon::parse($penilaian->tanggal_approved);
+                    @endphp
+                    {{ $tanggalApproved->format('d F Y, H:i') }}
+                @else
+                    {{ now()->format('d F Y, H:i') }}
+                @endif
             </p>
         </div>
 
