@@ -12,6 +12,10 @@ class PenilaianPesertaDidik extends Model
     protected $table = 'penilaian_peserta_didik';
     protected $primaryKey = 'penilaian_id';
 
+    /**
+     * The attributes that are mass assignable.
+     * Ini penting untuk keamanan saat membuat data baru secara massal.
+     */
     protected $fillable = [
         'peserta_didik_id',
         'tahun_ajaran',
@@ -26,10 +30,18 @@ class PenilaianPesertaDidik extends Model
         'minat_c',
         'minat_d',
         'keahlian',
-        'biaya_gelombang', // CHANGED dari penghasilan_ortu
-        'sudah_dihitung'
+        'biaya_gelombang',
+        'sudah_dihitung',
+        'status_submission',
+        'tanggal_submission',
+        'tanggal_approved',
+        'alasan_penolakan',
+        'jurusan_dipilih',
     ];
 
+    /**
+     * The attributes that should be cast.
+     */
     protected function casts(): array
     {
         return [
@@ -40,196 +52,122 @@ class PenilaianPesertaDidik extends Model
             'nilai_bahasa_inggris' => 'decimal:2',
             'nilai_pkn' => 'decimal:2',
             'sudah_dihitung' => 'boolean',
+            'tanggal_submission' => 'datetime',
+            'tanggal_approved' => 'datetime',
         ];
     }
 
+    /**
+     * Relasi ke model PesertaDidik.
+     */
     public function pesertaDidik()
     {
         return $this->belongsTo(PesertaDidik::class, 'peserta_didik_id', 'peserta_didik_id');
     }
 
+    /**
+     * Relasi ke model PerhitunganTopsis.
+     */
     public function perhitunganTopsis()
     {
         return $this->hasMany(PerhitunganTopsis::class, 'penilaian_id', 'penilaian_id');
     }
 
-    public function getNilaiAkademikAttribute(): array
-    {
-        return [
-            'n1' => (float) $this->nilai_ipa,
-            'n2' => (float) $this->nilai_ips,
-            'n3' => (float) $this->nilai_bahasa_inggris, // SESUAI EXCEL
-            'n4' => (float) $this->nilai_matematika,
-            'n5' => (float) $this->nilai_bahasa_indonesia,
-            'n6' => (float) $this->nilai_pkn,
-        ];
-    }
-
-    public function getMinatAttribute(): array
-    {
-        return [
-            'ma' => $this->minat_a ?? '',
-            'mb' => $this->minat_b ?? '',
-            'mc' => $this->minat_c ?? '',
-            'md' => $this->minat_d ?? '',
-        ];
-    }
-
-    public function getRataNilaiAkademikAttribute(): float
-    {
-        $total = (float)$this->nilai_ipa + (float)$this->nilai_ips + (float)$this->nilai_matematika +
-            (float)$this->nilai_bahasa_indonesia + (float)$this->nilai_bahasa_inggris + (float)$this->nilai_pkn;
-        return round($total / 6, 2);
-    }
-
     /**
-     * Convert minat to numeric value SESUAI EXCEL
-     * SEMUA MINAT = BENEFIT (semakin tinggi semakin baik)
+     * Mengkonversi nilai Minat ke bobot numerik sesuai Excel.
      */
-    public function convertMinatToNumeric(?string $minat): int
+    public function convertMinatToNumeric(string $minatValue): int
     {
-        if (empty($minat)) {
-            return 2; // default neutral
-        }
-
-        // Mapping SESUAI EXCEL - SEMUA minat adalah benefit
-        $minatMapping = [
-            // Minat A - Kreatif (MA)
+        $mapping = [
+            // MA: Minat Bidang Kreatif
+            'Desain Grafis' => 4,
+            'Seni & Kerajinan' => 4,
             'Musik & Teater' => 4,
             'Fotografi & Videografi' => 4,
-            'Seni & Kerajinan' => 4,
-            'Desain Grafis' => 4,
-
-            // Minat B - Teknologi (MB) - PALING PENTING!
-            'Teknologi informasi & Komunikasi' => 6,
+            // MB: Minat Bidang Teknologi
             'Komputer' => 6,
+            'Teknologi informasi & Komunikasi' => 6,
             'Elektronik' => 2,
             'Mesin' => 2,
-
-            // Minat C - Ilmiah (MC)
+            // MC: Minat Bidang Ilmiah
+            'Fisika' => 4,
             'Kimia' => 4,
             'Biologi & Lingkungan' => 4,
-            'Fisika' => 4,
-
-            // Minat D - Bisnis (MD)
-            'Bisnis & Enterpreneurship' => 2,
+            // MD: Minat Bidang Bisnis
             'Pemasaran' => 2,
+            'Bisnis & Enterpreneurship' => 2,
         ];
-
-        return $minatMapping[$minat] ?? 2;
+        return $mapping[$minatValue] ?? 1;
     }
 
     /**
-     * Convert keahlian to numeric value SESUAI EXCEL
-     * BB = BENEFIT (semakin tinggi semakin baik)
+     * Mengkonversi nilai Bakat (Keahlian) ke bobot numerik sesuai Excel.
      */
-    public function convertKeahlianToNumeric(?string $keahlian): int
+    public function convertKeahlianToNumeric(string $keahlianValue): int
     {
-        if (empty($keahlian)) {
-            return 4;
-        }
-
-        $keahlianMapping = [
-            // Keahlian yang sangat relevan untuk TKJ
-            'perangkat lunak' => 7,
-            'Menggunakan Perangkat Lunak & Komputer' => 7,
+        $mapping = [
             'menganalisa' => 7,
-
-            // Keahlian yang relevan untuk TKR
-            'kelistrikan' => 6,
-
-            // Keahlian umum
-            'Mengembangkan Rencana & Strategi' => 6,
             'memecahkan masalah' => 7,
-
-            // Default
-            'komunikasi' => 5,
-            'kerja sama tim' => 5,
+            'Menggunakan Perangkat Lunak & Komputer' => 7,
+            'perangkat lunak' => 7,
+            'Mengembangkan Rencana & Strategi' => 6,
+            'kelistrikan' => 6,
         ];
-
-        foreach ($keahlianMapping as $key => $value) {
-            if (stripos($keahlian, $key) !== false) {
-                return $value;
-            }
-        }
-
-        return 4;
+        return $mapping[$keahlianValue] ?? 1;
     }
 
     /**
-     * Convert biaya gelombang to numeric value
-     * BP = COST (semakin rendah semakin baik)
-     * Jadi nilai yang lebih tinggi = biaya lebih mahal = lebih tidak diinginkan
+     * Mengkonversi biaya gelombang ke bobot numerik sesuai 4 pilihan di Excel.
      */
-    public function convertBiayaGelombangToNumeric(?string $biaya): int
+    public function convertBiayaGelombangToNumeric(string $biayaValue): int
     {
-        if (empty($biaya)) {
-            return 2; // default middle
-        }
-
-        // Mapping SESUAI EXCEL
-        // G1 = 1 juta (paling murah) = nilai 4 (rendah)
-        // G2 = 1.5 juta (menengah) = nilai 3 (menengah)
-        // G3 = 2 juta (paling mahal) = nilai 2 (tinggi/lebih mahal)
-        $biayaMapping = [
-            'G1' => 4, // Paling murah - nilai rendah karena COST
-            'G2' => 3, // Menengah
-            'G3' => 2, // Paling mahal - nilai tinggi karena COST
-        ];
-
-        foreach ($biayaMapping as $code => $value) {
-            if (stripos($biaya, $code) !== false) {
-                return $value;
-            }
-        }
-
-        return 2; // default
+        if (str_contains($biayaValue, '1.000.000')) return 4;
+        if (str_contains($biayaValue, '1.500.000')) return 3;
+        if (str_contains($biayaValue, '2.000.000')) return 2;
+        if (str_contains($biayaValue, '2.500.000')) return 1;
+        return 1;
     }
 
     /**
-     * BACKWARD COMPATIBILITY - alias untuk method lama
+     * Memeriksa apakah semua field yang dibutuhkan untuk perhitungan sudah terisi.
      */
-    public function convertPenghasilanToNumeric(?string $penghasilan): int
-    {
-        return $this->convertBiayaGelombangToNumeric($penghasilan);
-    }
-
     public function isReadyForCalculation(): bool
     {
-        return !empty($this->nilai_ipa) &&
-            !empty($this->nilai_ips) &&
-            !empty($this->nilai_matematika) &&
-            !empty($this->nilai_bahasa_indonesia) &&
-            !empty($this->nilai_bahasa_inggris) &&
-            !empty($this->nilai_pkn) &&
-            !empty($this->minat_a) &&
-            !empty($this->minat_b) &&
-            !empty($this->minat_c) &&
-            !empty($this->minat_d) &&
-            !empty($this->keahlian) &&
-            !empty($this->biaya_gelombang);
+        return empty($this->getMissingFields());
     }
 
+    /**
+     * Mengembalikan daftar nama field yang masih kosong.
+     */
     public function getMissingFields(): array
     {
         $missing = [];
+        $requiredFields = [
+            'nilai_ipa',
+            'nilai_ips',
+            'nilai_matematika',
+            'nilai_bahasa_indonesia',
+            'nilai_bahasa_inggris',
+            'nilai_pkn',
+            'minat_a',
+            'minat_b',
+            'minat_c',
+            'minat_d',
+            'keahlian',
+            'biaya_gelombang'
+        ];
 
-        if (empty($this->nilai_ipa)) $missing[] = 'Nilai IPA';
-        if (empty($this->nilai_ips)) $missing[] = 'Nilai IPS';
-        if (empty($this->nilai_matematika)) $missing[] = 'Nilai Matematika';
-        if (empty($this->nilai_bahasa_indonesia)) $missing[] = 'Nilai Bahasa Indonesia';
-        if (empty($this->nilai_bahasa_inggris)) $missing[] = 'Nilai Bahasa Inggris';
-        if (empty($this->nilai_pkn)) $missing[] = 'Nilai PKN';
-        if (empty($this->minat_a)) $missing[] = 'Minat A';
-        if (empty($this->minat_b)) $missing[] = 'Minat B';
-        if (empty($this->minat_c)) $missing[] = 'Minat C';
-        if (empty($this->minat_d)) $missing[] = 'Minat D';
-        if (empty($this->keahlian)) $missing[] = 'Keahlian';
-        if (empty($this->biaya_gelombang)) $missing[] = 'Biaya Gelombang';
-
+        foreach ($requiredFields as $field) {
+            if (empty($this->$field)) {
+                $missing[] = ucwords(str_replace('_', ' ', $field));
+            }
+        }
         return $missing;
     }
 
+    /**
+     * Scope untuk query data penilaian yang siap untuk dihitung.
+     */
     public function scopeReadyForCalculation($query)
     {
         return $query->whereNotNull('nilai_ipa')
@@ -245,38 +183,30 @@ class PenilaianPesertaDidik extends Model
             ->whereNotNull('keahlian')
             ->whereNotNull('biaya_gelombang');
     }
-
-    public function scopeUncalculated($query)
-    {
-        return $query->where('sudah_dihitung', false);
-    }
-
-    public function markAsCalculated(): bool
-    {
-        return $this->update(['sudah_dihitung' => true]);
-    }
-
     public function markAsUncalculated(): bool
     {
         return $this->update(['sudah_dihitung' => false]);
     }
 
-    public function getDebugInfo(): array
+
+    /**
+     * Scope untuk query data penilaian yang belum dihitung.
+     */
+    public function scopeUncalculated($query)
     {
-        return [
-            'penilaian_id' => $this->penilaian_id,
-            'peserta_didik' => $this->pesertaDidik->nama_lengkap ?? 'Unknown',
-            'nilai_akademik' => $this->nilai_akademik,
-            'minat_converted' => [
-                'ma' => $this->convertMinatToNumeric($this->minat_a),
-                'mb' => $this->convertMinatToNumeric($this->minat_b),
-                'mc' => $this->convertMinatToNumeric($this->minat_c),
-                'md' => $this->convertMinatToNumeric($this->minat_d),
-            ],
-            'keahlian_converted' => $this->convertKeahlianToNumeric($this->keahlian),
-            'biaya_gelombang_converted' => $this->convertBiayaGelombangToNumeric($this->biaya_gelombang),
-            'is_ready' => $this->isReadyForCalculation(),
-            'missing_fields' => $this->getMissingFields(),
-        ];
+        return $query->where('sudah_dihitung', false);
+    }
+
+    public function getRataRataNilaiAkademikAttribute(): float
+    {
+        $total = (float)$this->nilai_ipa +
+            (float)$this->nilai_ips +
+            (float)$this->nilai_matematika +
+            (float)$this->nilai_bahasa_indonesia +
+            (float)$this->nilai_bahasa_inggris +
+            (float)$this->nilai_pkn;
+
+        // Menghindari pembagian dengan nol jika tidak ada nilai
+        return $total > 0 ? round($total / 6, 2) : 0;
     }
 }

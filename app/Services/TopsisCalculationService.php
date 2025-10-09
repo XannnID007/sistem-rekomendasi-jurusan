@@ -21,20 +21,15 @@ class TopsisCalculationService
           $this->weights = $this->getCriteriaWeights();
      }
 
-     /**
-      * Konversi nilai rapor (N1-N6) ke bobot sesuai aturan di Excel.
-      */
      private function convertNilaiToBobot(float $nilai, string $kategori): float
      {
-          // Aturan untuk N1 (IPA) & N4 (Matematika)
           if (in_array($kategori, ['N1', 'N4'])) {
-               if ($nilai > 90) return 4.0;
+               if ($nilai >= 91) return 4.0;
                if ($nilai >= 81) return 3.0;
                if ($nilai >= 76) return 2.0;
                return 1.0;
           }
 
-          // Aturan untuk N5 (B.Indonesia)
           if ($kategori === 'N5') {
                if ($nilai > 90) return 4.0;
                if ($nilai >= 80) return 3.0;
@@ -42,36 +37,30 @@ class TopsisCalculationService
                return 1.0;
           }
 
-          // Aturan Umum untuk N2, N3, N6 (IPS, B.Inggris, PKN)
           if (in_array($kategori, ['N2', 'N3', 'N6'])) {
-               if ($nilai > 89) return 4.0;
+               if ($nilai > 90) return 4.0;
                if ($nilai >= 80) return 3.0;
                if ($nilai >= 61) return 2.0;
                return 1.0;
           }
-
-          return 1.0; // Fallback
+          return 1.0;
      }
 
-     /**
-      * Membangun matriks keputusan dari data penilaian.
-      */
      private function buildDecisionMatrix(Collection $assessments): array
      {
           $matrix = [];
           foreach ($assessments as $assessment) {
                if (!$this->isAssessmentValid($assessment)) continue;
-
                $row = [
                     'penilaian_id' => $assessment->penilaian_id,
                     'peserta_didik_id' => $assessment->peserta_didik_id,
                     'tahun_ajaran' => $assessment->tahun_ajaran,
-                    'n1' => $this->convertNilaiToBobot((float)$assessment->nilai_ipa, 'N1'),
-                    'n2' => $this->convertNilaiToBobot((float)$assessment->nilai_ips, 'N2'),
-                    'n3' => $this->convertNilaiToBobot((float)$assessment->nilai_bahasa_inggris, 'N3'),
-                    'n4' => $this->convertNilaiToBobot((float)$assessment->nilai_matematika, 'N4'),
-                    'n5' => $this->convertNilaiToBobot((float)$assessment->nilai_bahasa_indonesia, 'N5'),
-                    'n6' => $this->convertNilaiToBobot((float)$assessment->nilai_pkn, 'N6'),
+                    'n1' => (float)$assessment->nilai_ipa,
+                    'n2' => (float)$assessment->nilai_ips,
+                    'n3' => (float)$assessment->nilai_bahasa_inggris,
+                    'n4' => (float)$assessment->nilai_matematika,
+                    'n5' => (float)$assessment->nilai_bahasa_indonesia,
+                    'n6' => (float)$assessment->nilai_pkn,
                     'ma' => (float) $assessment->convertMinatToNumeric($assessment->minat_a ?? ''),
                     'mb' => (float) $assessment->convertMinatToNumeric($assessment->minat_b ?? ''),
                     'mc' => (float) $assessment->convertMinatToNumeric($assessment->minat_c ?? ''),
@@ -79,10 +68,6 @@ class TopsisCalculationService
                     'bb' => (float) $assessment->convertKeahlianToNumeric($assessment->keahlian ?? ''),
                     'bp' => (float) $assessment->convertBiayaGelombangToNumeric($assessment->biaya_gelombang ?? ''),
                ];
-
-               // PERBAIKAN: Kode anomali untuk Balqisy TELAH DIHAPUS.
-               // Perhitungan sekarang murni berdasarkan aturan di atas.
-
                $matrix[] = $row;
           }
           return $matrix;
@@ -101,8 +86,9 @@ class TopsisCalculationService
      {
           try {
                DB::beginTransaction();
-
                $query = PenilaianPesertaDidik::with('pesertaDidik');
+
+               // Tentukan siswa target (yang baru mendaftar)
                if ($penilaianId) {
                     $query->where('penilaian_id', $penilaianId);
                } else {
@@ -115,43 +101,56 @@ class TopsisCalculationService
                     return collect();
                }
 
+               // Ambil tahun ajaran dari siswa target
                $tahunAjaran = $targetAssessments->first()->tahun_ajaran;
 
+               // --- PERUBAHAN UTAMA ADA DI SINI ---
+               // Untuk normalisasi, kita tetap butuh pembanding. Kita ambil SEMUA data yang sudah ada.
                $allAssessmentsForNormalization = PenilaianPesertaDidik::with('pesertaDidik')
                     ->where('tahun_ajaran', $tahunAjaran)
                     ->readyForCalculation()
                     ->get();
 
-               if (!$allAssessmentsForNormalization->contains('penilaian_id', $penilaianId)) {
-                    $allAssessmentsForNormalization = $allAssessmentsForNormalization->concat($targetAssessments);
+               // Jika belum ada data sama sekali selain yang baru, tambahkan data baru ke dalamnya
+               if ($allAssessmentsForNormalization->isEmpty()) {
+                    $allAssessmentsForNormalization = $targetAssessments;
+               } else {
+                    // Gabungkan data yang sudah ada dengan data baru jika belum ada
+                    if (!$allAssessmentsForNormalization->contains('penilaian_id', $penilaianId)) {
+                         $allAssessmentsForNormalization = $allAssessmentsForNormalization->concat($targetAssessments);
+                    }
                }
 
+               // Matriks keputusan tetap dibangun dari SEMUA data untuk normalisasi yang akurat
                $decisionMatrix = $this->buildDecisionMatrix($allAssessmentsForNormalization);
-               if (empty($decisionMatrix)) throw new Exception('Matriks keputusan kosong');
+               if (empty($decisionMatrix)) throw new Exception('Decision matrix is empty');
 
                $normalizedMatrix = $this->normalizeMatrix($decisionMatrix);
                $weightedMatrix = $this->calculateWeightedMatrix($normalizedMatrix);
                $idealSolutions = $this->calculateIdealSolutions($weightedMatrix);
+
+               // Namun, skor preferensi dan hasil hanya dihitung untuk siswa target
                $results = $this->calculatePreferenceScores($weightedMatrix, $idealSolutions, $allAssessmentsForNormalization);
 
+               // Simpan hasil HANYA untuk siswa target
                $this->saveResults($results, $normalizedMatrix, $weightedMatrix, $targetAssessments);
 
                DB::commit();
 
+               // Kembalikan hasil HANYA untuk siswa target
                return $results->whereIn('penilaian_id', $targetAssessments->pluck('penilaian_id'));
           } catch (Exception $e) {
                DB::rollback();
-               Log::error('Perhitungan TOPSIS gagal', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
-               throw new Exception('Perhitungan TOPSIS gagal: ' . $e->getMessage());
+               Log::error('TOPSIS calculation failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+               throw new Exception('TOPSIS calculation failed: ' . $e->getMessage());
           }
      }
 
      private function normalizeMatrix(array $decisionMatrix): array
      {
           $normalizedMatrix = [];
-          $criteriaKeys = array_keys($this->weights);
+          $criteriaKeys = ['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'ma', 'mb', 'mc', 'md', 'bb', 'bp'];
           $sumSquares = [];
-
           foreach ($criteriaKeys as $criteria) {
                $sumSquares[$criteria] = 0;
                foreach ($decisionMatrix as $row) {
@@ -159,9 +158,8 @@ class TopsisCalculationService
                }
                $sumSquares[$criteria] = sqrt($sumSquares[$criteria]);
           }
-
           foreach ($decisionMatrix as $row) {
-               $normalizedRow = $row;
+               $normalizedRow = ['penilaian_id' => $row['penilaian_id'], 'peserta_didik_id' => $row['peserta_didik_id'], 'tahun_ajaran' => $row['tahun_ajaran']];
                foreach ($criteriaKeys as $criteria) {
                     $value = $row[$criteria] ?? 0;
                     $sumSquare = $sumSquares[$criteria] ?? 1;
@@ -175,9 +173,9 @@ class TopsisCalculationService
      private function calculateWeightedMatrix(array $normalizedMatrix): array
      {
           $weightedMatrix = [];
-          $criteriaKeys = array_keys($this->weights);
+          $criteriaKeys = ['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'ma', 'mb', 'mc', 'md', 'bb', 'bp'];
           foreach ($normalizedMatrix as $row) {
-               $weightedRow = $row;
+               $weightedRow = ['penilaian_id' => $row['penilaian_id'], 'peserta_didik_id' => $row['peserta_didik_id'], 'tahun_ajaran' => $row['tahun_ajaran']];
                foreach ($criteriaKeys as $criteria) {
                     $weightedRow[$criteria] = ($row[$criteria] ?? 0) * ($this->weights[$criteria] ?? 0);
                }
@@ -188,10 +186,9 @@ class TopsisCalculationService
 
      private function calculateIdealSolutions(array $weightedMatrix): array
      {
-          $criteriaKeys = array_keys($this->weights);
+          $criteriaKeys = ['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'ma', 'mb', 'mc', 'md', 'bb', 'bp'];
           $idealPositive = [];
           $idealNegative = [];
-
           foreach ($criteriaKeys as $criteria) {
                $values = array_column($weightedMatrix, $criteria);
                if (empty($values)) {
@@ -199,11 +196,10 @@ class TopsisCalculationService
                     $idealNegative[$criteria] = 0;
                     continue;
                }
-               // 'bp' adalah satu-satunya kriteria COST
-               if ($this->criteria->where('kode_kriteria', strtoupper($criteria))->first()->atribut === 'Cost') {
+               if ($criteria === 'bp') { // COST
                     $idealPositive[$criteria] = min($values);
                     $idealNegative[$criteria] = max($values);
-               } else { // Sisanya BENEFIT
+               } else { // BENEFIT
                     $idealPositive[$criteria] = max($values);
                     $idealNegative[$criteria] = min($values);
                }
@@ -215,21 +211,17 @@ class TopsisCalculationService
      {
           $results = collect();
           $criteriaKeys = array_keys($this->weights);
-
           foreach ($weightedMatrix as $row) {
                $distancePositive = 0;
                $distanceNegative = 0;
-
                foreach ($criteriaKeys as $criteria) {
                     $value = $row[$criteria] ?? 0;
                     $distancePositive += pow($value - ($idealSolutions['positive'][$criteria] ?? 0), 2);
                     $distanceNegative += pow($value - ($idealSolutions['negative'][$criteria] ?? 0), 2);
                }
-
                $distancePositive = sqrt($distancePositive);
                $distanceNegative = sqrt($distanceNegative);
                $totalDistance = $distancePositive + $distanceNegative;
-
                $preferenceScore = $totalDistance == 0 ? 0 : $distanceNegative / $totalDistance;
 
                $results->push([
@@ -239,7 +231,7 @@ class TopsisCalculationService
                     'distance_positive' => $distancePositive,
                     'distance_negative' => $distanceNegative,
                     'preference_score' => $preferenceScore,
-                    'recommendation' => $preferenceScore > 0.30 ? 'TKJ' : 'TKR', // Sesuai catatan Excel
+                    'recommendation' => $preferenceScore > 0.30 ? 'TKJ' : 'TKR',
                     'assessment' => $assessments->where('penilaian_id', $row['penilaian_id'])->first()
                ]);
           }
@@ -250,14 +242,10 @@ class TopsisCalculationService
      {
           $normalizedMatrixMap = collect($normalizedMatrix)->keyBy('penilaian_id');
           $weightedMatrixMap = collect($weightedMatrix)->keyBy('penilaian_id');
-
           foreach ($results as $result) {
-               // Hanya simpan hasil untuk siswa target
-               if (!$targetAssessments->contains('penilaian_id', $result['penilaian_id'])) continue;
-
+               if (!$targetAssessments->where('penilaian_id', $result['penilaian_id'])->first()) continue;
                $normalized = $normalizedMatrixMap->get($result['penilaian_id']) ?? [];
                $weighted = $weightedMatrixMap->get($result['penilaian_id']) ?? [];
-
                PerhitunganTopsis::updateOrCreate(
                     ['peserta_didik_id' => $result['peserta_didik_id'], 'penilaian_id' => $result['penilaian_id']],
                     [
@@ -293,16 +281,12 @@ class TopsisCalculationService
                          'tanggal_perhitungan' => now()
                     ]
                );
-
                if ($result['assessment']) {
                     $result['assessment']->update(['sudah_dihitung' => true]);
                }
           }
      }
 
-     /**
-      * Bobot kriteria sesuai dengan file Excel.
-      */
      private function getCriteriaWeights(): array
      {
           return [

@@ -20,7 +20,7 @@ class PenilaianSeeder extends Seeder
                 'nilai_ipa' => 80.00,
                 'nilai_ips' => 82.00,
                 'nilai_matematika' => 80.00,
-                'nilai_bahasa_indonesia' => 87.00, // <-- BENAR SESUAI EXCEL
+                'nilai_bahasa_indonesia' => 87.00,
                 'nilai_bahasa_inggris' => 85.00,
                 'nilai_pkn' => 81.00,
                 'minat_a' => 'Musik & Teater',
@@ -28,14 +28,14 @@ class PenilaianSeeder extends Seeder
                 'minat_c' => 'Kimia',
                 'minat_d' => 'Bisnis & Enterpreneurship',
                 'keahlian' => 'perangkat lunak',
-                'biaya_gelombang' => 'G1. Rp 1.000.000',
+                'biaya_gelombang' => 'G1. 1.000.000',
             ],
             [
                 'nisn' => '3077762090',  // NAILA RIZKI
                 'nilai_ipa' => 85.00,
                 'nilai_ips' => 87.00,
                 'nilai_matematika' => 80.00,
-                'nilai_bahasa_indonesia' => 86.00, // <-- BENAR SESUAI EXCEL
+                'nilai_bahasa_indonesia' => 86.00,
                 'nilai_bahasa_inggris' => 85.00,
                 'nilai_pkn' => 83.00,
                 'minat_a' => 'Fotografi & Videografi',
@@ -43,14 +43,14 @@ class PenilaianSeeder extends Seeder
                 'minat_c' => 'Biologi & Lingkungan',
                 'minat_d' => 'Bisnis & Enterpreneurship',
                 'keahlian' => 'menganalisa',
-                'biaya_gelombang' => 'G2. Rp 1.500.000',
+                'biaya_gelombang' => 'G2. 1.500.000',
             ],
             [
                 'nisn' => '0079378430',  // MUHAMMAD RAFFI
                 'nilai_ipa' => 86.00,
                 'nilai_ips' => 80.00,
                 'nilai_matematika' => 80.00,
-                'nilai_bahasa_indonesia' => 82.00, // <-- BENAR SESUAI EXCEL
+                'nilai_bahasa_indonesia' => 82.00,
                 'nilai_bahasa_inggris' => 78.00,
                 'nilai_pkn' => 82.00,
                 'minat_a' => 'Seni & Kerajinan',
@@ -58,14 +58,14 @@ class PenilaianSeeder extends Seeder
                 'minat_c' => 'Fisika',
                 'minat_d' => 'Bisnis & Enterpreneurship',
                 'keahlian' => 'kelistrikan',
-                'biaya_gelombang' => 'G1. Rp 1.000.000',
+                'biaya_gelombang' => 'G1. 1.000.000',
             ],
             [
                 'nisn' => '0074255836',  // MUHAMMAD RIFFA
                 'nilai_ipa' => 70.00,
                 'nilai_ips' => 77.00,
                 'nilai_matematika' => 85.00,
-                'nilai_bahasa_indonesia' => 80.00, // <-- BENAR SESUAI EXCEL
+                'nilai_bahasa_indonesia' => 80.00,
                 'nilai_bahasa_inggris' => 77.00,
                 'nilai_pkn' => 82.00,
                 'minat_a' => 'Musik & Teater',
@@ -73,14 +73,14 @@ class PenilaianSeeder extends Seeder
                 'minat_c' => 'Biologi & Lingkungan',
                 'minat_d' => 'Bisnis & Enterpreneurship',
                 'keahlian' => 'Mengembangkan Rencana & Strategi',
-                'biaya_gelombang' => 'G3. Rp 2.000.000',
+                'biaya_gelombang' => 'G3. 2.000.000',
             ],
             [
                 'nisn' => '0071103523',  // BALQISY WARDAH HABIBAH
                 'nilai_ipa' => 80.00,
                 'nilai_ips' => 87.00,
                 'nilai_matematika' => 80.00,
-                'nilai_bahasa_indonesia' => 85.00, // <-- BENAR SESUAI EXCEL
+                'nilai_bahasa_indonesia' => 85.00,
                 'nilai_bahasa_inggris' => 77.00,
                 'nilai_pkn' => 80.00,
                 'minat_a' => 'Desain Grafis',
@@ -88,14 +88,14 @@ class PenilaianSeeder extends Seeder
                 'minat_c' => 'Biologi & Lingkungan',
                 'minat_d' => 'Pemasaran',
                 'keahlian' => 'Menggunakan Perangkat Lunak & Komputer',
-                'biaya_gelombang' => 'G3. Rp 2.000.000',
+                'biaya_gelombang' => 'G3. 2.000.000',
             ],
             [
                 'nisn' => '0074812147',  // SITI RAHAYU
                 'nilai_ipa' => 72.00,
                 'nilai_ips' => 75.00,
                 'nilai_matematika' => 74.00,
-                'nilai_bahasa_indonesia' => 80.00, // <-- BENAR SESUAI EXCEL
+                'nilai_bahasa_indonesia' => 80.00,
                 'nilai_bahasa_inggris' => 70.00,
                 'nilai_pkn' => 79.00,
                 'minat_a' => 'Musik & Teater',
@@ -103,7 +103,7 @@ class PenilaianSeeder extends Seeder
                 'minat_c' => 'Biologi & Lingkungan',
                 'minat_d' => 'Pemasaran',
                 'keahlian' => 'memecahkan masalah',
-                'biaya_gelombang' => 'G3. Rp 2.000.000',
+                'biaya_gelombang' => 'G3. 2.000.000',
             ],
         ];
 
@@ -118,7 +118,7 @@ class PenilaianSeeder extends Seeder
                     $penilaian = PenilaianPesertaDidik::updateOrCreate(
                         [
                             'peserta_didik_id' => $pesertaDidik->peserta_didik_id,
-                            'tahun_ajaran' => '2024/2025'
+                            'tahun_ajaran' => '2024/2025' // Ganti sesuai tahun ajaran yang relevan
                         ],
                         [
                             'nilai_ipa' => $data['nilai_ipa'],
@@ -137,11 +137,10 @@ class PenilaianSeeder extends Seeder
                         ]
                     );
 
-                    $debugInfo = $penilaian->getDebugInfo();
-                    $this->command->info("✓ {$pesertaDidik->nama_lengkap}:");
-                    $this->command->info("  - Rata nilai: " . $penilaian->rata_nilai_akademik);
-                    $this->command->info("  - Minat: MA={$debugInfo['minat_converted']['ma']}, MB={$debugInfo['minat_converted']['mb']}, MC={$debugInfo['minat_converted']['mc']}, MD={$debugInfo['minat_converted']['md']}");
-                    $this->command->info("  - Keahlian: {$debugInfo['keahlian_converted']} | Biaya Gelombang: {$debugInfo['biaya_gelombang_converted']}");
+                    // PERBAIKAN: Menggunakan fungsi konversi yang ada di model untuk debug
+                    $this->command->info("✓ Data penilaian untuk {$pesertaDidik->nama_lengkap} berhasil disimpan.");
+                    $this->command->info("  - Bobot Keahlian: " . $penilaian->convertKeahlianToNumeric($penilaian->keahlian));
+                    $this->command->info("  - Bobot Biaya: " . $penilaian->convertBiayaGelombangToNumeric($penilaian->biaya_gelombang));
 
                     $successCount++;
                 } else {
@@ -149,36 +148,18 @@ class PenilaianSeeder extends Seeder
                     $errorCount++;
                 }
             } catch (\Exception $e) {
-                $this->command->error("✗ Error processing NISN {$data['nisn']}: " . $e->getMessage());
+                $this->command->error("✗ Error saat memproses NISN {$data['nisn']}: " . $e->getMessage());
                 $errorCount++;
             }
         }
 
         // Summary
-        $this->command->info("\n=== SUMMARY PENILAIAN SEEDER ===");
+        $this->command->info("\n" . '=== RINGKASAN PENILAIAN SEEDER ===');
         $this->command->info("✓ Berhasil: {$successCount} data");
         if ($errorCount > 0) {
             $this->command->error("✗ Gagal: {$errorCount} data");
         }
 
-        // Validation check
-        $totalPenilaian = PenilaianPesertaDidik::where('tahun_ajaran', '2024/2025')->count();
-        $readyForCalculation = PenilaianPesertaDidik::where('tahun_ajaran', '2024/2025')
-            ->readyForCalculation()
-            ->count();
-
-        $this->command->info("Total penilaian 2024/2025: {$totalPenilaian}");
-        $this->command->info("Siap untuk kalkulasi: {$readyForCalculation}");
-
-        if ($readyForCalculation == $totalPenilaian && $totalPenilaian > 0) {
-            $this->command->info("✅ Semua data penilaian siap untuk perhitungan TOPSIS!");
-        } else {
-            $this->command->warn("⚠️  Ada data yang belum lengkap untuk perhitungan TOPSIS");
-        }
-
-        $this->command->info("\n=== DATA SESUAI EXCEL ===");
-        $this->command->info("✓ Bobot MB (Teknologi) = 39%");
-        $this->command->info("✓ Bobot BB (Bakat) = 39%");
-        $this->command->info("✓ BP = Biaya Gelombang (COST)");
+        $this->command->info("\n" . 'Proses seeder penilaian selesai.');
     }
 }

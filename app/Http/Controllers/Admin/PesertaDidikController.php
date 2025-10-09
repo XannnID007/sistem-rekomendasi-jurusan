@@ -267,7 +267,7 @@ class PesertaDidikController extends Controller
             'minat_c' => 'required|string|max:255',
             'minat_d' => 'required|string|max:255',
             'keahlian' => 'required|string|max:255',
-            'biaya_gelombang' => 'required|string|max:50',,
+            'biaya_gelombang' => 'required|string|max:50',
         ], [
             'tahun_ajaran.required' => 'Tahun ajaran wajib diisi',
             'nilai_ipa.required' => 'Nilai IPA wajib diisi',
