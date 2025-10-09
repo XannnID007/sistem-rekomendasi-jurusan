@@ -29,11 +29,19 @@ class PublicSubmissionController extends Controller
 
     public function submit(Request $request)
     {
-        Log::info('=== SUBMISSION START ===');
-        $request->validate(['nisn' => 'required|string|size:10'], ['nisn.required' => 'NISN wajib diisi.', 'nisn.size' => 'NISN harus 10 digit.']);
+        Log::info('=== PUBLIC SUBMISSION START ===', ['nisn' => $request->nisn]);
 
+        $request->validate([
+            'nisn' => 'required|string|size:10'
+        ], [
+            'nisn.required' => 'NISN wajib diisi.',
+            'nisn.size' => 'NISN harus 10 digit.'
+        ]);
+
+        // Cek existing NISN
         $existingPeserta = PesertaDidik::where('nisn', $request->nisn)->first();
         if ($existingPeserta) {
+            Log::info('Existing NISN found', ['nisn' => $existingPeserta->nisn]);
             return redirect()->route('submission.result', ['nisn' => $existingPeserta->nisn])
                 ->with('info', 'NISN Anda sudah terdaftar. Berikut adalah hasil rekomendasi yang sudah ada.');
         }
@@ -62,10 +70,14 @@ class PublicSubmissionController extends Controller
                 'minat_d' => 'required|string',
                 'keahlian' => 'required|string',
                 'biaya_gelombang' => 'required|string',
-            ], ['nisn.unique' => 'NISN sudah terdaftar.', 'email.unique' => 'Email sudah terdaftar.']);
+            ], [
+                'nisn.unique' => 'NISN sudah terdaftar.',
+                'email.unique' => 'Email sudah terdaftar.'
+            ]);
 
             DB::beginTransaction();
 
+            // Create user
             $user = User::create([
                 'username' => $validated['nisn'],
                 'email' => $validated['email'],
@@ -75,6 +87,9 @@ class PublicSubmissionController extends Controller
                 'is_active' => false,
             ]);
 
+            Log::info('User created', ['user_id' => $user->user_id]);
+
+            // Create peserta didik
             $pesertaDidik = PesertaDidik::create([
                 'user_id' => $user->user_id,
                 'nisn' => $validated['nisn'],
@@ -91,6 +106,9 @@ class PublicSubmissionController extends Controller
                 'no_telepon_submission' => $validated['no_telepon'],
             ]);
 
+            Log::info('Peserta didik created', ['peserta_didik_id' => $pesertaDidik->peserta_didik_id]);
+
+            // Create penilaian
             $penilaian = PenilaianPesertaDidik::create([
                 'peserta_didik_id' => $pesertaDidik->peserta_didik_id,
                 'tahun_ajaran' => $validated['tahun_ajaran'],
@@ -111,17 +129,31 @@ class PublicSubmissionController extends Controller
                 'tanggal_submission' => now(),
             ]);
 
-            $this->topsisService->calculateTopsis($penilaian->penilaian_id);
+            Log::info('Penilaian created', ['penilaian_id' => $penilaian->penilaian_id]);
+
+            // Calculate TOPSIS
+            try {
+                $this->topsisService->calculateTopsis($penilaian->penilaian_id);
+                Log::info('TOPSIS calculation completed');
+            } catch (\Exception $e) {
+                Log::error('TOPSIS calculation failed', ['error' => $e->getMessage()]);
+            }
 
             DB::commit();
+
+            Log::info('=== PUBLIC SUBMISSION SUCCESS ===', ['nisn' => $pesertaDidik->nisn]);
 
             return redirect()->route('submission.result', ['nisn' => $pesertaDidik->nisn])
                 ->with('success', 'Data berhasil disubmit! Silakan lihat hasil rekomendasi Anda.')
                 ->with('newly_created_id', $pesertaDidik->peserta_didik_id);
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return back()->withErrors($e->errors())->withInput()->with('error', 'Terdapat kesalahan dalam pengisian form. Silakan periksa kembali.');
+            DB::rollback();
+            Log::error('Validation failed', ['errors' => $e->errors()]);
+            return back()->withErrors($e->errors())->withInput()
+                ->with('error', 'Terdapat kesalahan dalam pengisian form. Silakan periksa kembali.');
         } catch (\Exception $e) {
             DB::rollback();
+            Log::error('Submission failed', ['error' => $e->getMessage()]);
             return back()->withInput()->with('error', 'Gagal memproses data: ' . $e->getMessage());
         }
     }
@@ -129,25 +161,45 @@ class PublicSubmissionController extends Controller
     public function result($nisn)
     {
         try {
+            Log::info('=== RESULT PAGE ===', ['nisn' => $nisn]);
+
             $pesertaDidik = null;
+
+            // Check from session first
             if (session()->has('newly_created_id')) {
                 $pesertaDidik = PesertaDidik::find(session('newly_created_id'));
+                Log::info('Found from session', ['id' => session('newly_created_id')]);
             }
+
+            // If not in session, search by NISN (WITHOUT is_public_submission filter untuk debugging)
             if (!$pesertaDidik) {
-                $pesertaDidik = PesertaDidik::where('nisn', $nisn)->where('is_public_submission', true)->first();
+                $pesertaDidik = PesertaDidik::where('nisn', $nisn)->first();
+                Log::info('Search by NISN', [
+                    'found' => $pesertaDidik ? 'yes' : 'no',
+                    'is_public' => $pesertaDidik ? $pesertaDidik->is_public_submission : null
+                ]);
             }
+
             if (!$pesertaDidik) {
-                return redirect()->route('submission.index')->with('error', 'Data peserta didik dengan NISN ' . $nisn . ' tidak ditemukan.');
+                Log::error('Peserta not found', ['nisn' => $nisn]);
+                return redirect()->route('submission.index')
+                    ->with('error', 'Data peserta didik dengan NISN ' . $nisn . ' tidak ditemukan.');
             }
 
             $pesertaDidik->load(['penilaianTerbaru', 'perhitunganTerbaru']);
             $penilaian = $pesertaDidik->penilaianTerbaru;
             $perhitungan = $pesertaDidik->perhitunganTerbaru;
 
+            // If no calculation, try to calculate
             if (!$perhitungan && $penilaian) {
-                $this->topsisService->calculateTopsis($penilaian->penilaian_id);
-                $pesertaDidik->load('perhitunganTerbaru');
-                $perhitungan = $pesertaDidik->perhitunganTerbaru;
+                Log::info('No calculation, attempting to calculate');
+                try {
+                    $this->topsisService->calculateTopsis($penilaian->penilaian_id);
+                    $pesertaDidik->load('perhitunganTerbaru');
+                    $perhitungan = $pesertaDidik->perhitunganTerbaru;
+                } catch (\Exception $e) {
+                    Log::error('Calculation failed', ['error' => $e->getMessage()]);
+                }
             }
 
             if (!$perhitungan) {
@@ -155,46 +207,110 @@ class PublicSubmissionController extends Controller
                     'pesertaDidik' => $pesertaDidik,
                     'perhitungan' => null,
                     'penilaian' => $penilaian,
-                    'error' => 'Hasil perhitungan sedang diproses. Silakan refresh halaman ini dalam beberapa detik.'
+                    'error' => 'Hasil perhitungan sedang diproses. Silakan refresh halaman ini.'
                 ]);
             }
 
             return view('public.submission.result', compact('pesertaDidik', 'perhitungan', 'penilaian'));
         } catch (\Exception $e) {
-            return redirect()->route('submission.index')->with('error', 'Terjadi kesalahan saat memuat halaman hasil: ' . $e->getMessage());
+            Log::error('Result page error', ['error' => $e->getMessage()]);
+            return redirect()->route('submission.index')
+                ->with('error', 'Terjadi kesalahan saat memuat halaman hasil.');
         }
     }
 
     public function approve($nisn)
     {
         try {
-            $pesertaDidik = PesertaDidik::where('nisn', $nisn)->where('is_public_submission', true)->firstOrFail();
-            $penilaian = $pesertaDidik->penilaianTerbaru;
-            if (!$penilaian) {
-                return back()->with('error', 'Data penilaian tidak ditemukan');
+            Log::info('=== APPROVE REQUEST ===', ['nisn' => $nisn, 'session_id' => session()->getId()]);
+
+            // Cari peserta (TANPA filter is_public_submission dulu untuk debugging)
+            $pesertaDidik = PesertaDidik::where('nisn', $nisn)->first();
+
+            if (!$pesertaDidik) {
+                Log::error('Peserta not found in database', ['nisn' => $nisn]);
+                return redirect()->route('submission.index')
+                    ->with('error', 'Data peserta didik dengan NISN ' . $nisn . ' tidak ditemukan.');
             }
 
-            $penilaian->update(['status_submission' => 'approved', 'tanggal_approved' => now()]);
+            Log::info('Peserta found for approve', [
+                'id' => $pesertaDidik->peserta_didik_id,
+                'is_public' => $pesertaDidik->is_public_submission
+            ]);
+
+            $penilaian = $pesertaDidik->penilaianTerbaru;
+
+            if (!$penilaian) {
+                Log::error('Penilaian not found');
+                return redirect()->route('submission.result', ['nisn' => $nisn])
+                    ->with('error', 'Data penilaian tidak ditemukan');
+            }
+
+            // Update status
+            $penilaian->update([
+                'status_submission' => 'approved',
+                'tanggal_approved' => now()
+            ]);
+
+            // Activate user
             $pesertaDidik->user->update(['is_active' => true]);
 
+            Log::info('=== APPROVE SUCCESS ===', ['nisn' => $nisn]);
+
+            // SIMPAN KE SESSION dengan key yang PERSISTENT
+            session([
+                'approved_nisn' => $nisn,
+                'approved_peserta_id' => $pesertaDidik->peserta_didik_id
+            ]);
+            session()->save(); // PAKSA SAVE SESSION
+
+            // REDIRECT TO CERTIFICATE
             return redirect()->route('submission.certificate', ['nisn' => $nisn])
-                ->with('success', 'Rekomendasi berhasil dikonfirmasi!')
-                ->with('processed_peserta_id', $pesertaDidik->peserta_didik_id);
+                ->with('success', 'Rekomendasi berhasil dikonfirmasi!');
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal menyetujui rekomendasi: ' . $e->getMessage());
+            Log::error('Approve failed', [
+                'nisn' => $nisn,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->route('submission.result', ['nisn' => $nisn])
+                ->with('error', 'Gagal menyetujui: ' . $e->getMessage());
         }
     }
 
     public function reject(Request $request, $nisn)
     {
         try {
-            $validated = $request->validate(['alasan_penolakan' => 'required|string|min:10', 'jurusan_dipilih' => 'required|in:TKJ,TKR']);
-            $pesertaDidik = PesertaDidik::where('nisn', $nisn)->where('is_public_submission', true)->firstOrFail();
-            $penilaian = $pesertaDidik->penilaianTerbaru;
-            if (!$penilaian) {
-                return back()->with('error', 'Data penilaian tidak ditemukan');
+            Log::info('=== REJECT REQUEST ===', ['nisn' => $nisn, 'session_id' => session()->getId()]);
+
+            $validated = $request->validate([
+                'alasan_penolakan' => 'required|string|min:10',
+                'jurusan_dipilih' => 'required|in:TKJ,TKR'
+            ]);
+
+            // Cari peserta (TANPA filter is_public_submission dulu untuk debugging)
+            $pesertaDidik = PesertaDidik::where('nisn', $nisn)->first();
+
+            if (!$pesertaDidik) {
+                Log::error('Peserta not found in database', ['nisn' => $nisn]);
+                return redirect()->route('submission.index')
+                    ->with('error', 'Data peserta didik dengan NISN ' . $nisn . ' tidak ditemukan.');
             }
 
+            Log::info('Peserta found for reject', [
+                'id' => $pesertaDidik->peserta_didik_id,
+                'is_public' => $pesertaDidik->is_public_submission
+            ]);
+
+            $penilaian = $pesertaDidik->penilaianTerbaru;
+
+            if (!$penilaian) {
+                Log::error('Penilaian not found');
+                return redirect()->route('submission.result', ['nisn' => $nisn])
+                    ->with('error', 'Data penilaian tidak ditemukan');
+            }
+
+            // Update status
             $penilaian->update([
                 'status_submission' => 'rejected',
                 'alasan_penolakan' => $validated['alasan_penolakan'],
@@ -202,48 +318,119 @@ class PublicSubmissionController extends Controller
                 'tanggal_approved' => now(),
             ]);
 
+            Log::info('=== REJECT SUCCESS ===', ['nisn' => $nisn]);
+
+            // SIMPAN KE SESSION dengan key yang PERSISTENT
+            session([
+                'rejected_nisn' => $nisn,
+                'rejected_peserta_id' => $pesertaDidik->peserta_didik_id
+            ]);
+            session()->save(); // PAKSA SAVE SESSION
+
+            // REDIRECT TO CERTIFICATE
             return redirect()->route('submission.certificate', ['nisn' => $nisn])
-                ->with('info', 'Pilihan Anda telah dicatat. Admin akan menghubungi Anda untuk konfirmasi lebih lanjut.')
-                ->with('processed_peserta_id', $pesertaDidik->peserta_didik_id);
+                ->with('info', 'Pilihan Anda telah dicatat. Admin akan menghubungi Anda.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal menolak rekomendasi: ' . $e->getMessage());
+            Log::error('Reject failed', [
+                'nisn' => $nisn,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->route('submission.result', ['nisn' => $nisn])
+                ->with('error', 'Gagal menolak: ' . $e->getMessage());
         }
     }
 
     public function certificate($nisn)
     {
         try {
+            Log::info('=== CERTIFICATE PAGE ===', [
+                'nisn' => $nisn,
+                'session_id' => session()->getId(),
+                'has_approved_session' => session()->has('approved_nisn'),
+                'has_rejected_session' => session()->has('rejected_nisn')
+            ]);
+
             $pesertaDidik = null;
-            if (session()->has('processed_peserta_id')) {
-                $pesertaDidik = PesertaDidik::find(session('processed_peserta_id'));
+
+            // Try multiple ways to find peserta
+            // 1. From approve session
+            if (session()->has('approved_peserta_id')) {
+                $pesertaDidik = PesertaDidik::find(session('approved_peserta_id'));
+                Log::info('Found from approve session', ['id' => session('approved_peserta_id')]);
             }
-            if (!$pesertaDidik) {
-                $pesertaDidik = PesertaDidik::where('nisn', $nisn)->where('is_public_submission', true)->first();
+
+            // 2. From reject session
+            if (!$pesertaDidik && session()->has('rejected_peserta_id')) {
+                $pesertaDidik = PesertaDidik::find(session('rejected_peserta_id'));
+                Log::info('Found from reject session', ['id' => session('rejected_peserta_id')]);
             }
+
+            // 3. Search by NISN (WITHOUT is_public_submission untuk debugging)
             if (!$pesertaDidik) {
-                return redirect()->route('submission.index')->with('error', 'Data peserta didik tidak ditemukan.');
+                $pesertaDidik = PesertaDidik::where('nisn', $nisn)->first();
+                Log::info('Search by NISN', [
+                    'found' => $pesertaDidik ? 'yes' : 'no',
+                    'is_public' => $pesertaDidik ? $pesertaDidik->is_public_submission : null
+                ]);
+            }
+
+            if (!$pesertaDidik) {
+                Log::error('Peserta not found for certificate', [
+                    'nisn' => $nisn,
+                    'all_sessions' => session()->all()
+                ]);
+
+                // REDIRECT KE RESULT, BUKAN FORM!
+                return redirect()->route('submission.result', ['nisn' => $nisn])
+                    ->with('error', 'Data tidak ditemukan. Silakan coba lagi.');
             }
 
             $pesertaDidik->load(['penilaianTerbaru', 'perhitunganTerbaru']);
             $perhitungan = $pesertaDidik->perhitunganTerbaru;
             $penilaian = $pesertaDidik->penilaianTerbaru;
 
+            Log::info('Certificate data loaded', [
+                'has_perhitungan' => $perhitungan ? 'yes' : 'no',
+                'has_penilaian' => $penilaian ? 'yes' : 'no'
+            ]);
+
             return view('public.submission.certificate', compact('pesertaDidik', 'perhitungan', 'penilaian'));
         } catch (\Exception $e) {
-            return redirect()->route('submission.index')->with('error', 'Terjadi kesalahan saat memuat halaman sertifikat.');
+            Log::error('Certificate page error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            // REDIRECT KE RESULT, BUKAN FORM!
+            return redirect()->route('submission.result', ['nisn' => $nisn])
+                ->with('error', 'Terjadi kesalahan. Silakan coba lagi.');
         }
     }
 
     public function downloadPdf($nisn)
     {
         try {
-            $pesertaDidik = PesertaDidik::where('nisn', $nisn)->where('is_public_submission', true)->firstOrFail();
+            Log::info('=== PDF DOWNLOAD ===', ['nisn' => $nisn]);
+
+            $pesertaDidik = PesertaDidik::where('nisn', $nisn)->first();
+
+            if (!$pesertaDidik) {
+                return redirect()->route('submission.result', ['nisn' => $nisn])
+                    ->with('error', 'Data tidak ditemukan.');
+            }
+
             $pesertaDidik->load(['penilaianTerbaru', 'perhitunganTerbaru']);
             $perhitungan = $pesertaDidik->perhitunganTerbaru;
             $penilaian = $pesertaDidik->penilaianTerbaru;
+
             $pdf = Pdf::loadView('public.submission.pdf', compact('pesertaDidik', 'perhitungan', 'penilaian'));
+
+            Log::info('PDF generated');
+
             return $pdf->download('Hasil_Rekomendasi_' . $nisn . '.pdf');
         } catch (\Exception $e) {
+            Log::error('PDF download failed', ['error' => $e->getMessage()]);
             return back()->with('error', 'Gagal mengunduh PDF: ' . $e->getMessage());
         }
     }
