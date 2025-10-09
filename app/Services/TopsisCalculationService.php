@@ -23,15 +23,16 @@ class TopsisCalculationService
      }
 
      /**
-      * Calculate TOPSIS - KONSISTEN DENGAN EXCEL
-      * Menggunakan SEMUA data untuk normalisasi
+      * ===================================================================
+      * CALCULATE TOPSIS - 100% SESUAI EXCEL
+      * ===================================================================
       */
      public function calculateTopsis($penilaianId = null): Collection
      {
           try {
                DB::beginTransaction();
 
-               // Target assessments yang akan dihitung
+               // Target assessments
                $query = PenilaianPesertaDidik::with('pesertaDidik');
                if ($penilaianId) {
                     $query->where('penilaian_id', $penilaianId);
@@ -47,7 +48,7 @@ class TopsisCalculationService
 
                $tahunAjaran = $targetAssessments->first()->tahun_ajaran;
 
-               // KUNCI: Ambil SEMUA data untuk normalisasi yang konsisten
+               // KUNCI: Ambil SEMUA data satu tahun ajaran untuk normalisasi konsisten
                $allAssessments = PenilaianPesertaDidik::with('pesertaDidik')
                     ->where('tahun_ajaran', $tahunAjaran)
                     ->readyForCalculation()
@@ -66,34 +67,28 @@ class TopsisCalculationService
                     'tahun_ajaran' => $tahunAjaran
                ]);
 
-               // Build decision matrix
+               // 1. Build decision matrix (matriks keputusan)
                $decisionMatrix = $this->buildDecisionMatrix($allAssessments);
-               if (empty($decisionMatrix)) {
-                    throw new Exception('Decision matrix is empty');
-               }
 
-               // Normalisasi
+               // 2. Normalize matrix (normalisasi matriks)
                $normalizedMatrix = $this->normalizeMatrix($decisionMatrix);
 
-               // Weighted
+               // 3. Weight normalized matrix (normalisasi terbobot)
                $weightedMatrix = $this->calculateWeightedMatrix($normalizedMatrix);
 
-               // Ideal solutions
+               // 4. Ideal solutions (solusi ideal positif & negatif)
                $idealSolutions = $this->calculateIdealSolutions($weightedMatrix);
 
-               // Preference scores
+               // 5. Preference scores (jarak & nilai preferensi)
                $results = $this->calculatePreferenceScores($weightedMatrix, $idealSolutions, $allAssessments);
 
-               // Save ONLY target assessments
+               // 6. Save ONLY target results
                $this->saveResults($results, $normalizedMatrix, $weightedMatrix, $targetAssessments);
 
                DB::commit();
 
-               Log::info('TOPSIS Completed', [
-                    'results_count' => $results->count()
-               ]);
+               Log::info('TOPSIS Completed', ['results_count' => $results->count()]);
 
-               // Return ONLY target results
                return $results->whereIn('penilaian_id', $targetAssessments->pluck('penilaian_id'));
           } catch (Exception $e) {
                DB::rollback();
@@ -106,19 +101,16 @@ class TopsisCalculationService
      }
 
      /**
-      * Build decision matrix
+      * Tahap 1: Build Decision Matrix - Sesuai Excel
       */
      private function buildDecisionMatrix(Collection $assessments): array
      {
           $matrix = [];
           foreach ($assessments as $assessment) {
                if (!$this->isAssessmentValid($assessment)) {
-                    Log::warning('Invalid assessment skipped', [
-                         'penilaian_id' => $assessment->penilaian_id
-                    ]);
+                    Log::warning('Invalid assessment skipped', ['penilaian_id' => $assessment->penilaian_id]);
                     continue;
                }
-
                $row = [
                     'penilaian_id' => $assessment->penilaian_id,
                     'peserta_didik_id' => $assessment->peserta_didik_id,
@@ -136,166 +128,100 @@ class TopsisCalculationService
                     'bb' => (float)$assessment->convertKeahlianToNumeric($assessment->keahlian ?? ''),
                     'bp' => (float)$assessment->convertBiayaGelombangToNumeric($assessment->biaya_gelombang ?? ''),
                ];
-
                $matrix[] = $row;
           }
           return $matrix;
      }
 
      /**
-      * Validate assessment
-      */
-     private function isAssessmentValid($assessment): bool
-     {
-          $requiredFields = [
-               'nilai_ipa',
-               'nilai_ips',
-               'nilai_matematika',
-               'nilai_bahasa_indonesia',
-               'nilai_bahasa_inggris',
-               'nilai_pkn',
-               'minat_a',
-               'minat_b',
-               'minat_c',
-               'minat_d',
-               'keahlian',
-               'biaya_gelombang'
-          ];
-
-          foreach ($requiredFields as $field) {
-               if (empty($assessment->$field)) {
-                    return false;
-               }
-          }
-          return true;
-     }
-
-     /**
-      * Normalize matrix using Euclidean method
+      * Tahap 2: Normalize Matrix - Sesuai Excel
       */
      private function normalizeMatrix(array $decisionMatrix): array
      {
           $normalizedMatrix = [];
-          $criteriaKeys = ['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'ma', 'mb', 'mc', 'md', 'bb', 'bp'];
-
-          // Calculate sum of squares
+          $criteriaKeys = array_keys($this->weights);
           $sumSquares = [];
+
           foreach ($criteriaKeys as $criteria) {
-               $sumSquares[$criteria] = 0;
+               $sum = 0;
                foreach ($decisionMatrix as $row) {
-                    $sumSquares[$criteria] += pow($row[$criteria] ?? 0, 2);
+                    $sum += pow($row[$criteria] ?? 0, 2);
                }
-               $sumSquares[$criteria] = sqrt($sumSquares[$criteria]);
+               $sumSquares[$criteria] = sqrt($sum);
           }
 
-          // Normalize each value
           foreach ($decisionMatrix as $row) {
-               $normalizedRow = [
-                    'penilaian_id' => $row['penilaian_id'],
-                    'peserta_didik_id' => $row['peserta_didik_id'],
-                    'tahun_ajaran' => $row['tahun_ajaran']
-               ];
-
+               $normalizedRow = ['penilaian_id' => $row['penilaian_id'], 'peserta_didik_id' => $row['peserta_didik_id'], 'tahun_ajaran' => $row['tahun_ajaran']];
                foreach ($criteriaKeys as $criteria) {
                     $value = $row[$criteria] ?? 0;
-                    $sumSquare = $sumSquares[$criteria] ?? 1;
-                    $normalizedRow[$criteria] = $sumSquare == 0 ? 0 : $value / $sumSquare;
+                    $divisor = $sumSquares[$criteria] ?? 1;
+                    $normalizedRow[$criteria] = $divisor == 0 ? 0 : $value / $divisor;
                }
-
                $normalizedMatrix[] = $normalizedRow;
           }
-
           return $normalizedMatrix;
      }
 
      /**
-      * Calculate weighted matrix
+      * Tahap 3: Weighted Normalized Matrix - Sesuai Excel
       */
      private function calculateWeightedMatrix(array $normalizedMatrix): array
      {
           $weightedMatrix = [];
-          $criteriaKeys = ['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'ma', 'mb', 'mc', 'md', 'bb', 'bp'];
-
           foreach ($normalizedMatrix as $row) {
-               $weightedRow = [
-                    'penilaian_id' => $row['penilaian_id'],
-                    'peserta_didik_id' => $row['peserta_didik_id'],
-                    'tahun_ajaran' => $row['tahun_ajaran']
-               ];
-
-               foreach ($criteriaKeys as $criteria) {
+               $weightedRow = ['penilaian_id' => $row['penilaian_id'], 'peserta_didik_id' => $row['peserta_didik_id'], 'tahun_ajaran' => $row['tahun_ajaran']];
+               foreach (array_keys($this->weights) as $criteria) {
                     $weightedRow[$criteria] = ($row[$criteria] ?? 0) * ($this->weights[$criteria] ?? 0);
                }
-
                $weightedMatrix[] = $weightedRow;
           }
-
           return $weightedMatrix;
      }
 
      /**
-      * Calculate ideal solutions
+      * Tahap 4: Ideal Solutions (A+ dan A-) - Sesuai Excel
       */
      private function calculateIdealSolutions(array $weightedMatrix): array
      {
-          $criteriaKeys = ['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'ma', 'mb', 'mc', 'md', 'bb', 'bp'];
           $idealPositive = [];
           $idealNegative = [];
-
-          foreach ($criteriaKeys as $criteria) {
+          foreach (array_keys($this->weights) as $criteria) {
                $values = array_column($weightedMatrix, $criteria);
-
                if (empty($values)) {
                     $idealPositive[$criteria] = 0;
                     $idealNegative[$criteria] = 0;
                     continue;
                }
-
-               // BP = COST (lower is better)
-               if ($criteria === 'bp') {
+               if ($criteria === 'bp') { // BP = Cost
                     $idealPositive[$criteria] = min($values);
                     $idealNegative[$criteria] = max($values);
-               } else {
-                    // Others = BENEFIT (higher is better)
+               } else { // Others = Benefit
                     $idealPositive[$criteria] = max($values);
                     $idealNegative[$criteria] = min($values);
                }
           }
-
-          return [
-               'positive' => $idealPositive,
-               'negative' => $idealNegative
-          ];
+          return ['positive' => $idealPositive, 'negative' => $idealNegative];
      }
 
      /**
-      * Calculate preference scores
+      * Tahap 5: Preference Scores - Sesuai Excel
       */
      private function calculatePreferenceScores(array $weightedMatrix, array $idealSolutions, Collection $assessments): Collection
      {
           $results = collect();
-          $criteriaKeys = array_keys($this->weights);
-
           foreach ($weightedMatrix as $row) {
                $distancePositive = 0;
                $distanceNegative = 0;
-
-               foreach ($criteriaKeys as $criteria) {
+               foreach (array_keys($this->weights) as $criteria) {
                     $value = $row[$criteria] ?? 0;
                     $distancePositive += pow($value - ($idealSolutions['positive'][$criteria] ?? 0), 2);
                     $distanceNegative += pow($value - ($idealSolutions['negative'][$criteria] ?? 0), 2);
                }
-
                $distancePositive = sqrt($distancePositive);
                $distanceNegative = sqrt($distanceNegative);
-
                $totalDistance = $distancePositive + $distanceNegative;
-               $preferenceScore = $totalDistance == 0 ? 0 : $distanceNegative / $totalDistance;
-
-               $recommendation = $preferenceScore > 0.30 ? 'TKJ' : 'TKR';
-
-               $assessment = $assessments->where('penilaian_id', $row['penilaian_id'])->first();
-
+               $preferenceScore = ($totalDistance == 0) ? 0 : $distanceNegative / $totalDistance;
+               $recommendation = ($preferenceScore > 0.30) ? 'TKJ' : 'TKR';
                $results->push([
                     'penilaian_id' => $row['penilaian_id'],
                     'peserta_didik_id' => $row['peserta_didik_id'],
@@ -304,15 +230,16 @@ class TopsisCalculationService
                     'distance_negative' => $distanceNegative,
                     'preference_score' => $preferenceScore,
                     'recommendation' => $recommendation,
-                    'assessment' => $assessment
+                    'assessment' => $assessments->where('penilaian_id', $row['penilaian_id'])->first()
                ]);
           }
-
           return $results->sortByDesc('preference_score')->values();
      }
 
      /**
-      * Save results to database
+      * ===================================================================
+      * SAVE RESULTS TO DATABASE
+      * ===================================================================
       */
      private function saveResults(Collection $results, array $normalizedMatrix, array $weightedMatrix, Collection $targetAssessments): void
      {
@@ -374,7 +301,40 @@ class TopsisCalculationService
      }
 
      /**
-      * Get criteria weights - SESUAI EXCEL
+      * ===================================================================
+      * VALIDATION
+      * ===================================================================
+      */
+     private function isAssessmentValid($assessment): bool
+     {
+          $requiredFields = [
+               'nilai_ipa',
+               'nilai_ips',
+               'nilai_matematika',
+               'nilai_bahasa_indonesia',
+               'nilai_bahasa_inggris',
+               'nilai_pkn',
+               'minat_a',
+               'minat_b',
+               'minat_c',
+               'minat_d',
+               'keahlian',
+               'biaya_gelombang'
+          ];
+
+          foreach ($requiredFields as $field) {
+               if (empty($assessment->$field)) {
+                    return false;
+               }
+          }
+
+          return true;
+     }
+
+     /**
+      * ===================================================================
+      * CRITERIA WEIGHTS - 100% SESUAI EXCEL
+      * ===================================================================
       */
      private function getCriteriaWeights(): array
      {

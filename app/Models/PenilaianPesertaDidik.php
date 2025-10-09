@@ -3,8 +3,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class PenilaianPesertaDidik extends Model
 {
@@ -36,93 +37,49 @@ class PenilaianPesertaDidik extends Model
         'jurusan_dipilih',
     ];
 
-    /**
-     * =================================================================
-     * PERBAIKAN UTAMA DI SINI
-     * =================================================================
-     * Pastikan kolom tanggal di-cast ke datetime.
-     */
     protected function casts(): array
     {
         return [
-            'nilai_ipa' => 'decimal:2',
-            'nilai_ips' => 'decimal:2',
-            'nilai_matematika' => 'decimal:2',
-            'nilai_bahasa_indonesia' => 'decimal:2',
-            'nilai_bahasa_inggris' => 'decimal:2',
-            'nilai_pkn' => 'decimal:2',
             'sudah_dihitung' => 'boolean',
             'tanggal_submission' => 'datetime',
             'tanggal_approved' => 'datetime',
         ];
     }
 
-    /**
-     * Relasi ke model PesertaDidik.
-     */
     public function pesertaDidik()
     {
         return $this->belongsTo(PesertaDidik::class, 'peserta_didik_id', 'peserta_didik_id');
     }
 
-    /**
-     * Relasi ke model PerhitunganTopsis.
-     */
-    public function perhitunganTopsis()
-    {
-        return $this->hasMany(PerhitunganTopsis::class, 'penilaian_id', 'penilaian_id');
-    }
-
-    /**
-     * =================================================================
-     * FUNGSI KONVERSI BARU UNTUK MENYESUAIKAN DENGAN EXCEL
-     * =================================================================
-     * Mengkonversi nilai akademik (cth: 85) menjadi bobot (cth: 3).
-     */
     public function convertNilaiToBobot($nilai): int
     {
         $nilai = (float) $nilai;
-        if ($nilai > 90) {
-            return 4;
-        } elseif ($nilai >= 81) { // Rentang 81-90
-            return 3;
-        } elseif ($nilai >= 76) { // Rentang 76-80
-            return 2;
-        } else { // Di bawah 76
-            return 1;
-        }
+        if ($nilai > 90) return 4;
+        if ($nilai >= 81) return 3;
+        if ($nilai >= 76) return 2;
+        return 1;
     }
 
-    /**
-     * Mengkonversi nilai Minat ke bobot numerik sesuai Excel.
-     */
     public function convertMinatToNumeric(string $minatValue): int
     {
         $mapping = [
-            // MA: Minat Bidang Kreatif
             'Desain Grafis' => 4,
             'Seni & Kerajinan' => 4,
             'Musik & Teater' => 4,
             'Fotografi & Videografi' => 4,
-            // MB: Minat Bidang Teknologi
             'Komputer' => 6,
             'Teknologi informasi & Komunikasi' => 6,
             'Elektronik' => 2,
             'Mesin' => 2,
-            // MC: Minat Bidang Ilmiah
             'Fisika' => 4,
             'Kimia' => 4,
             'Biologi & Lingkungan' => 4,
-            // MD: Minat Bidang Bisnis
             'Pemasaran' => 2,
             'Bisnis & Enterpreneurship' => 2,
         ];
-        return $mapping[$minatValue] ?? 1;
+        return $mapping[trim($minatValue)] ?? 1;
     }
 
-    /**
-     * Mengkonversi nilai Bakat (Keahlian) ke bobot numerik sesuai Excel.
-     */
     public function convertKeahlianToNumeric(string $keahlianValue): int
     {
         $mapping = [
@@ -133,32 +90,25 @@ class PenilaianPesertaDidik extends Model
             'Mengembangkan Rencana & Strategi' => 6,
             'kelistrikan' => 6,
         ];
-        return $mapping[$keahlianValue] ?? 1;
+        return $mapping[trim($keahlianValue)] ?? 1;
     }
 
-    /**
-     * Mengkonversi biaya gelombang ke bobot numerik sesuai 4 pilihan di Excel.
-     */
     public function convertBiayaGelombangToNumeric(string $biayaValue): int
     {
-        if (str_contains($biayaValue, '1.000.000')) return 4;
-        if (str_contains($biayaValue, '1.500.000')) return 3;
-        if (str_contains($biayaValue, '2.000.000')) return 2;
-        if (str_contains($biayaValue, '2.500.000')) return 1;
+        if (str_contains($biayaValue, '1.000.000') || str_contains($biayaValue, 'G1')) return 4;
+        if (str_contains($biayaValue, '1.500.000') || str_contains($biayaValue, 'G2')) return 3;
+        if (str_contains($biayaValue, '2.000.000') || str_contains($biayaValue, 'G3')) return 2;
+        if (str_contains($biayaValue, '2.500.000') || str_contains($biayaValue, 'G4')) return 1;
         return 1;
     }
 
-    /**
-     * Memeriksa apakah semua field yang dibutuhkan untuk perhitungan sudah terisi.
-     */
+    // === HELPER METHODS ===
+
     public function isReadyForCalculation(): bool
     {
         return empty($this->getMissingFields());
     }
 
-    /**
-     * Mengembalikan daftar nama field yang masih kosong.
-     */
     public function getMissingFields(): array
     {
         $missing = [];
@@ -182,12 +132,10 @@ class PenilaianPesertaDidik extends Model
                 $missing[] = ucwords(str_replace('_', ' ', $field));
             }
         }
+
         return $missing;
     }
 
-    /**
-     * Scope untuk query data penilaian yang siap untuk dihitung.
-     */
     public function scopeReadyForCalculation($query)
     {
         return $query->whereNotNull('nilai_ipa')
@@ -209,17 +157,11 @@ class PenilaianPesertaDidik extends Model
         return $this->update(['sudah_dihitung' => false]);
     }
 
-    /**
-     * Scope untuk query data penilaian yang belum dihitung.
-     */
     public function scopeUncalculated($query)
     {
         return $query->where('sudah_dihitung', false);
     }
 
-    /**
-     * Accessor for nilai_akademik array
-     */
     public function getNilaiAkademikAttribute(): array
     {
         return [

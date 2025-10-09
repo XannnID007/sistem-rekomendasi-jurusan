@@ -8,8 +8,7 @@ use App\Models\Kriteria;
 class KriteriaSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
-     * Bobot kriteria SESUAI EXCEL yang BENAR
+     * BOBOT KRITERIA SESUAI EXCEL ASLI
      * Total = 100% (1.00)
      */
     public function run(): void
@@ -71,7 +70,7 @@ class KriteriaSeeder extends Seeder
                 'nama_kriteria' => 'Minat Bidang Kreatif',
                 'jenis_kriteria' => 'benefit',
                 'bobot' => 0.0300, // 3%
-                'keterangan' => 'Minat pada bidang seni, musik, fotografi, desain grafis, dan kreativitas',
+                'keterangan' => 'Minat pada bidang seni, musik, fotografi, desain grafis',
                 'is_active' => true,
             ],
             [
@@ -79,7 +78,7 @@ class KriteriaSeeder extends Seeder
                 'nama_kriteria' => 'Minat Bidang Teknologi',
                 'jenis_kriteria' => 'benefit',
                 'bobot' => 0.3900, // 39% - TERBESAR!
-                'keterangan' => 'Minat pada bidang teknologi informasi, komputer, elektronik, dan mesin',
+                'keterangan' => 'Minat pada bidang teknologi informasi, komputer, elektronik, mesin',
                 'is_active' => true,
             ],
             [
@@ -87,35 +86,35 @@ class KriteriaSeeder extends Seeder
                 'nama_kriteria' => 'Minat Bidang Ilmiah',
                 'jenis_kriteria' => 'benefit',
                 'bobot' => 0.0300, // 3%
-                'keterangan' => 'Minat pada bidang sains, fisika, kimia, dan biologi',
+                'keterangan' => 'Minat pada bidang sains, fisika, kimia, biologi',
                 'is_active' => true,
             ],
             [
                 'kode_kriteria' => 'MD',
-                'nama_kriteria' => 'Minat Bidang Bisnis & Manajemen',
+                'nama_kriteria' => 'Minat Bidang Bisnis',
                 'jenis_kriteria' => 'benefit',
                 'bobot' => 0.0300, // 3%
-                'keterangan' => 'Minat pada bidang bisnis, kewirausahaan, dan pemasaran',
+                'keterangan' => 'Minat pada bidang bisnis, kewirausahaan, pemasaran',
                 'is_active' => true,
             ],
 
-            // Bakat/Keahlian (39% - TERBESAR!)
+            // Bakat/Keahlian (39% - SAMA BESAR DENGAN MB!)
             [
                 'kode_kriteria' => 'BB',
                 'nama_kriteria' => 'Bakat (Keahlian Teknis)',
                 'jenis_kriteria' => 'benefit',
-                'bobot' => 0.3900, // 39% - SAMA BESAR DENGAN MB!
-                'keterangan' => 'Keahlian dan bakat teknis yang dimiliki peserta didik',
+                'bobot' => 0.3900, // 39%
+                'keterangan' => 'Keahlian dan bakat teknis yang dimiliki',
                 'is_active' => true,
             ],
 
-            // Biaya Pergelombang (1% - COST)
+            // Biaya Gelombang (1% - COST!)
             [
                 'kode_kriteria' => 'BP',
-                'nama_kriteria' => 'Biaya Pergelombang',
-                'jenis_kriteria' => 'cost', // COST! Semakin rendah semakin baik
+                'nama_kriteria' => 'Biaya Gelombang',
+                'jenis_kriteria' => 'cost', // COST! Lower is better
                 'bobot' => 0.0100, // 1%
-                'keterangan' => 'Biaya pergelombang pendaftaran (G1, G2, G3) - semakin rendah semakin baik',
+                'keterangan' => 'Biaya pendaftaran gelombang - semakin rendah semakin baik',
                 'is_active' => true,
             ],
         ];
@@ -127,26 +126,24 @@ class KriteriaSeeder extends Seeder
             );
         }
 
-        // Validasi total bobot = 100%
+        // Validasi
         $totalBobot = Kriteria::sum('bobot');
 
-        if (abs($totalBobot - 1.0) > 0.001) {
-            $this->command->warn("Warning: Total bobot kriteria = " . ($totalBobot * 100) . "%, seharusnya 100%");
+        $this->command->info("\n=== VALIDASI BOBOT ===");
+        if (abs($totalBobot - 1.0) < 0.001) {
+            $this->command->info("✓ Total bobot = 100% (Valid)");
         } else {
-            $this->command->info("✓ Total bobot kriteria = 100% (Valid)");
+            $this->command->warn("⚠ Total bobot = " . ($totalBobot * 100) . "%");
         }
 
-        // Tampilkan ringkasan
-        $this->command->info("\n=== RINGKASAN BOBOT ===");
+        $this->command->info("\n=== DISTRIBUSI BOBOT ===");
         $this->command->info("Akademik (N1-N6): 12%");
         $this->command->info("Minat Kreatif (MA): 3%");
         $this->command->info("Minat Teknologi (MB): 39% ⭐");
         $this->command->info("Minat Ilmiah (MC): 3%");
         $this->command->info("Minat Bisnis (MD): 3%");
         $this->command->info("Bakat (BB): 39% ⭐");
-        $this->command->info("Biaya Gelombang (BP): 1% [COST]");
-        $this->command->info("TOTAL: 100%");
-
-        $this->command->info("\n✅ Kriteria seeded sesuai Excel!");
+        $this->command->info("Biaya (BP): 1% [COST]");
+        $this->command->info("TOTAL: 100%\n");
     }
 }
