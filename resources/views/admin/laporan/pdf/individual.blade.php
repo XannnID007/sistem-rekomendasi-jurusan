@@ -248,8 +248,8 @@
                                 <div class="info-value">{{ $penilaian->keahlian ?? 'N/A' }}</div>
                             </div>
                             <div class="info-row">
-                                <div class="info-label">Penghasilan Orang Tua:</div>
-                                <div class="info-value">{{ $penilaian->penghasilan_ortu ?? 'N/A' }}</div>
+                                <div class="info-label">Biaya Gelombang:</div>
+                                <div class="info-value">{{ $penilaian->biaya_gelombang ?? 'N/A' }}</div>
                             </div>
                         </div>
                     @else

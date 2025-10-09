@@ -5,7 +5,6 @@
 
 @section('content')
     <div class="space-y-6">
-        <!-- Data Peserta -->
         <div class="bg-white rounded-xl shadow-sm p-8 border border-gray-100">
             <h3 class="text-xl font-bold text-navy mb-6">Data Peserta Didik</h3>
             <div class="grid grid-cols-2 gap-6">
@@ -28,7 +27,6 @@
             </div>
         </div>
 
-        <!-- Hasil Rekomendasi -->
         @if ($pesertaDidik->perhitunganTerbaru)
             <div class="bg-white rounded-xl shadow-sm p-8 border border-gray-100">
                 <h3 class="text-xl font-bold text-navy mb-6">Hasil Rekomendasi</h3>
@@ -47,12 +45,11 @@
             </div>
         @endif
 
-        <!-- Status & Keputusan Siswa -->
-        @if ($pesertaDidik->penilaianTerbaru)
+        @if ($penilaian)
             <div class="bg-white rounded-xl shadow-sm p-8 border border-gray-100">
                 <h3 class="text-xl font-bold text-navy mb-6">Status Konfirmasi</h3>
 
-                @if ($pesertaDidik->penilaianTerbaru->status_submission === 'pending')
+                @if ($penilaian->status_submission === 'pending')
                     <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
                         <div class="flex items-center space-x-3 mb-4">
                             <svg class="w-6 h-6 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
@@ -64,7 +61,7 @@
                         </div>
                         <p class="text-sm text-yellow-700">Siswa belum memberikan konfirmasi terhadap rekomendasi.</p>
                     </div>
-                @elseif($pesertaDidik->penilaianTerbaru->status_submission === 'approved')
+                @elseif($penilaian->status_submission === 'approved')
                     <div class="bg-green-50 border border-green-200 rounded-xl p-6">
                         <div class="flex items-center space-x-3 mb-4">
                             <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
@@ -75,7 +72,7 @@
                             <span class="font-semibold text-green-800">APPROVED - Siswa Menyetujui</span>
                         </div>
                         <p class="text-sm text-green-700">Siswa telah menyetujui rekomendasi sistem pada
-                            {{ $pesertaDidik->penilaianTerbaru->tanggal_approved->format('d F Y, H:i') }}</p>
+                            {{ $penilaian->tanggal_approved->format('d F Y, H:i') }}</p>
                     </div>
                 @else
                     <div class="bg-red-50 border border-red-200 rounded-xl p-6">
@@ -91,18 +88,18 @@
                             <div class="mb-3">
                                 <label class="text-sm text-gray-600">Jurusan yang Dipilih:</label>
                                 <p class="font-bold text-navy text-lg">
-                                    {{ $pesertaDidik->penilaianTerbaru->jurusan_dipilih }}</p>
+                                    {{ $penilaian->jurusan_dipilih }}</p>
                             </div>
                             <div>
                                 <label class="text-sm text-gray-600">Alasan Penolakan:</label>
-                                <p class="text-gray-800">{{ $pesertaDidik->penilaianTerbaru->alasan_penolakan }}</p>
+                                <p class="text-gray-800">{{ $penilaian->alasan_penolakan }}</p>
                             </div>
                         </div>
 
-                        <!-- Form Override untuk Admin -->
                         <div class="mt-6 bg-white rounded-lg p-6 border-2 border-orange-200">
                             <h4 class="font-bold text-gray-900 mb-4">🔧 Override Jurusan (Admin)</h4>
-                            <form action="{{ route('admin.submission.override', $pesertaDidik) }}" method="POST">
+                            <form action="{{ route('admin.submission.override', $penilaian->penilaian_id) }}"
+                                method="POST">
                                 @csrf
                                 <div class="space-y-4">
                                     <div>
@@ -132,15 +129,14 @@
             </div>
         @endif
 
-        <!-- Actions -->
         <div class="flex justify-between">
             <a href="{{ route('admin.submission.index') }}" class="text-gray-600 hover:text-gray-900">
                 ← Kembali
             </a>
 
             <div class="flex space-x-3">
-                @if ($pesertaDidik->penilaianTerbaru && $pesertaDidik->penilaianTerbaru->status_submission === 'pending')
-                    <form action="{{ route('admin.submission.approve', $pesertaDidik) }}" method="POST"
+                @if ($penilaian && $penilaian->status_submission === 'pending')
+                    <form action="{{ route('admin.submission.approve', $penilaian->penilaian_id) }}" method="POST"
                         onsubmit="return confirm('Approve submission ini?')">
                         @csrf
                         <button type="submit"
@@ -150,8 +146,8 @@
                     </form>
                 @endif
 
-                <form action="{{ route('admin.submission.destroy', $pesertaDidik) }}" method="POST"
-                    onsubmit="return confirm('Hapus submission ini?')">
+                <form action="{{ route('admin.submission.destroy', $penilaian->penilaian_id) }}" method="POST"
+                    onsubmit="return confirm('PERINGATAN: Menghapus submission ini akan menghapus data user, peserta didik, penilaian, dan perhitungan yang terkait. Lanjutkan?')">
                     @csrf
                     @method('DELETE')
                     <button type="submit"

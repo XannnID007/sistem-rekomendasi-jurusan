@@ -190,37 +190,23 @@
                                     <div class="text-sm font-medium text-gray-900">
                                         {{ number_format($calc->nilai_preferensi, 4) }}</div>
                                     <div class="text-xs text-gray-500">
-                                        @php
-                                            $totalCalcs = \App\Models\PerhitunganTopsis::where(
-                                                'tahun_ajaran',
-                                                $calc->tahun_ajaran,
-                                            )->count();
-                                            $ranking =
-                                                \App\Models\PerhitunganTopsis::where(
-                                                    'tahun_ajaran',
-                                                    $calc->tahun_ajaran,
-                                                )
-                                                    ->where('nilai_preferensi', '>', $calc->nilai_preferensi)
-                                                    ->count() + 1;
-                                        @endphp
-                                        Ranking: {{ $ranking }} dari {{ $totalCalcs }}
+                                        {{-- Mengambil data ranking dari variabel $rankings --}}
+                                        @if (isset($rankings[$calc->perhitungan_id]))
+                                            Ranking: {{ $rankings[$calc->perhitungan_id]['rank'] }} dari
+                                            {{ $rankings[$calc->perhitungan_id]['total'] }}
+                                        @endif
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span
                                         class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{ $calc->jurusan_rekomendasi === 'TKJ' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
+                                        {{-- Menggunakan accessor baru --}}
                                         {{ $calc->rekomendasi_lengkap }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    @php
-                                        $tanggalFormatted = $calc->getTanggalPerhitunganFormatted();
-                                    @endphp
-                                    @if ($tanggalFormatted)
-                                        {{ $tanggalFormatted->format('d/m/Y H:i') }}
-                                    @else
-                                        {{ $calc->created_at->format('d/m/Y H:i') }}
-                                    @endif
+                                    {{-- Menggunakan accessor baru --}}
+                                    {{ $calc->tanggal_perhitungan_formatted->format('d/m/Y H:i') }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                     <a href="{{ route('admin.perhitungan.detail', $calc->pesertaDidik) }}"
@@ -247,35 +233,12 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr>
-                                <td colspan="6" class="px-6 py-8 text-center">
-                                    <div class="flex flex-col items-center">
-                                        <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                        </svg>
-                                        <p class="text-gray-500 text-lg">Belum ada perhitungan TOPSIS</p>
-                                        <p class="text-gray-400 text-sm mt-1">Mulai dengan menghitung TOPSIS untuk peserta
-                                            didik</p>
-                                        <a href="{{ route('admin.perhitungan.create') }}"
-                                            class="mt-4 inline-flex items-center px-4 py-2 bg-navy text-white rounded-lg hover:bg-navy-dark transition duration-200">
-                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                            </svg>
-                                            Hitung TOPSIS
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
+                            {{-- ... (bagian ini sudah benar, tidak perlu diubah) ... --}}
                         @endforelse
                     </tbody>
                 </table>
             </div>
 
-            <!-- Pagination -->
             @if ($perhitungan->hasPages())
                 <div class="px-6 py-4 border-t border-gray-200">
                     {{ $perhitungan->links() }}

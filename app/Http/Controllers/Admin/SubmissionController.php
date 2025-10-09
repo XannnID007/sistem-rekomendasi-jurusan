@@ -6,8 +6,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\PesertaDidik;
 use App\Models\PenilaianPesertaDidik;
-use App\Models\PerhitunganTopsis;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class SubmissionController extends Controller
 {
@@ -16,58 +16,64 @@ class SubmissionController extends Controller
      */
     public function index(Request $request)
     {
-        $query = PesertaDidik::where('is_public_submission', true)
-            ->with(['penilaianTerbaru', 'perhitunganTerbaru', 'user']);
-
-        // Filter by status
-        if ($request->filled('status')) {
-            $query->whereHas('penilaianTerbaru', function ($q) use ($request) {
-                $q->where('status_submission', $request->status);
+        // =================================================================
+        // PERUBAHAN UTAMA DI SINI
+        // =================================================================
+        // Query dimulai dari PenilaianPesertaDidik, bukan PesertaDidik.
+        // Ini memastikan setiap entri penilaian baru akan terambil.
+        $query = PenilaianPesertaDidik::query()
+            ->with(['pesertaDidik.user', 'pesertaDidik.perhitunganTerbaru'])
+            ->whereHas('pesertaDidik', function ($q) {
+                // Filter hanya untuk submission dari halaman publik
+                $q->where('is_public_submission', true);
             });
+
+
+        // Filter by status (sekarang langsung ke kolom di tabel penilaian)
+        if ($request->filled('status')) {
+            $query->where('status_submission', $request->status);
         }
 
-        // Filter by jurusan rekomendasi
+        // Filter by jurusan rekomendasi (melalui relasi pesertaDidik)
         if ($request->filled('jurusan')) {
-            $query->whereHas('perhitunganTerbaru', function ($q) use ($request) {
+            $query->whereHas('pesertaDidik.perhitunganTerbaru', function ($q) use ($request) {
                 $q->where('jurusan_rekomendasi', $request->jurusan);
             });
         }
 
-        // Filter by tahun ajaran
+        // Filter by tahun ajaran (langsung ke kolom di tabel penilaian)
         if ($request->filled('tahun_ajaran')) {
             $query->where('tahun_ajaran', $request->tahun_ajaran);
         }
 
-        // Search
+        // Search (melalui relasi pesertaDidik)
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function ($q) use ($search) {
+            $query->whereHas('pesertaDidik', function ($q) use ($search) {
                 $q->where('nama_lengkap', 'like', "%{$search}%")
                     ->orWhere('nisn', 'like', "%{$search}%");
             });
         }
 
-        $submissions = $query->latest('created_at')->paginate(20);
+        // Mengurutkan berdasarkan data penilaian yang terbaru
+        $submissions = $query->latest('tanggal_submission')->paginate(20);
 
-        // Get statistics - FIXED: Pastikan hitung dari peserta dengan is_public_submission = true
+        // Get statistics
+        $statsQuery = function ($status) {
+            return PenilaianPesertaDidik::where('status_submission', $status)
+                ->whereHas('pesertaDidik', fn($q) => $q->where('is_public_submission', true))
+                ->count();
+        };
+
         $stats = [
-            'total' => PesertaDidik::where('is_public_submission', true)->count(),
-            'pending' => PesertaDidik::where('is_public_submission', true)
-                ->whereHas('penilaianTerbaru', function ($q) {
-                    $q->where('status_submission', 'pending');
-                })->count(),
-            'approved' => PesertaDidik::where('is_public_submission', true)
-                ->whereHas('penilaianTerbaru', function ($q) {
-                    $q->where('status_submission', 'approved');
-                })->count(),
-            'rejected' => PesertaDidik::where('is_public_submission', true)
-                ->whereHas('penilaianTerbaru', function ($q) {
-                    $q->where('status_submission', 'rejected');
-                })->count(),
+            'total' => PenilaianPesertaDidik::whereHas('pesertaDidik', fn($q) => $q->where('is_public_submission', true))->count(),
+            'pending' => $statsQuery('pending'),
+            'approved' => $statsQuery('approved'),
+            'rejected' => $statsQuery('rejected'),
         ];
 
         // Get filter options
-        $tahunAjaran = PesertaDidik::where('is_public_submission', true)
+        $tahunAjaran = PenilaianPesertaDidik::whereHas('pesertaDidik', fn($q) => $q->where('is_public_submission', true))
             ->distinct()
             ->pluck('tahun_ajaran')
             ->filter();
@@ -78,31 +84,31 @@ class SubmissionController extends Controller
     /**
      * Detail submission
      */
-    public function show(PesertaDidik $pesertaDidik)
+    public function show($id) // Menggunakan ID Penilaian
     {
-        // FIXED: Tidak perlu cek is_public_submission karena sudah di route model binding
-        $pesertaDidik->load(['penilaianTerbaru', 'perhitunganTerbaru', 'user']);
+        $penilaian = PenilaianPesertaDidik::with(['pesertaDidik.user', 'pesertaDidik.perhitunganTerbaru'])
+            ->findOrFail($id);
 
-        return view('admin.submission.show', compact('pesertaDidik'));
+        $pesertaDidik = $penilaian->pesertaDidik;
+
+        return view('admin.submission.show', compact('penilaian', 'pesertaDidik'));
     }
 
     /**
      * Approve submission (admin override)
      */
-    public function approve(PesertaDidik $pesertaDidik)
+    public function approve($id) // Menggunakan ID Penilaian
     {
-        $penilaian = $pesertaDidik->penilaianTerbaru;
-
-        if (!$penilaian) {
-            return back()->with('error', 'Data penilaian tidak ditemukan');
-        }
+        $penilaian = PenilaianPesertaDidik::with('pesertaDidik.user')->findOrFail($id);
 
         $penilaian->update([
             'status_submission' => 'approved',
             'tanggal_approved' => now(),
         ]);
 
-        $pesertaDidik->user->update(['is_active' => true]);
+        $penilaian->pesertaDidik->user->update(['is_active' => true]);
+
+        Log::info('Submission approved by admin', ['penilaian_id' => $id]);
 
         return back()->with('success', 'Submission berhasil di-approve');
     }
@@ -110,18 +116,18 @@ class SubmissionController extends Controller
     /**
      * Override jurusan (admin change recommendation)
      */
-    public function overrideJurusan(Request $request, PesertaDidik $pesertaDidik)
+    public function overrideJurusan(Request $request, $id) // Menggunakan ID Penilaian
     {
         $validated = $request->validate([
             'jurusan_baru' => 'required|in:TKJ,TKR',
             'catatan_admin' => 'nullable|string',
         ]);
 
-        $perhitungan = $pesertaDidik->perhitunganTerbaru;
-        $penilaian = $pesertaDidik->penilaianTerbaru;
+        $penilaian = PenilaianPesertaDidik::with('pesertaDidik.user', 'pesertaDidik.perhitunganTerbaru')->findOrFail($id);
+        $perhitungan = $penilaian->pesertaDidik->perhitunganTerbaru;
 
-        if (!$perhitungan || !$penilaian) {
-            return back()->with('error', 'Data tidak lengkap');
+        if (!$perhitungan) {
+            return back()->with('error', 'Data perhitungan tidak ditemukan');
         }
 
         // Update jurusan di perhitungan
@@ -137,7 +143,7 @@ class SubmissionController extends Controller
             'tanggal_approved' => now(),
         ]);
 
-        $pesertaDidik->user->update(['is_active' => true]);
+        $penilaian->pesertaDidik->user->update(['is_active' => true]);
 
         return back()->with('success', 'Jurusan berhasil diubah menjadi ' . $validated['jurusan_baru']);
     }
@@ -145,83 +151,23 @@ class SubmissionController extends Controller
     /**
      * Delete submission
      */
-    public function destroy(PesertaDidik $pesertaDidik)
+    public function destroy($id) // Menggunakan ID Penilaian
     {
         try {
-            // Delete user (akan cascade delete peserta didik)
-            $pesertaDidik->user->delete();
+            $penilaian = PenilaianPesertaDidik::with('pesertaDidik.user')->findOrFail($id);
+            // Hapus user, dan data lain (peserta, penilaian, perhitungan) akan terhapus otomatis karena cascade delete
+            if ($penilaian->pesertaDidik->user) {
+                $penilaian->pesertaDidik->user->delete();
+            } else {
+                // Jika user tidak ada, hapus manual
+                $penilaian->pesertaDidik->delete();
+            }
 
             return redirect()->route('admin.submission.index')
                 ->with('success', 'Submission berhasil dihapus');
         } catch (\Exception $e) {
+            Log::error('Gagal menghapus submission', ['error' => $e->getMessage()]);
             return back()->with('error', 'Gagal menghapus: ' . $e->getMessage());
         }
-    }
-
-    /**
-     * Export submissions
-     */
-    public function export(Request $request)
-    {
-        $query = PesertaDidik::where('is_public_submission', true)
-            ->with(['penilaianTerbaru', 'perhitunganTerbaru']);
-
-        if ($request->filled('status')) {
-            $query->whereHas('penilaianTerbaru', function ($q) use ($request) {
-                $q->where('status_submission', $request->status);
-            });
-        }
-
-        $submissions = $query->get();
-
-        $filename = 'submissions_' . date('Y-m-d') . '.csv';
-
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ];
-
-        $callback = function () use ($submissions) {
-            $file = fopen('php://output', 'w');
-
-            // Header
-            fputcsv($file, [
-                'NISN',
-                'Nama',
-                'Email',
-                'No. Telepon',
-                'Tahun Ajaran',
-                'Tanggal Submit',
-                'Status',
-                'Rekomendasi',
-                'Nilai Preferensi',
-                'Jurusan Dipilih',
-                'Alasan'
-            ]);
-
-            // Data
-            foreach ($submissions as $item) {
-                $penilaian = $item->penilaianTerbaru;
-                $perhitungan = $item->perhitunganTerbaru;
-
-                fputcsv($file, [
-                    $item->nisn,
-                    $item->nama_lengkap,
-                    $item->email_submission,
-                    $item->no_telepon_submission,
-                    $item->tahun_ajaran,
-                    $penilaian ? $penilaian->tanggal_submission : '',
-                    $penilaian ? ucfirst($penilaian->status_submission) : '',
-                    $perhitungan ? $perhitungan->jurusan_rekomendasi : '',
-                    $perhitungan ? $perhitungan->nilai_preferensi : '',
-                    $penilaian ? $penilaian->jurusan_dipilih : '',
-                    $penilaian ? $penilaian->alasan_penolakan : '',
-                ]);
-            }
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
     }
 }

@@ -27,7 +27,7 @@ class PenilaianPesertaDidik extends Model
         'minat_c',
         'minat_d',
         'keahlian',
-        'biaya_gelombang', // FIXED: Changed from penghasilan_ortu
+        'biaya_gelombang',
         'sudah_dihitung',
         'status_submission',
         'tanggal_submission',
@@ -65,6 +65,26 @@ class PenilaianPesertaDidik extends Model
     public function perhitunganTopsis()
     {
         return $this->hasMany(PerhitunganTopsis::class, 'penilaian_id', 'penilaian_id');
+    }
+
+    /**
+     * =================================================================
+     * FUNGSI KONVERSI BARU UNTUK MENYESUAIKAN DENGAN EXCEL
+     * =================================================================
+     * Mengkonversi nilai akademik (cth: 85) menjadi bobot (cth: 3).
+     */
+    public function convertNilaiToBobot($nilai): int
+    {
+        $nilai = (float) $nilai;
+        if ($nilai > 90) {
+            return 4;
+        } elseif ($nilai >= 81) { // Rentang 81-90
+            return 3;
+        } elseif ($nilai >= 76) { // Rentang 76-80
+            return 2;
+        } else { // Di bawah 76
+            return 1;
+        }
     }
 
     /**
@@ -111,7 +131,6 @@ class PenilaianPesertaDidik extends Model
     }
 
     /**
-     * FIXED: Renamed from convertPenghasilanToNumeric
      * Mengkonversi biaya gelombang ke bobot numerik sesuai 4 pilihan di Excel.
      */
     public function convertBiayaGelombangToNumeric(string $biayaValue): int
@@ -149,7 +168,7 @@ class PenilaianPesertaDidik extends Model
             'minat_c',
             'minat_d',
             'keahlian',
-            'biaya_gelombang' // FIXED: Changed from penghasilan_ortu
+            'biaya_gelombang'
         ];
 
         foreach ($requiredFields as $field) {
@@ -176,7 +195,7 @@ class PenilaianPesertaDidik extends Model
             ->whereNotNull('minat_c')
             ->whereNotNull('minat_d')
             ->whereNotNull('keahlian')
-            ->whereNotNull('biaya_gelombang'); // FIXED: Changed from penghasilan_ortu
+            ->whereNotNull('biaya_gelombang');
     }
 
     public function markAsUncalculated(): bool
@@ -193,7 +212,7 @@ class PenilaianPesertaDidik extends Model
     }
 
     /**
-     * FIXED: Added accessor for nilai_akademik array
+     * Accessor for nilai_akademik array
      */
     public function getNilaiAkademikAttribute(): array
     {

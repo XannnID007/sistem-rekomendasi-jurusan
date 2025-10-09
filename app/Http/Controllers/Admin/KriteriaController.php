@@ -49,16 +49,6 @@ class KriteriaController extends Controller
             'bobot' => 'required|numeric|min:0|max:1',
             'keterangan' => 'nullable|string',
             'is_active' => 'boolean'
-        ], [
-            'kode_kriteria.required' => 'Kode kriteria wajib diisi',
-            'kode_kriteria.unique' => 'Kode kriteria sudah digunakan',
-            'nama_kriteria.required' => 'Nama kriteria wajib diisi',
-            'jenis_kriteria.required' => 'Jenis kriteria wajib dipilih',
-            'jenis_kriteria.in' => 'Jenis kriteria harus benefit atau cost',
-            'bobot.required' => 'Bobot wajib diisi',
-            'bobot.numeric' => 'Bobot harus berupa angka',
-            'bobot.min' => 'Bobot minimal 0',
-            'bobot.max' => 'Bobot maksimal 1',
         ]);
 
         try {
@@ -109,16 +99,6 @@ class KriteriaController extends Controller
             'bobot' => 'required|numeric|min:0|max:1',
             'keterangan' => 'nullable|string',
             'is_active' => 'boolean'
-        ], [
-            'kode_kriteria.required' => 'Kode kriteria wajib diisi',
-            'kode_kriteria.unique' => 'Kode kriteria sudah digunakan',
-            'nama_kriteria.required' => 'Nama kriteria wajib diisi',
-            'jenis_kriteria.required' => 'Jenis kriteria wajib dipilih',
-            'jenis_kriteria.in' => 'Jenis kriteria harus benefit atau cost',
-            'bobot.required' => 'Bobot wajib diisi',
-            'bobot.numeric' => 'Bobot harus berupa angka',
-            'bobot.min' => 'Bobot minimal 0',
-            'bobot.max' => 'Bobot maksimal 1',
         ]);
 
         try {
@@ -147,9 +127,6 @@ class KriteriaController extends Controller
     public function destroy(Kriteria $kriteria)
     {
         try {
-            // Check if criteria is used in calculations
-            // You might want to add this check
-
             $kriteria->delete();
 
             return redirect()
@@ -167,19 +144,20 @@ class KriteriaController extends Controller
     public function resetWeights()
     {
         try {
+
             $defaultWeights = [
-                'N1' => 0.0500,
-                'N2' => 0.0500,
-                'N3' => 0.0500,
-                'N4' => 0.0500,
-                'N5' => 0.0500,
-                'N6' => 0.0500,
-                'MA' => 0.1000,
-                'MB' => 0.1500,
-                'MC' => 0.1000,
-                'MD' => 0.0500,
-                'BB' => 0.2000,
-                'BP' => 0.1000
+                'N1' => 0.02,
+                'N2' => 0.02,
+                'N3' => 0.02,
+                'N4' => 0.02,
+                'N5' => 0.02,
+                'N6' => 0.02,
+                'MA' => 0.03,
+                'MB' => 0.39,
+                'MC' => 0.03,
+                'MD' => 0.03,
+                'BB' => 0.39,
+                'BP' => 0.01
             ];
 
             foreach ($defaultWeights as $kode => $bobot) {
@@ -188,7 +166,7 @@ class KriteriaController extends Controller
 
             return redirect()
                 ->route('admin.kriteria.index')
-                ->with('success', 'Bobot kriteria berhasil direset ke nilai default');
+                ->with('success', 'Bobot kriteria berhasil direset ke nilai yang sesuai dengan perhitungan Excel');
         } catch (\Exception $e) {
             return back()
                 ->with('error', 'Gagal mereset bobot: ' . $e->getMessage());

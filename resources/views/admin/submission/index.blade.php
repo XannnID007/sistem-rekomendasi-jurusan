@@ -8,7 +8,6 @@
 @section('content')
     <div class="space-y-6">
 
-        <!-- Statistics Cards -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                 <div class="flex items-center justify-between">
@@ -70,7 +69,6 @@
             </div>
         </div>
 
-        <!-- Filters & Actions -->
         <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
             <form method="GET" action="{{ route('admin.submission.index') }}" class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -126,15 +124,11 @@
                             Reset
                         </a>
                     </div>
-                    <a href="{{ route('admin.submission.export', request()->all()) }}"
-                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
-                        Export CSV
-                    </a>
+                    {{-- Export button is removed for now as it needs separate logic update --}}
                 </div>
             </form>
         </div>
 
-        <!-- Table -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
@@ -149,53 +143,59 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        @forelse($submissions as $item)
+                        @forelse($submissions as $penilaian)
+                            @php
+                                $peserta = $penilaian->pesertaDidik;
+                                $perhitungan = $peserta->perhitunganTerbaru;
+                            @endphp
                             <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-4">
-                                    <div>
-                                        <p class="font-medium text-gray-900">{{ $item->nama_lengkap }}</p>
-                                        <p class="text-sm text-gray-500">NISN: {{ $item->nisn }}</p>
-                                    </div>
+                                    @if ($peserta)
+                                        <div>
+                                            <p class="font-medium text-gray-900">{{ $peserta->nama_lengkap }}</p>
+                                            <p class="text-sm text-gray-500">NISN: {{ $peserta->nisn }}</p>
+                                        </div>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4">
-                                    <div class="text-sm">
-                                        <p class="text-gray-900">{{ $item->email_submission }}</p>
-                                        <p class="text-gray-500">{{ $item->no_telepon_submission }}</p>
-                                    </div>
+                                    @if ($peserta)
+                                        <div class="text-sm">
+                                            <p class="text-gray-900">{{ $peserta->email_submission }}</p>
+                                            <p class="text-gray-500">{{ $peserta->no_telepon_submission }}</p>
+                                        </div>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    @if ($item->perhitunganTerbaru)
+                                    @if ($perhitungan)
                                         <span
-                                            class="px-3 py-1 rounded-full text-xs font-medium {{ $item->perhitunganTerbaru->jurusan_rekomendasi === 'TKJ' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
-                                            {{ $item->perhitunganTerbaru->jurusan_rekomendasi }}
+                                            class="px-3 py-1 rounded-full text-xs font-medium {{ $perhitungan->jurusan_rekomendasi === 'TKJ' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
+                                            {{ $perhitungan->jurusan_rekomendasi }}
                                         </span>
                                         <p class="text-xs text-gray-500 mt-1">
-                                            {{ number_format($item->perhitunganTerbaru->nilai_preferensi, 4) }}</p>
+                                            {{ number_format($perhitungan->nilai_preferensi, 4) }}</p>
                                     @else
                                         <span class="text-gray-400">-</span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    @if ($item->penilaianTerbaru)
-                                        @if ($item->penilaianTerbaru->status_submission === 'pending')
-                                            <span
-                                                class="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending</span>
-                                        @elseif($item->penilaianTerbaru->status_submission === 'approved')
-                                            <span
-                                                class="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Approved</span>
-                                        @else
-                                            <span
-                                                class="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">Rejected</span>
-                                            <p class="text-xs text-gray-600 mt-1">Pilih:
-                                                {{ $item->penilaianTerbaru->jurusan_dipilih }}</p>
-                                        @endif
+                                    @if ($penilaian->status_submission === 'pending')
+                                        <span
+                                            class="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending</span>
+                                    @elseif($penilaian->status_submission === 'approved')
+                                        <span
+                                            class="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Approved</span>
+                                    @else
+                                        <span
+                                            class="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">Rejected</span>
+                                        <p class="text-xs text-gray-600 mt-1">Pilih:
+                                            {{ $penilaian->jurusan_dipilih }}</p>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-center text-sm text-gray-500">
-                                    {{ $item->created_at->format('d/m/Y H:i') }}
+                                    {{ $penilaian->tanggal_submission->format('d/m/Y H:i') }}
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <a href="{{ route('admin.submission.show', $item) }}"
+                                    <a href="{{ route('admin.submission.show', $penilaian->penilaian_id) }}"
                                         class="text-navy hover:text-navy-dark font-medium text-sm">
                                         Detail →
                                     </a>

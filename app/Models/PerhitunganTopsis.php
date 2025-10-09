@@ -194,16 +194,6 @@ class PerhitunganTopsis extends Model
     }
 
     /**
-     * Get recommendation with description
-     */
-    public function getRekomendasiLengkapAttribute(): string
-    {
-        return $this->jurusan_rekomendasi === 'TKJ'
-            ? 'TKJ (Teknik Komputer dan Jaringan)'
-            : 'TKR (Teknik Kendaraan Ringan)';
-    }
-
-    /**
      * Get status color for recommendation
      */
     public function getStatusColorAttribute(): string
@@ -225,5 +215,32 @@ class PerhitunganTopsis extends Model
     public function scopeByTahunAjaran($query, $tahunAjaran)
     {
         return $query->where('tahun_ajaran', $tahunAjaran);
+    }
+
+    public function getRekomendasiLengkapAttribute(): string
+    {
+        if ($this->jurusan_rekomendasi === 'TKJ') {
+            return 'Teknik Komputer & Jaringan';
+        }
+        if ($this->jurusan_rekomendasi === 'TKR') {
+            return 'Teknik Kendaraan Ringan';
+        }
+        return 'Tidak Diketahui';
+    }
+
+    /**
+     * Safely parse and format tanggal_perhitungan.
+     */
+    public function getTanggalPerhitunganFormattedAttribute()
+    {
+        if ($this->tanggal_perhitungan) {
+            try {
+                return \Carbon\Carbon::parse($this->tanggal_perhitungan);
+            } catch (\Exception $e) {
+                // fallback to created_at if parsing fails
+                return $this->created_at;
+            }
+        }
+        return $this->created_at;
     }
 }

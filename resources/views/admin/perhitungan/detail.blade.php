@@ -122,8 +122,8 @@
                                 <span class="font-medium">{{ $perhitungan->penilaian->keahlian }}</span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-gray-600">Penghasilan Ortu:</span>
-                                <span class="font-medium">{{ $perhitungan->penilaian->penghasilan_ortu }}</span>
+                                <span class="text-gray-600">Biaya Gelombang:</span>
+                                <span class="font-medium">{{ $perhitungan->penilaian->biaya_gelombang }}</span>
                             </div>
                         </div>
                     </div>

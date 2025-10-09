@@ -90,9 +90,8 @@
                         class="text-gray-700 hover:text-navy transition duration-200 text-sm font-medium">Tentang</a>
                     <a href="#jurusan"
                         class="text-gray-700 hover:text-navy transition duration-200 text-sm font-medium">Jurusan</a>
-                    <a href="{{ route('rekomendasi.index') }}"
-                        class="text-gray-700 hover:text-navy transition duration-200 text-sm font-medium">Cek
-                        Rekomendasi</a>
+                    <a href="{{ route('submission.index') }}"
+                        class="text-gray-700 hover:text-navy transition duration-200 text-sm font-medium">Rekomendasi</a>
                     <a href="#contact"
                         class="text-gray-700 hover:text-navy transition duration-200 text-sm font-medium">Kontak</a>
                     <a href="/login"
@@ -117,8 +116,8 @@
                 <div class="space-y-2">
                     <a href="#about" class="block py-2 text-gray-700 hover:text-navy text-sm">Tentang</a>
                     <a href="#jurusan" class="block py-2 text-gray-700 hover:text-navy text-sm">Jurusan</a>
-                    <a href="{{ route('rekomendasi.index') }}"
-                        class="block py-2 text-gray-700 hover:text-navy text-sm">Cek Rekomendasi</a>
+                    <a href="{{ route('submission.index') }}"
+                        class="block py-2 text-gray-700 hover:text-navy text-sm">Rekomendasi</a>
                     <a href="#contact" class="block py-2 text-gray-700 hover:text-navy text-sm">Kontak</a>
                     <a href="/login"
                         class="block mt-2 bg-navy text-white px-4 py-2 rounded-lg text-center text-sm">Login Admin</a>
@@ -158,7 +157,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
-                            Daftar & Dapatkan Rekomendasi
+                            Dapatkan Rekomendasi
                         </a>
 
                         <!-- Tombol untuk CEK HASIL yang sudah ada -->
@@ -168,7 +167,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
-                            Cek Hasil Rekomendasi Saya
+                            Cek Hasil Rekomendasi
                         </a>
                     </div>
 
@@ -416,34 +415,31 @@
             <div class="grid md:grid-cols-4 gap-8 mb-8">
                 <div class="md:col-span-2">
                     <div class="flex items-center space-x-3 mb-4">
-                        <div class="w-10 h-10 bg-gold rounded-lg flex items-center justify-center">
-                            <span class="text-navy font-bold text-lg">SP</span>
+                        <img src="/images/logo.png" alt="Logo SPK" class="w-10 h-10 object-contain"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="w-10 h-10 bg-navy rounded-lg flex items-center justify-center"
+                            style="display: none;">
+                            <span class="text-white font-semibold text-lg">SP</span>
                         </div>
                         <div>
-                            <h3 class="text-lg font-bold">SPK Pemilihan Jurusan</h3>
-                            <p class="text-sm text-gray-400">SMK Penida 2 Katapang</p>
+                            <h3 class="text-lg font-semibold text-white">SPK Pemilihan Jurusan</h3>
+                            <p class="text-xs text-white">SMK Penida 2 Katapang</p>
                         </div>
                     </div>
                     <p class="text-gray-400 text-sm mb-4">Sistem Pendukung Keputusan untuk membantu siswa memilih
                         jurusan yang sesuai dengan minat dan bakat menggunakan metode TOPSIS.</p>
                 </div>
 
-                <h4 class="text-lg font-semibold mb-4">Menu Utama</h4>
-                <ul class="space-y-2 text-sm text-gray-400">
-                    <li><a href="#about" class="hover:text-gold transition duration-200">Tentang Sekolah</a></li>
-                    <li><a href="#jurusan" class="hover:text-gold transition duration-200">Program Keahlian</a>
-                    </li>
-                    <li><a href="{{ route('submission.index') }}"
-                            class="hover:text-gold transition duration-200">Daftar Rekomendasi</a></li>
-                    <li><a href="{{ route('rekomendasi.index') }}" class="hover:text-gold transition duration-200">Cek
-                            Hasil Rekomendasi</a></li>
-                    <li><a href="/login" class="hover:text-gold transition duration-200">Login Admin</a></li>
-                </ul>
-            </div>
-            <div class="grid md:grid-cols-2 gap-8" id="contact">
                 <div>
-                    <h4 class="text-lg font-semibold mb-4">Alamat</h4>
-                    <p class="text-sm text-gray-400">Jl. Raya Katapang No.123, Katapang, Bandung</p>
+                    <h4 class="text-lg font-semibold mb-4">Menu Utama</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#about" class="hover:text-gold transition duration-200">Tentang Sekolah</a></li>
+                        <li><a href="#jurusan" class="hover:text-gold transition duration-200">Program Keahlian</a>
+                        </li>
+                        <li><a href="{{ route('rekomendasi.index') }}"
+                                class="hover:text-gold transition duration-200">Cek Rekomendasi</a></li>
+                        <li><a href="/login" class="hover:text-gold transition duration-200">Login Admin</a></li>
+                    </ul>
                 </div>
 
                 <div>

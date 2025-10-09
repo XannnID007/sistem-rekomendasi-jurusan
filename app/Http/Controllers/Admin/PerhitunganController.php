@@ -27,20 +27,17 @@ class PerhitunganController extends Controller
      */
     public function index(Request $request)
     {
-        $query = PerhitunganTopsis::with(['pesertaDidik', 'penilaian'])
+        $query = PerhitunganTopsis::with(['pesertaDidik'])
             ->orderBy('tanggal_perhitungan', 'desc');
 
-        // Filter by academic year
         if ($request->filled('tahun_ajaran')) {
             $query->where('tahun_ajaran', $request->get('tahun_ajaran'));
         }
 
-        // Filter by recommendation
         if ($request->filled('jurusan_rekomendasi')) {
             $query->where('jurusan_rekomendasi', $request->get('jurusan_rekomendasi'));
         }
 
-        // Search by name or NISN
         if ($request->filled('search')) {
             $search = $request->get('search');
             $query->whereHas('pesertaDidik', function ($q) use ($search) {
@@ -51,10 +48,22 @@ class PerhitunganController extends Controller
 
         $perhitungan = $query->paginate(15);
 
-        // Get filter options
+        $allPerhitunganForRanking = PerhitunganTopsis::select('perhitungan_id', 'tahun_ajaran', 'nilai_preferensi')->get()->groupBy('tahun_ajaran');
+        $rankings = [];
+
+        foreach ($allPerhitunganForRanking as $tahun => $items) {
+            $sortedItems = $items->sortByDesc('nilai_preferensi')->values();
+            foreach ($sortedItems as $index => $item) {
+                $rankings[$item->perhitungan_id] = [
+                    'rank' => $index + 1,
+                    'total' => $items->count(),
+                ];
+            }
+        }
+        // =================================================================
+
         $tahunAjaran = PerhitunganTopsis::distinct()->pluck('tahun_ajaran');
 
-        // Get statistics
         $statistics = [
             'total' => PerhitunganTopsis::count(),
             'tkj' => PerhitunganTopsis::where('jurusan_rekomendasi', 'TKJ')->count(),
@@ -62,22 +71,17 @@ class PerhitunganController extends Controller
             'rata_preferensi' => PerhitunganTopsis::avg('nilai_preferensi')
         ];
 
-        return view('admin.perhitungan.index', compact('perhitungan', 'tahunAjaran', 'statistics'));
+        return view('admin.perhitungan.index', compact('perhitungan', 'tahunAjaran', 'statistics', 'rankings'));
     }
 
-    /**
-     * Show form for new calculation
-     */
     public function create()
     {
-        // Validate criteria weights first
         if (!$this->topsisService->validateWeights()) {
             return redirect()
                 ->route('admin.kriteria.index')
                 ->with('error', 'Total bobot kriteria harus sama dengan 100% (1.0). Silakan periksa dan perbaiki bobot kriteria terlebih dahulu.');
         }
 
-        // Get peserta didik yang belum dihitung atau perlu dihitung ulang
         $pesertaDidik = PesertaDidik::with(['penilaianTerbaru', 'perhitunganTerbaru'])
             ->whereHas('penilaian', function ($query) {
                 $query->readyForCalculation();
@@ -91,7 +95,6 @@ class PerhitunganController extends Controller
                     return false;
                 }
 
-                // Tampilkan jika belum ada perhitungan atau penilaian sudah diupdate
                 return !$penilaian->sudah_dihitung ||
                     !$perhitungan ||
                     $penilaian->updated_at > $perhitungan->tanggal_perhitungan;
@@ -99,8 +102,6 @@ class PerhitunganController extends Controller
 
         $totalBelumDihitung = $pesertaDidik->count();
         $totalSudahDihitung = PerhitunganTopsis::count();
-
-        // Get criteria info for debugging
         $criteriaInfo = $this->topsisService->getCriteriaInfo();
 
         return view('admin.perhitungan.create', compact(
@@ -122,7 +123,6 @@ class PerhitunganController extends Controller
         ]);
 
         try {
-            // Validate criteria weights
             if (!$this->topsisService->validateWeights()) {
                 return back()
                     ->withInput()
@@ -269,9 +269,6 @@ class PerhitunganController extends Controller
         return view('admin.perhitungan.show', compact('perhitungan'));
     }
 
-    /**
-     * Display detailed calculation steps
-     */
     public function detail(PesertaDidik $pesertaDidik)
     {
         $pesertaDidik->load(['penilaianTerbaru', 'perhitunganTerbaru']);
@@ -282,11 +279,9 @@ class PerhitunganController extends Controller
                 ->with('error', 'Belum ada perhitungan untuk peserta didik ini');
         }
 
-        // Get the calculation data
         $perhitungan = $pesertaDidik->perhitunganTerbaru;
         $perhitungan->load('penilaian');
 
-        // Get all data for matrix display
         $allPenilaian = PenilaianPesertaDidik::with('pesertaDidik')
             ->where('tahun_ajaran', $perhitungan->tahun_ajaran)
             ->readyForCalculation()
@@ -295,11 +290,8 @@ class PerhitunganController extends Controller
         $allPerhitungan = PerhitunganTopsis::with('pesertaDidik')
             ->where('tahun_ajaran', $perhitungan->tahun_ajaran)
             ->get();
-
-        // Get criteria for detailed steps
         $kriteria = Kriteria::active()->orderBy('kode_kriteria')->get();
 
-        // Calculate ranking
         $ranking = PerhitunganTopsis::where('tahun_ajaran', $perhitungan->tahun_ajaran)
             ->where('nilai_preferensi', '>', $perhitungan->nilai_preferensi)
             ->count() + 1;
@@ -324,7 +316,6 @@ class PerhitunganController extends Controller
     public function destroy(PerhitunganTopsis $perhitungan)
     {
         try {
-            // Reset penilaian status
             if ($perhitungan->penilaian) {
                 $perhitungan->penilaian->markAsUncalculated();
             }

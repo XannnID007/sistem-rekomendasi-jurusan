@@ -1,4 +1,5 @@
 <?php
+// app/Services/TopsisCalculationService.php
 
 namespace App\Services;
 
@@ -122,12 +123,12 @@ class TopsisCalculationService
                     'penilaian_id' => $assessment->penilaian_id,
                     'peserta_didik_id' => $assessment->peserta_didik_id,
                     'tahun_ajaran' => $assessment->tahun_ajaran,
-                    'n1' => (float)$assessment->nilai_ipa,
-                    'n2' => (float)$assessment->nilai_ips,
-                    'n3' => (float)$assessment->nilai_bahasa_inggris,
-                    'n4' => (float)$assessment->nilai_matematika,
-                    'n5' => (float)$assessment->nilai_bahasa_indonesia,
-                    'n6' => (float)$assessment->nilai_pkn,
+                    'n1' => (float)$assessment->convertNilaiToBobot($assessment->nilai_ipa),
+                    'n2' => (float)$assessment->convertNilaiToBobot($assessment->nilai_ips),
+                    'n3' => (float)$assessment->convertNilaiToBobot($assessment->nilai_bahasa_inggris),
+                    'n4' => (float)$assessment->convertNilaiToBobot($assessment->nilai_matematika),
+                    'n5' => (float)$assessment->convertNilaiToBobot($assessment->nilai_bahasa_indonesia),
+                    'n6' => (float)$assessment->convertNilaiToBobot($assessment->nilai_pkn),
                     'ma' => (float)$assessment->convertMinatToNumeric($assessment->minat_a ?? ''),
                     'mb' => (float)$assessment->convertMinatToNumeric($assessment->minat_b ?? ''),
                     'mc' => (float)$assessment->convertMinatToNumeric($assessment->minat_c ?? ''),

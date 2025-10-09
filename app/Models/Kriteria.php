@@ -72,19 +72,16 @@ class Kriteria extends Model
         return $this->jenis_kriteria === 'cost';
     }
 
+    public function getJenisKriteriaIndonesiaAttribute(): string
+    {
+        return $this->jenis_kriteria === 'benefit' ? 'Benefit' : 'Cost';
+    }
+
     /**
-     * Get formatted weight percentage
+     * Accessor untuk menampilkan bobot dalam format persen.
      */
     public function getBobotPersenAttribute(): string
     {
         return number_format($this->bobot * 100, 2) . '%';
-    }
-
-    /**
-     * Get criteria type in Indonesian
-     */
-    public function getJenisKriteriaIndonesiaAttribute(): string
-    {
-        return $this->jenis_kriteria === 'benefit' ? 'Keuntungan' : 'Biaya';
     }
 }
