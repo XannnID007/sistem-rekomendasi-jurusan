@@ -72,7 +72,7 @@
                             <span class="font-semibold text-green-800">APPROVED - Siswa Menyetujui</span>
                         </div>
                         <p class="text-sm text-green-700">Siswa telah menyetujui rekomendasi sistem pada
-                            {{ $penilaian->tanggal_approved->format('d F Y, H:i') }}</p>
+                            {{ \Carbon\Carbon::parse($penilaian->tanggal_submission)->format('d/m/Y H:i') }}</p>
                     </div>
                 @else
                     <div class="bg-red-50 border border-red-200 rounded-xl p-6">

@@ -1,5 +1,5 @@
 <?php
-
+// app/Models/PesertaDidik.php
 
 namespace App\Models;
 
@@ -28,7 +28,14 @@ class PesertaDidik extends Model
         'no_telepon',
         'nama_orang_tua',
         'no_telepon_orang_tua',
-        'tahun_ajaran'
+        'tahun_ajaran',
+
+        // ======================================================
+        // PERBAIKAN UTAMA: TAMBAHKAN TIGA BARIS INI
+        // ======================================================
+        'is_public_submission',
+        'email_submission',
+        'no_telepon_submission',
     ];
 
     /**
@@ -40,6 +47,7 @@ class PesertaDidik extends Model
     {
         return [
             'tanggal_lahir' => 'date',
+            'is_public_submission' => 'boolean', // Tambahkan ini untuk keamanan
         ];
     }
 
@@ -65,7 +73,7 @@ class PesertaDidik extends Model
     public function penilaianTerbaru()
     {
         return $this->hasOne(PenilaianPesertaDidik::class, 'peserta_didik_id', 'peserta_didik_id')
-            ->latest();
+            ->latest('created_at'); // Menggunakan created_at untuk data terbaru
     }
 
     /**
@@ -90,7 +98,13 @@ class PesertaDidik extends Model
      */
     public function getJenisKelaminLengkapAttribute(): string
     {
-        return $this->jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan';
+        if ($this->jenis_kelamin === 'L') {
+            return 'Laki-laki';
+        }
+        if ($this->jenis_kelamin === 'P') {
+            return 'Perempuan';
+        }
+        return 'Tidak Diketahui';
     }
 
     /**

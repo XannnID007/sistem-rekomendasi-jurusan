@@ -36,6 +36,12 @@ class PenilaianPesertaDidik extends Model
         'jurusan_dipilih',
     ];
 
+    /**
+     * =================================================================
+     * PERBAIKAN UTAMA DI SINI
+     * =================================================================
+     * Pastikan kolom tanggal di-cast ke datetime.
+     */
     protected function casts(): array
     {
         return [

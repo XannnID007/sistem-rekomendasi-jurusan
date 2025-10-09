@@ -4,15 +4,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sertifikat Hasil Rekomendasi</title>
+    <title>Sertifikat Hasil Rekomendasi - {{ $pesertaDidik->nama_lengkap }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Tinos:wght@400;700&display=swap"
+        rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Tinos', 'serif'],
+                    },
                     colors: {
                         'navy': '#1e3a8a',
-                        'gold': '#fbbf24',
+                        'navy-dark': '#1e40af',
+                        'gold': '#ca8a04',
                     }
                 }
             }
@@ -24,351 +34,132 @@
                 background: white !important;
             }
 
-            .print\\:hidden {
-                display: none !important;
-            }
-
             .no-print {
                 display: none !important;
             }
         }
 
-        /* Style mirip template PDF laporan */
-        .certificate-container {
-            border: 4px solid #1e3a8a;
-            background: white;
-        }
-
-        .info-box {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
-        }
-
-        .info-row {
-            display: flex;
-            margin-bottom: 8px;
-        }
-
-        .info-label {
-            font-weight: 600;
-            width: 180px;
-            color: #6b7280;
-        }
-
-        .info-value {
-            flex: 1;
-            color: #111827;
-            font-weight: 500;
-        }
-
-        .result-box {
-            border: 2px solid;
-            background: linear-gradient(to right, #f1f5f9, #e2e8f0);
-        }
-
-        .badge {
-            padding: 4px 12px;
-            border-radius: 4px;
-            font-size: 14px;
-            font-weight: 600;
-            display: inline-block;
-        }
-
-        .badge-tkj {
-            background-color: #dbeafe;
-            color: #1e40af;
-        }
-
-        .badge-tkr {
-            background-color: #dcfce7;
-            color: #166534;
-        }
-
-        .status-approved {
-            background: #d1fae5;
-            border: 2px solid #10b981;
-            color: #047857;
-        }
-
-        .status-rejected {
-            background: #fee2e2;
-            border: 2px solid #ef4444;
-            color: #991b1b;
-        }
-
-        .signature-line {
-            border-top: 2px solid #111827;
-            padding-top: 8px;
-            margin-top: 80px;
-            font-weight: 600;
+        .certificate-body {
+            border: 8px double #1e3a8a;
+            background-color: #f8fafc;
         }
     </style>
 </head>
 
-<body class="bg-gray-100">
+<body class="bg-gray-100 font-sans">
 
-    <!-- Navigation (Hide on Print) -->
-    <nav class="bg-white shadow-sm border-b border-gray-200 no-print">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-navy rounded-lg flex items-center justify-center">
-                        <span class="text-white font-bold text-lg">SP</span>
-                    </div>
-                    <h1 class="text-lg font-semibold text-gray-900">Sertifikat Hasil Rekomendasi</h1>
-                </div>
-                <a href="{{ route('welcome') }}" class="text-navy hover:text-navy-dark text-sm font-medium">
-                    Kembali ke Beranda
-                </a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+    <div class="py-8 px-4 sm:px-6 lg:px-8">
         <div class="max-w-4xl mx-auto space-y-6">
 
-            <!-- Success/Info Messages (Hide on Print) -->
-            @if (session('success'))
-                <div class="bg-green-50 border border-green-200 text-green-700 px-6 py-4 rounded-lg no-print">
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                clip-rule="evenodd" />
-                        </svg>
-                        {{ session('success') }}
-                    </div>
-                </div>
-            @endif
-
-            @if (session('info'))
-                <div class="bg-blue-50 border border-blue-200 text-blue-700 px-6 py-4 rounded-lg no-print">
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd"
-                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                                clip-rule="evenodd" />
-                        </svg>
-                        {{ session('info') }}
-                    </div>
-                </div>
-            @endif
-
-            <!-- Action Buttons (Hide on Print) -->
-            <div class="flex justify-end space-x-4 no-print">
-                <button onclick="window.print()"
-                    class="bg-navy text-white px-6 py-3 rounded-lg hover:bg-navy-dark transition font-semibold flex items-center space-x-2 shadow-md">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                    </svg>
-                    <span>Cetak</span>
-                </button>
-                <a href="{{ route('submission.download-pdf', $pesertaDidik->nisn) }}"
-                    class="bg-gold text-navy px-6 py-3 rounded-lg hover:bg-gold-dark transition font-semibold flex items-center space-x-2 shadow-md">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <span>Download PDF</span>
+            <div class="flex justify-between items-center no-print">
+                <a href="{{ route('submission.result', ['nisn' => $pesertaDidik->nisn]) }}"
+                    class="text-sm font-medium text-navy hover:underline">
+                    &larr; Kembali ke Halaman Hasil
                 </a>
-            </div>
-
-            <!-- Certificate -->
-            <div class="bg-white certificate-container rounded-xl shadow-xl p-8">
-
-                <!-- Header - Style Laporan Admin -->
-                <div class="text-center border-b-2 border-navy pb-6 mb-8">
-                    <div class="w-20 h-20 bg-navy rounded-full mx-auto mb-4 flex items-center justify-center">
-                        <svg class="w-10 h-10 text-gold" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd"
-                                d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                clip-rule="evenodd" />
+                <div class="flex space-x-3">
+                    <button onclick="window.print()"
+                        class="bg-navy text-white px-5 py-2.5 rounded-lg hover:bg-navy-dark transition font-semibold flex items-center space-x-2 shadow-md">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
+                            </path>
                         </svg>
-                    </div>
-                    <h1 class="text-3xl font-bold text-navy mb-2">SERTIFIKAT HASIL REKOMENDASI</h1>
-                    <p class="text-lg text-gray-600">Sistem Pendukung Keputusan Pemilihan Jurusan</p>
-                    <p class="text-sm text-gray-500 mt-2">SMK Penida 2 Katapang</p>
-                    <p class="text-xs text-gray-400 mt-1">Jl. Raya Katapang No.123, Katapang, Kabupaten Bandung</p>
-                </div>
-
-                <!-- Data Peserta - Info Box Style -->
-                <div class="info-box p-6 mb-6">
-                    <h3 class="font-bold text-navy mb-4 text-lg">Data Peserta Didik</h3>
-                    <div class="space-y-2">
-                        <div class="info-row">
-                            <span class="info-label">Nama Lengkap:</span>
-                            <span class="info-value">{{ $pesertaDidik->nama_lengkap }}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">NISN:</span>
-                            <span class="info-value">{{ $pesertaDidik->nisn }}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Jenis Kelamin:</span>
-                            <span
-                                class="info-value">{{ $pesertaDidik->jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan' }}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Tahun Ajaran:</span>
-                            <span class="info-value">{{ $pesertaDidik->tahun_ajaran }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Hasil Rekomendasi - Result Box -->
-                @php
-                    $isTKJ = $perhitungan->jurusan_rekomendasi === 'TKJ';
-                    $borderColor = $isTKJ ? '#3b82f6' : '#10b981';
-                @endphp
-
-                <div class="result-box rounded-xl p-8 text-center mb-6" style="border-color: {{ $borderColor }}">
-                    <p class="text-sm text-gray-600 mb-2">Berdasarkan Metode TOPSIS, Anda Direkomendasikan:</p>
-                    <h2 class="text-3xl font-bold text-navy mb-2">
-                        {{ $isTKJ ? 'TEKNIK KOMPUTER DAN JARINGAN' : 'TEKNIK KENDARAAN RINGAN' }}
-                    </h2>
-                    <span class="badge {{ $isTKJ ? 'badge-tkj' : 'badge-tkr' }} text-xl">
-                        {{ $perhitungan->jurusan_rekomendasi }}
-                    </span>
-
-                    <div class="grid grid-cols-2 gap-4 mt-6">
-                        <div class="bg-white rounded-lg p-4 border border-gray-200">
-                            <p class="text-xs text-gray-600 mb-1">Nilai Preferensi</p>
-                            <p class="text-2xl font-bold text-navy">
-                                {{ number_format($perhitungan->nilai_preferensi, 4) }}</p>
-                        </div>
-                        <div class="bg-white rounded-lg p-4 border border-gray-200">
-                            <p class="text-xs text-gray-600 mb-1">Tingkat Kesesuaian</p>
-                            <p class="text-2xl font-bold text-navy">
-                                {{ number_format($perhitungan->nilai_preferensi * 100, 1) }}%</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Status Konfirmasi -->
-                <div class="info-box p-6 mb-8">
-                    <h3 class="font-bold text-navy mb-4">Status Konfirmasi</h3>
-
-                    @if ($penilaian->status_submission === 'approved')
-                        <div class="status-approved rounded-lg p-4">
-                            <div class="flex items-center space-x-3 mb-2">
-                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd"
-                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                        clip-rule="evenodd" />
-                                </svg>
-                                <span class="font-bold text-lg">DISETUJUI</span>
-                            </div>
-                            <p class="text-sm">Peserta didik telah menyetujui rekomendasi ini</p>
-                            <p class="text-xs mt-2 opacity-75">
-                                Tanggal:
-                                @if ($penilaian->tanggal_approved)
-                                    @php
-                                        $tanggalApproved =
-                                            $penilaian->tanggal_approved instanceof \Carbon\Carbon
-                                                ? $penilaian->tanggal_approved
-                                                : \Carbon\Carbon::parse($penilaian->tanggal_approved);
-                                    @endphp
-                                    {{ $tanggalApproved->format('d F Y, H:i') }} WIB
-                                @else
-                                    {{ now()->format('d F Y, H:i') }} WIB
-                                @endif
-                            </p>
-                        </div>
-                    @elseif($penilaian->status_submission === 'rejected')
-                        <div class="status-rejected rounded-lg p-4">
-                            <div class="flex items-center space-x-3 mb-2">
-                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd"
-                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                        clip-rule="evenodd" />
-                                </svg>
-                                <span class="font-bold text-lg">TIDAK DISETUJUI</span>
-                            </div>
-                            <div class="bg-white rounded-lg p-4 mt-3 text-sm">
-                                <div class="mb-2">
-                                    <span class="text-gray-600">Jurusan yang Dipilih:</span>
-                                    <p class="font-bold text-navy text-base">{{ $penilaian->jurusan_dipilih }}</p>
-                                </div>
-                                <div>
-                                    <span class="text-gray-600">Alasan:</span>
-                                    <p class="text-gray-800">{{ $penilaian->alasan_penolakan }}</p>
-                                </div>
-                            </div>
-                            <p class="text-xs mt-2 opacity-75">
-                                Tanggal:
-                                @if ($penilaian->tanggal_approved)
-                                    @php
-                                        $tanggalApproved =
-                                            $penilaian->tanggal_approved instanceof \Carbon\Carbon
-                                                ? $penilaian->tanggal_approved
-                                                : \Carbon\Carbon::parse($penilaian->tanggal_approved);
-                                    @endphp
-                                    {{ $tanggalApproved->format('d F Y, H:i') }} WIB
-                                @else
-                                    {{ now()->format('d F Y, H:i') }} WIB
-                                @endif
-                            </p>
-                        </div>
-                    @endif
-                </div>
-
-                <!-- Footer dengan Tanda Tangan -->
-                <div class="border-t-2 border-gray-300 pt-8 mt-8">
-                    <div class="grid grid-cols-2 gap-8 text-center">
-                        <div>
-                            <p class="text-sm text-gray-600 mb-2">Mengetahui,</p>
-                            <p class="text-sm text-gray-600 mb-1">Kepala Sekolah</p>
-                            <div class="signature-line inline-block px-8">
-                                <p class="font-bold text-navy">Drs. H. Ahmad Suherman, M.Pd</p>
-                            </div>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-600 mb-2">Peserta Didik,</p>
-                            <p class="text-sm text-gray-600 mb-1">&nbsp;</p>
-                            <div class="signature-line inline-block px-8">
-                                <p class="font-bold text-navy">{{ $pesertaDidik->nama_lengkap }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="text-center mt-8 text-xs text-gray-500 border-t border-gray-200 pt-6">
-                        <p class="mb-1">Dokumen ini digenerate secara otomatis oleh Sistem Pendukung Keputusan</p>
-                        <p class="font-semibold text-navy">SMK Penida 2 Katapang © {{ date('Y') }}</p>
-                        <p class="mt-2 text-gray-400">Dicetak pada: {{ now()->format('d F Y, H:i') }} WIB</p>
-                    </div>
+                        <span>Cetak</span>
+                    </button>
+                    <a href="{{ route('submission.download-pdf', $pesertaDidik->nisn) }}"
+                        class="bg-gold text-white px-5 py-2.5 rounded-lg hover:bg-yellow-600 transition font-semibold flex items-center space-x-2 shadow-md">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        <span>Download PDF</span>
+                    </a>
                 </div>
             </div>
 
-            <!-- Info Tambahan untuk Rejected (Hide on Print) -->
+            <div class="bg-white certificate-body rounded-lg shadow-2xl p-8 md:p-12">
+
+                <div class="flex items-center justify-between border-b-4 border-navy pb-6">
+                    <div class="text-left">
+                        <h1 class="text-3xl md:text-4xl font-extrabold text-navy font-serif tracking-wider">SERTIFIKAT
+                            REKOMENDASI</h1>
+                        <p class="text-lg text-gray-600 font-serif">Sistem Pendukung Keputusan Pemilihan Jurusan</p>
+                    </div>
+                    <img src="{{ asset('images/logo.png') }}" alt="Logo Sekolah" class="w-24 h-24 object-contain">
+                </div>
+
+                <div class="mt-8">
+                    <p class="text-gray-700 leading-relaxed text-center">Berdasarkan data penilaian dan analisis
+                        menggunakan metode <strong>TOPSIS (Technique for Order of Preference by Similarity to Ideal
+                            Solution)</strong>, dengan hormat menyatakan bahwa siswa berikut:</p>
+
+                    <div class="my-6 bg-gray-50 border border-gray-200 rounded-lg p-6 text-base">
+                        <div class="grid grid-cols-2 gap-x-8 gap-y-3">
+                            <div class="font-semibold text-gray-500">Nama Lengkap</div>
+                            <div class="font-semibold text-gray-900">: {{ $pesertaDidik->nama_lengkap }}</div>
+                            <div class="font-semibold text-gray-500">NISN</div>
+                            <div class="font-semibold text-gray-900">: {{ $pesertaDidik->nisn }}</div>
+                            <div class="font-semibold text-gray-500">Tahun Ajaran</div>
+                            <div class="font-semibold text-gray-900">: {{ $pesertaDidik->tahun_ajaran }}</div>
+                        </div>
+                    </div>
+
+                    @php
+                        $isTKJ = $perhitungan->jurusan_rekomendasi === 'TKJ';
+                        $jurusanLengkap = $isTKJ ? 'Teknik Komputer & Jaringan' : 'Teknik Kendaraan Ringan';
+                        $colorClass = $isTKJ ? 'blue' : 'green';
+                    @endphp
+                    <p class="text-gray-700 leading-relaxed text-center mb-6">Direkomendasikan untuk melanjutkan studi
+                        ke jurusan:</p>
+                    <div
+                        class="bg-{{ $colorClass }}-50 border-2 border-{{ $colorClass }}-200 rounded-xl p-8 text-center">
+                        <h2 class="text-4xl font-extrabold text-{{ $colorClass }}-800 font-serif tracking-wide">
+                            {{ strtoupper($jurusanLengkap) }} ({{ $perhitungan->jurusan_rekomendasi }})</h2>
+                        <div class="mt-4 text-sm text-{{ $colorClass }}-700">Dengan nilai preferensi sebesar <strong
+                                class="text-lg">{{ number_format($perhitungan->nilai_preferensi, 4) }}</strong></div>
+                    </div>
+
+                    <div class="mt-6 text-center">
+                        @if ($penilaian->status_submission === 'approved')
+                            <p class="font-semibold text-green-700">Status: Telah Disetujui oleh Siswa</p>
+                        @elseif($penilaian->status_submission === 'rejected')
+                            <p class="font-semibold text-red-700">Status: Rekomendasi Ditolak, Siswa Memilih Jurusan
+                                {{ $penilaian->jurusan_dipilih }}</p>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="mt-16 flex justify-end">
+                    <div class="text-center">
+                        <p class="text-gray-700">Katapang, {{ now()->translatedFormat('d F Y') }}</p>
+                        <p class="text-gray-700 mb-20">Kepala Sekolah SMK Penida 2 Katapang</p>
+                        <p class="font-bold text-lg text-navy border-t-2 border-gray-800 pt-2">Drs. H. Ahmad Suherman,
+                            M.Pd</p>
+                    </div>
+                </div>
+
+            </div>
             @if ($penilaian->status_submission === 'rejected')
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 no-print">
                     <h4 class="font-bold text-blue-900 mb-2 flex items-center">
                         <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path
-                                d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                                d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z">
+                            </path>
                         </svg>
                         Informasi Penting
                     </h4>
                     <p class="text-sm text-blue-800 mb-3">
-                        Karena Anda memilih jurusan yang berbeda dari rekomendasi sistem, admin sekolah akan menghubungi
-                        Anda melalui:
+                        Karena Anda memilih jurusan yang berbeda, admin sekolah akan menghubungi Anda melalui:
                     </p>
                     <ul class="list-disc list-inside text-sm text-blue-800 space-y-1 ml-2">
                         <li><strong>Email:</strong> {{ $pesertaDidik->email_submission }}</li>
                         <li><strong>No. Telepon:</strong> {{ $pesertaDidik->no_telepon_submission }}</li>
                     </ul>
-                    <p class="text-sm text-blue-800 mt-3 bg-blue-100 rounded p-2">
-                        💡 <strong>Tips:</strong> Pastikan nomor dan email tersebut aktif untuk dihubungi oleh pihak
-                        sekolah.
-                    </p>
                 </div>
             @endif
-
         </div>
     </div>
-
 </body>
 
 </html>

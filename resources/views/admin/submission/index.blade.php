@@ -192,7 +192,11 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-center text-sm text-gray-500">
-                                    {{ $penilaian->tanggal_submission->format('d/m/Y H:i') }}
+                                    @if ($penilaian->tanggal_submission)
+                                        {{ \Carbon\Carbon::parse($penilaian->tanggal_submission)->format('d/m/Y H:i') }}
+                                    @else
+                                        -
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <a href="{{ route('admin.submission.show', $penilaian->penilaian_id) }}"

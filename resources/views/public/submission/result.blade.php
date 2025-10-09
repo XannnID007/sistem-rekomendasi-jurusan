@@ -54,7 +54,10 @@
                     <div class="w-10 h-10 bg-navy rounded-lg flex items-center justify-center" style="display: none;">
                         <span class="text-white font-semibold text-lg">SP</span>
                     </div>
-                    <h1 class="text-lg font-semibold text-gray-800">Hasil Rekomendasi Jurusan</h1>
+                    <div>
+                        <h1 class="text-lg font-semibold text-gray-900">SPK Pemilihan Jurusan</h1>
+                        <p class="text-xs text-gray-500">SMK Penida 2 Katapang</p>
+                    </div>
                 </div>
             </div>
         </div>

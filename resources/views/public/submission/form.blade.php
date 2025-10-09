@@ -34,11 +34,13 @@
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-navy rounded-lg flex items-center justify-center">
-                        <span class="text-white font-bold text-lg">SPK</span>
+                    <img src="/images/logo.png" alt="Logo SPK" class="w-10 h-10 object-contain"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="w-10 h-10 bg-navy rounded-lg flex items-center justify-center" style="display: none;">
+                        <span class="text-white font-semibold text-lg">SP</span>
                     </div>
                     <div>
-                        <h1 class="text-lg font-semibold text-gray-800">SPK Pemilihan Jurusan</h1>
+                        <h1 class="text-lg font-semibold text-gray-900">SPK Pemilihan Jurusan</h1>
                         <p class="text-xs text-gray-500">SMK Penida 2 Katapang</p>
                     </div>
                 </div>
